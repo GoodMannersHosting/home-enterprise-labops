@@ -1,0 +1,13 @@
+creation_rules:
+- shamir_threshold: 1
+  path_regex: .*talsecret\.(yaml|yml)$
+  input_type: yaml
+  encrypted_regex: ^(token|crt|key|id|secret|secretboxEncryptionSecret|ca)$
+  mac_only_encrypted: true
+  key_groups:
+  - age:
+    - age1aq9fayk647u8rp7vfl4z4k9drp4mztluumgvm09w2uz36f5exysspkvk7p
+    - age1986cspgjd7xhdwfwmyplc5jsjk43gewedu7s3sr7gwwhrdp7rgzq6t4ax9
+stores:
+  yaml:
+    indent: 2

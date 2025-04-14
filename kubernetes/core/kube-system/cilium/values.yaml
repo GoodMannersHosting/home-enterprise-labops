@@ -1,0 +1,77 @@
+autoDirectNodeRoutes: true
+bandwidthManager:
+  enabled: true
+  bbr: true
+bpf:
+  datapathMode: netkit
+  masquerade: false
+  preallocateMaps: true
+bpfClockProbe: true
+bgpControlPlane:
+  enabled: true
+cni:
+  exclusive: false
+cgroup:
+  automount:
+    enabled: false
+  hostRoot: /sys/fs/cgroup
+cluster:
+  id: 1
+  name: capi-core
+endpointRoutes:
+  enabled: true
+envoy:
+  enabled: false
+envoyConfig:
+  enabled: false
+hubble:
+  enabled: false
+ipam:
+  mode: kubernetes
+ipv4NativeRoutingCIDR: 10.244.0.0/16
+k8sServiceHost: localhost
+k8sServicePort: 7445
+kubeProxyReplacement: true
+kubeProxyReplacementHealthzBindAddr: 0.0.0.0:10256
+l2announcements:
+  enabled: true
+loadBalancer:
+  acceleration: best-effort
+  algorithm: maglev
+  mode: dsr
+localRedirectPolicy: true
+operator:
+  replicas: 2
+  rollOutPods: true
+  prometheus:
+    enabled: false
+    serviceMonitor:
+      enabled: false
+  dashboards:
+    enabled: true
+prometheus:
+  enabled: false
+dashboards:
+  enabled: false
+rollOutCiliumPods: true
+routingMode: native
+securityContext:
+  capabilities:
+    ciliumAgent:
+    - CHOWN
+    - KILL
+    - NET_ADMIN
+    - NET_RAW
+    - IPC_LOCK
+    - SYS_ADMIN
+    - SYS_RESOURCE
+    - DAC_OVERRIDE
+    - FOWNER
+    - SETGID
+    - SETUID
+    - PERFMON
+    - BPF
+    cleanCiliumState:
+    - NET_ADMIN
+    - SYS_ADMIN
+    - SYS_RESOURCE

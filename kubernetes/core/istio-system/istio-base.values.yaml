@@ -1,0 +1,12 @@
+meshConfig:
+  defaultConfig:
+    proxyMetadata:
+      ISTIO_META_ENABLE_HBONE: "true"
+global:
+  variant: distroless
+pilot:
+  env:
+    PILOT_ENABLE_AMBIENT: "true"
+cni:
+  ambient:
+    enabled: true
