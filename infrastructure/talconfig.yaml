@@ -1,0 +1,165 @@
+clusterName: capi-core
+talosVersion: v1.9.5
+kubernetesVersion: 1.32.2
+endpoint: "https://capi-core.homelab.danmanners.com:6443"
+cniConfig:
+  name: none
+
+clusterPodNets:
+- 10.244.0.0/16
+clusterSvcNets:
+- 10.96.0.0/12
+
+additionalApiServerCertSans: &certs
+  - 172.21.0.10
+  - capi-core.homelab.danmanners.com
+
+additionalMachineCertSans: *certs
+
+nodes:
+# Control Plane Nodes
+- hostname: capi-core-cn1.homelab.danmanners.com
+  controlPlane: true
+  installDisk: /dev/sda
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions: &extensions
+          - siderolabs/binfmt-misc
+          - siderolabs/util-linux-tools
+          - siderolabs/qemu-guest-agent
+  ipAddress: 172.21.0.11
+  disableSearchDomain: true
+  nameservers: &nameservers
+    - 10.3.0.1
+    - 172.21.0.1
+  networkInterfaces:
+  - interface: ens18
+    dhcp: false
+    mtu: 1460
+    addresses:
+    - 172.21.0.11/20
+    routes:
+    - network: 0.0.0.0/0
+      gateway: &mgmt_gateway 172.21.0.1
+    vip:
+      ip: 172.21.0.10
+# Worker Nodes
+- hostname: capi-core-wn1.homelab.danmanners.com
+  controlPlane: false
+  installDisk: /dev/sda
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions: *extensions
+  ipAddress: 172.21.0.14
+  nameservers: *nameservers
+  networkInterfaces:
+  - interface: ens18
+    dhcp: false
+    mtu: 1460
+    addresses:
+    - 172.21.0.14/20
+    routes:
+    - network: 0.0.0.0/0
+      gateway: *mgmt_gateway
+- hostname: capi-core-wn2.homelab.danmanners.com
+  controlPlane: false
+  installDisk: /dev/sda
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions: *extensions
+  ipAddress: 172.21.0.15
+  nameservers: *nameservers
+  networkInterfaces:
+  - interface: ens18
+    dhcp: false
+    mtu: 1460
+    addresses:
+    - 172.21.0.15/20
+    routes:
+    - network: 0.0.0.0/0
+      gateway: *mgmt_gateway
+
+patches:
+- |-
+  - op: add
+    path: /machine/sysctls
+    value:
+      vm.max_map_count: 524288
+      fs.file-max: 131072
+      fs.inotify.max_user_watches: 1048576
+      fs.inotify.max_user_instances: 8192
+- |-
+  - op: add
+    path: /machine/time
+    value:
+      servers: [time.cloudflare.com]
+- |-
+  - op: add
+    path: /machine/features
+    value:
+      stableHostname: true
+      diskQuotaSupport: true
+      rbac: true
+      kubePrism:
+        enabled: true
+        port: 7445
+- |-
+  - op: add
+    path: /machine/features/hostDNS
+    value:
+      enabled: true
+      resolveMemberNames: false
+      forwardKubeDNSToHost: false
+- |-
+  - op: add
+    path: /cluster/proxy
+    value:
+      disabled: true
+
+controlPlane:
+  schematic: {}
+  patches:
+  - |-
+    - op: add
+      path: /machine/kubelet/extraArgs
+      value:
+        rotate-server-certificates: true
+        rotate-certificates: true
+  - |-
+    - op: add
+      path: /cluster/coreDNS
+      value:
+        disabled: true
+  - |-
+    - op: remove
+      path: /cluster/apiServer/admissionControl
+  - |-
+    - op: add
+      path: /machine/features/kubernetesTalosAPIAccess
+      value:
+        enabled: true
+        allowedRoles:
+          - os:admin
+        allowedKubernetesNamespaces:
+          - actions-runner-system
+          - system-upgrade
+
+worker:
+  schematic:
+    customization:
+      extraKernelArgs:
+      - apparmor=0 # Less security, faster puter
+      - init_on_alloc=0 # Less security, faster puter
+      - init_on_free=0 # Less security, faster puter
+      - mitigations=off # Less security, faster puter
+      - security=none # Less security, faster puter
+      - talos.auditd.disabled=1 # Less security, faster puter
+  patches:
+  - |-
+    - op: add
+      path: /machine/kubelet/nodeIP
+      value:
+        validSubnets: [172.21.0.0/20]
