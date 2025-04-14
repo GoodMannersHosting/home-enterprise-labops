@@ -111,3 +111,30 @@ clusterctl init --ipam in-cluster:v1.0.1 \
 --bootstrap talos:v0.6.7 \
 --control-plane talos:v0.5.8
 ```
+
+## Sealed Secrets
+
+```bash
+# Add the Sealed Secrets Helm repository and update
+helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
+helm repo update
+
+# Create the Sealed Secrets namespace
+kubectl create namespace sealed-secrets
+
+# Create the Sealed Secrets key
+kubectl create secret tls sealed-secrets-key \
+--cert=./keys/sealed-secret.crt \
+--key=./keys/sealed-secret.key \
+--namespace sealed-secrets
+
+# Label the Sealed Secrets key for the Sealed Secrets controller
+kubectl label secret/sealed-secrets-key \
+--namespace sealed-secrets \
+sealedsecrets.bitnami.com/sealed-secrets-key=true
+
+# Install Sealed Secrets
+helm upgrade --install sealed-secrets sealed-secrets/sealed-secrets \
+--namespace sealed-secrets \
+--version 2.17.2 --values kubernetes/core/sealed-secrets/values.yaml
+```

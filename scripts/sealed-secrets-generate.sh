@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Check if a number of days are specified. Otherwise, default to 400 days.
+DAYS=${1:-400}
+
 check_existing_files() {
   if [[ -f "keys/sealed-secret.crt" || -f "keys/sealed-secret.key" ]]; then
     echo "Error: keys/sealed-secret.crt or keys/sealed-secret.key already exist."
@@ -19,7 +22,7 @@ mkdir -p keys
 check_existing_files
 
 # Generate a self-signed certificate and private key
-openssl req -x509 -days 400 \
+openssl req -x509 -days ${DAYS} \
   -nodes -newkey rsa:4096 \
   -keyout keys/sealed-secret.key \
   -out keys/sealed-secret.crt \
