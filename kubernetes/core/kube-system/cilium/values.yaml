@@ -18,6 +18,7 @@ cgroup:
 cluster:
   id: 1
   name: capi-core
+devices: ens18
 endpointRoutes:
   enabled: true
 envoy:
