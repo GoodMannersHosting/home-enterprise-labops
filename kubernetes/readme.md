@@ -144,7 +144,9 @@ helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
 helm repo update
 
 # Install the Metrics Server
-helm upgrade --install metrics-server metrics-server/metrics-server
+helm upgrade --install metrics-server metrics-server/metrics-server \
+--namespace kube-system --version 3.12.2 \
+--values kubernetes/core/kube-system/metrics-server/values.yaml
 ```
 
 ## Cluster API Initialization
