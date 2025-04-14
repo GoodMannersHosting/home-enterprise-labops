@@ -58,6 +58,9 @@ nodes:
       systemExtensions:
         officialExtensions: *extensions
   ipAddress: 172.21.0.14
+  certSANs:
+  - capi-core-wn1.homelab.danmanners.com
+  - 172.21.0.14
   nameservers: *nameservers
   networkInterfaces:
   - interface: ens18
@@ -81,6 +84,9 @@ nodes:
       systemExtensions:
         officialExtensions: *extensions
   ipAddress: 172.21.0.15
+  certSANs:
+  - capi-core-wn2.homelab.danmanners.com
+  - 172.21.0.15
   nameservers: *nameservers
   networkInterfaces:
   - interface: ens18
