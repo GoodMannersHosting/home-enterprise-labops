@@ -1,0 +1,115 @@
+operatorNamespace: rook-ceph
+clusterName: capi-core
+toolbox:
+  enabled: true # true
+  image: quay.io/ceph/ceph:v19.2.1
+  containerSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 2016
+    runAsGroup: 2016
+    capabilities:
+      drop: [ "ALL" ]
+  # -- Toolbox resources
+  resources:
+    limits:
+      memory: "1Gi"
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+
+monitoring:
+  enabled: false
+
+cephClusterSpec:
+  cephVersion:
+    image: quay.io/ceph/ceph:v19.2.1
+    allowUnsupported: false
+  dataDirHostPath: /var/lib/rook
+  skipUpgradeChecks: false
+  continueUpgradeAfterChecksEvenIfNotHealthy: false
+  waitTimeoutForHealthyOSDInMinutes: 10
+  upgradeOSDRequiresHealthyPGs: false
+  mon:
+    count: 3
+    allowMultiplePerNode: false
+
+  mgr:
+    count: 2
+    allowMultiplePerNode: false
+    modules:
+  dashboard:
+    enabled: true
+    ssl: true
+  network:
+    provider: host
+    ipFamily: "IPv4"
+    connections:
+      encryption:
+        enabled: false
+      compression:
+        enabled: false
+      requireMsgr2: false
+
+  crashCollector:
+    disable: false
+
+  logCollector:
+    enabled: true
+    periodicity: daily # one of: hourly, daily, weekly, monthly
+    maxLogSize: 500M # SUFFIX may be 'M' or 'G'. Must be at least 1M.
+
+  cleanupPolicy:
+    confirmation: ""
+    sanitizeDisks:
+      method: quick
+      dataSource: zero
+      iteration: 1
+    allowUninstallWithVolumes: false
+
+  # The option to automatically remove OSDs that are out and are safe to destroy.
+  removeOSDsIfOutAndSafeToRemove: false
+
+  # priority classes to apply to ceph resources
+  priorityClassNames:
+    mon: system-node-critical
+    osd: system-node-critical
+    mgr: system-cluster-critical
+
+  storage:
+    useAllNodes: true
+    useAllDevices: true
+
+ingress:
+  dashboard: {}
+    # labels:
+    #   external-dns/private: "true"
+    # annotations:
+    #   external-dns.alpha.kubernetes.io/hostname: dashboard.example.com
+    #   nginx.ingress.kubernetes.io/rewrite-target: /ceph-dashboard/$2
+    # If the dashboard has ssl: true the following will make sure the NGINX Ingress controller can expose the dashboard correctly
+    #   nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    #   nginx.ingress.kubernetes.io/server-snippet: |
+    #     proxy_ssl_verify off;
+    # host:
+    #   name: dashboard.example.com
+    #   path: "/ceph-dashboard(/|$)(.*)"
+    #   pathType: Prefix
+    # tls:
+    # - hosts:
+    #     - dashboard.example.com
+    #   secretName: testsecret-tls
+    ## Note: Only one of ingress class annotation or the `ingressClassName:` can be used at a time
+    ## to set the ingress class
+    # ingressClassName: nginx
+
+cephBlockPools: {}
+cephFileSystems: {}
+
+cephFileSystemVolumeSnapshotClass:
+  enabled: false
+
+cephBlockPoolsVolumeSnapshotClass:
+  enabled: false
+# -- A list of CephObjectStore configurations to deploy
+# @default -- See [below](#ceph-object-stores)
+cephObjectStores: {}
