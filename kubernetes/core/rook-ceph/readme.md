@@ -36,10 +36,12 @@ helm repo update
 helm upgrade --install --create-namespace \
 --namespace $clusterNamespace rook-ceph rook-release/rook-ceph \
 -f kubernetes/core/rook-ceph/values-external.yaml
-# -f kubernetes/core/rook-ceph/values.yaml
 
 helm upgrade --install --create-namespace \
 --namespace $clusterNamespace rook-ceph-cluster \
 --set operatorNamespace=$operatorNamespace rook-release/rook-ceph-cluster \
 -f kubernetes/core/rook-ceph/values-external.yaml
+
+# Add the CephFS Retain StorageClass
+kubectl apply -f kubernetes/core/rook-ceph/cephfs-retain-sc.yaml
 ```

@@ -1,0 +1,45 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: powerdns-sqlite-job
+  namespace: default
+spec:
+  template:
+    spec:
+      securityContext:
+        fsGroup: 953
+        fsGroupChangePolicy: OnRootMismatch
+      containers:
+      - name: sqlite3-runner
+        image: docker.io/powerdns/pdns-auth-49:4.9.4
+        command: [ "/bin/sh", "-c" ]
+        args:
+        - |
+          echo "Running SQLite3 commands..."
+          if [ ! -f /var/lib/powerdns/pdns.sqlite3 ]; then
+            # Example command from Dockerfile can be found here:
+            # https://hub.docker.com/layers/powerdns/pdns-auth-master/latest/images/sha256-876a1e1462578be374c389711ebb5b21856dc01a278e0022c6278c840898e5ff
+            sqlite3 /var/lib/powerdns/pdns.sqlite3 < /usr/local/share/doc/pdns/schema.sqlite3.sql
+            if [ $? -ne 0 ]; then
+              echo "SQLite3 command failed to initialize the db."
+              exit 1
+            else
+              echo "SQLite3 initialization succeeded."
+              ls -la /var/lib/powerdns/
+              exit 0
+            fi
+          else
+            echo "SQLite3 database already exists, skipping initialization."
+            ls -la /var/lib/powerdns/
+            exit 0
+          fi
+        volumeMounts:
+        - name: sqlite3-db
+          mountPath: /var/lib/powerdns/
+          subPath: var-lib
+      restartPolicy: Never
+      volumes:
+      - name: sqlite3-db
+        persistentVolumeClaim:
+          claimName: powerdns-sqlite3-db
+  backoffLimit: 4
