@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak-core
+  namespace: keycloak
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+      - name: keycloak
+        image: quay.io/keycloak/keycloak:26.2
+        args:
+        - start
+        - --http-port=8080
+        - --https-port=8443
+        - --https-certificate-file=/etc/x509/https/tls.crt
+        - --https-certificate-key-file=/etc/x509/https/tls.key
+        - --db-url-host=keycloak-rw.keycloak.svc.cluster.local
+        - --hostname-strict=false
+        volumeMounts:
+        - name: tls-certs
+          mountPath: /etc/x509/https
+          readOnly: true
+        ports:
+        - name: http
+          containerPort: 8080
+        - name: https
+          containerPort: 8443
+        env:
+        - name: KC_BOOTSTRAP_ADMIN_USERNAME
+          value: admin
+        - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-superuser-secret
+              key: password
+        - name: KC_DB
+          value: "postgres"
+        - name: KC_DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-superuser-secret
+              key: username
+        - name: KC_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-superuser-secret
+              key: password
+        - name: KC_DB_URL_DATABASE
+          value: app
+        # readinessProbe:
+        #   httpGet:
+        #     path: /auth/realms/master
+        #     port: 8080
+        #   initialDelaySeconds: 30
+        #   periodSeconds: 10
+        # livenessProbe:
+        #   httpGet:
+        #     path: /auth/realms/master
+        #     port: 8080
+        #   initialDelaySeconds: 60
+        #   periodSeconds: 10
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "1Gi"
+          limits:
+            cpu: "2000m"
+            memory: "4Gi"
+      volumes:
+      - name: tls-certs
+        secret:
+          secretName: keycloak-core-internal-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak-core
+  namespace: keycloak
+  labels:
+    app: keycloak
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+    protocol: TCP
+  - name: https
+    port: 443
+    targetPort: 8443
+    protocol: TCP
+  selector:
+    app: keycloak
+  type: LoadBalancer

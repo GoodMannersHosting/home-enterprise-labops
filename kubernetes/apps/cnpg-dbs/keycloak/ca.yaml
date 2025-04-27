@@ -1,0 +1,31 @@
+# https://cert-manager.io/docs/configuration/selfsigned/#bootstrapping-ca-issuers
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: keycloak-internal-ca
+  namespace: keycloak
+spec:
+  isCA: true
+  commonName: keycloak-internal-ca
+  secretName: keycloak-internal-ca-secret
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth
+  - client auth
+  issuerRef:
+    name: selfsigned-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: keycloak-internal-ca-issuer
+  namespace: keycloak
+spec:
+  ca:
+    secretName: keycloak-internal-ca-secret

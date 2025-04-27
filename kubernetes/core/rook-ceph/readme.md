@@ -17,7 +17,8 @@ python3 create-external-cluster-resources.py \
 # running the script to enable the Prometheus module in Ceph.
 
 # Make sure to set the permissions for the client.healthchecker user
-ceph auth caps client.healthchecker mon 'allow r'
+ceph auth caps client.healthchecker \
+mon 'allow r' osd 'allow r' mgr 'allow r'
 ```
 
 Copy/paste the output into your local terminal.

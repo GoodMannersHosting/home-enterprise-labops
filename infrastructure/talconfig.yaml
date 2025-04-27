@@ -149,6 +149,7 @@ controlPlane:
       value:
         rotate-server-certificates: true
         rotate-certificates: true
+
   - |-
     - op: add
       path: /cluster/coreDNS
