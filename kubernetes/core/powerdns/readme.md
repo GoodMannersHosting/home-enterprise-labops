@@ -13,3 +13,9 @@ openssl rand -base64 96 | tr -d '\n'
 # MacOS - /dev/urandom
 cat /dev/urandom | base64 | tr -dc '0-9a-zA-Z' | head -c128
 ```
+
+## Upstream Router Domain Forwarding
+
+![image](unifi.png)
+
+Configure your router to forward your specified domains to the BGP IP of your PowerDNS server.

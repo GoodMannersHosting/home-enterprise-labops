@@ -1,0 +1,26 @@
+provider:
+  name: pdns
+env:
+- name: PDNS_API_KEY
+  valueFrom:
+    secretKeyRef:
+      name: as-secrets
+      key: api-key
+extraArgs:
+- --pdns-server=http://powerdns-gui.powerdns.svc.cluster.local:8081
+# On MacOS, you can generate a server-id with:
+# uuidgen | tr '[:upper:]' '[:lower:]' | tr -dc '0-9a-zA-Z'
+- --pdns-server-id=localhost
+- --pdns-api-key=$(PDNS_API_KEY)
+interval: 30s
+logFormat: json
+triggerLoopOnEvent: true
+policy: sync
+sources:
+- ingress
+- service
+txtOwnerId: capi-core
+txtPrefix: k8s.capi-core.
+domainFilters:
+- "capi-core.homelab.danmanners.com"
+- "core.goodmannershosting.com"

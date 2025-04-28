@@ -27,6 +27,8 @@ metadata:
   namespace: powerdns
   labels:
     app: powerdns-clients-as
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: pdns.capi-core.homelab.danmanners.com
 spec:
   ports:
   - name: pwds-as-web

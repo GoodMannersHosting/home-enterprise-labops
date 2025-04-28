@@ -12,7 +12,7 @@ HELO: Test Big Ideas in Small Spaces.
 
 | Category                                | Tools & Technologies                                                                                   |
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| **Infrastructure & Cluster Management** | Talos Linux, Cluster API, Cluster Autoscaler, Rook-Ceph, Minio, Proxmox                                |
+| **Infrastructure & Cluster Management** | Talos Linux, Cluster API, Cluster Autoscaler, Rook-Ceph, Proxmox                                       |
 | **Networking & Service Mesh**           | Cilium/Hubble, Istio, Gateway API, External DNS, PowerDNS                                              |
 | **Security & Identity**                 | Cert-Manager, Keycloak, OpenBao, SOPS, age, Validating Admission Policies, Mutating Admission Webhooks |
 | **Observability & Monitoring**          | Kube Prometheus Stack, Mimir, OpenTelemetry                                                            |
