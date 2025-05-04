@@ -1,7 +1,7 @@
 clusterName: capi-core
 talosVersion: v1.9.5
 kubernetesVersion: 1.32.2
-endpoint: "https://capi-core.homelab.danmanners.com:6443"
+endpoint: "https://k8s-capi-core.homelab.danmanners.com:6443"
 cniConfig:
   name: none
 
@@ -12,6 +12,7 @@ clusterSvcNets:
 
 additionalApiServerCertSans: &certs
   - 172.21.0.10
+  - k8s-capi-core.homelab.danmanners.com
   - capi-core.homelab.danmanners.com
 
 additionalMachineCertSans: *certs

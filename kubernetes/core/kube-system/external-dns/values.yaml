@@ -19,6 +19,7 @@ policy: sync
 sources:
 - ingress
 - service
+- istio-gateway
 txtOwnerId: capi-core
 txtPrefix: k8s.capi-core.
 domainFilters:

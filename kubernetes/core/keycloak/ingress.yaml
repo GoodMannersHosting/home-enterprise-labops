@@ -1,0 +1,49 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: keycloak-gateway
+  namespace: keycloak
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: keycloak.capi-core.homelab.danmanners.com
+    cert-manager.io/cluster-issuer: letsencrypt-dns01
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - keycloak.capi-core.homelab.danmanners.com
+    tls:
+      httpsRedirect: true
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    hosts:
+    - keycloak.capi-core.homelab.danmanners.com
+    tls:
+      mode: SIMPLE
+      credentialName: keycloak-tls-cert
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: keycloak
+  namespace: keycloak
+spec:
+  hosts:
+  - keycloak.capi-core.homelab.danmanners.com
+  gateways:
+  - keycloak-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: keycloak.keycloak.svc.cluster.local
+        port:
+          number: 8080
