@@ -80,29 +80,6 @@ spec:
       - name: tls-certs
         secret:
           secretName: keycloak-core-internal-tls
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: keycloak-core
-  namespace: keycloak
-  annotations:
-    external-dns.alpha.kubernetes.io/hostname: keycloak.capi-core.homelab.danmanners.com
-  labels:
-    app: keycloak
-spec:
-  ports:
-  - name: http
-    port: 80
-    targetPort: 8080
-    protocol: TCP
-  - name: https
-    port: 443
-    targetPort: 8443
-    protocol: TCP
-  selector:
-    app: keycloak
-  type: LoadBalancer
 
 # ---
 # apiVersion: gateway.networking.k8s.io/v1
