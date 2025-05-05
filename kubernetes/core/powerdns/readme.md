@@ -16,6 +16,17 @@ cat /dev/urandom | base64 | tr -dc '0-9a-zA-Z' | head -c128
 
 ## Upstream Router Domain Forwarding
 
-![image](unifi.png)
+![image](unifi-dns-settings.png)
 
 Configure your router to forward your specified domains to the BGP IP of your PowerDNS server.
+
+## Enabling Cert-Manager DNS-01 Auth with PowerDNS
+
+If you want to use Cert-Manager to generate valid Let's Encrypt certificates, you need to make sure that your PowerDNS server is reachable from the internet. If you're using a Unifi Router, you can create a Port Forwarding rule to forward the DNS requests to your PowerDNS server. In **Settings > Routing > Port Forwarding**, create a new entry:
+
+![image](unifi-dns-nat.png)
+
+- WAN Port: 53
+- Forwarding IP Address: `<BGP IP of your PowerDNS server>`
+- Forwarding Port: 53
+- Protocol: UDP

@@ -18,4 +18,4 @@ spec:
     protocol: TCP
   selector:
     app: keycloak
-  type: LoadBalancer
+  type: ClusterIP

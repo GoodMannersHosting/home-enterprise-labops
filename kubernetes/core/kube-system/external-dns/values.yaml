@@ -14,12 +14,15 @@ extraArgs:
 - --pdns-api-key=$(PDNS_API_KEY)
 interval: 30s
 logFormat: json
+logLevel: debug
 triggerLoopOnEvent: true
 policy: sync
 sources:
-- ingress
 - service
-- istio-gateway
+- gateway-httproute
+- gateway-tlsroute
+- gateway-tcproute
+- gateway-udproute
 txtOwnerId: capi-core
 txtPrefix: k8s.capi-core.
 domainFilters:
