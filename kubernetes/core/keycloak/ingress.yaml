@@ -1,49 +1,65 @@
-apiVersion: networking.istio.io/v1beta1
+apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: keycloak-gateway
+  name: core-services
   namespace: keycloak
-  annotations:
-    external-dns.alpha.kubernetes.io/hostname: keycloak.capi-core.homelab.danmanners.com
-    cert-manager.io/cluster-issuer: letsencrypt-dns01
 spec:
-  selector:
-    istio: ingressgateway
-  servers:
-  - port:
-      number: 80
-      name: http
-      protocol: HTTP
-    hosts:
-    - keycloak.capi-core.homelab.danmanners.com
+  gatewayClassName: istio
+  listeners:
+  - name: https
+    port: 443
+    protocol: HTTPS
     tls:
-      httpsRedirect: true
-  - port:
-      number: 443
-      name: https
-      protocol: HTTPS
-    hosts:
-    - keycloak.capi-core.homelab.danmanners.com
-    tls:
-      mode: SIMPLE
-      credentialName: keycloak-tls-cert
+      mode: Terminate
+      certificateRefs:
+      - name: keycloak-tls-cert
+        kind: Secret
+        group: ""
+    allowedRoutes:
+      namespaces:
+        from: All
 ---
-apiVersion: networking.istio.io/v1beta1
-kind: VirtualService
+apiVersion: gateway.networking.k8s.io/v1alpha3
+kind: BackendTLSPolicy
+metadata:
+  name: keycloak-tls-policy
+  namespace: keycloak
+spec:
+  targetRefs:
+  - name: keycloak-core
+    kind: Service
+    group: ""
+  validation:
+    hostname: keycloak-core.keycloak.svc.cluster.local
+    caCertificateRefs:
+    - kind: Secret
+      name: keycloak-core-internal-tls
+      group: ""
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
 metadata:
   name: keycloak
   namespace: keycloak
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: keycloak.capi-core.homelab.danmanners.com
 spec:
-  hosts:
+  parentRefs:
+  - name: core-services
+    namespace: keycloak
+  hostnames:
   - keycloak.capi-core.homelab.danmanners.com
-  gateways:
-  - keycloak-gateway
-  http:
-  - match:
-    - uri:
-        prefix: /
-    route:
-    - destination:
-        host: keycloak.keycloak.svc.cluster.local
-        port:
-          number: 8080
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: keycloak-core
+      kind: Service
+      group: ""
+      port: 80
+      # TCP/443 isn't working yet, don't know if it's a
+      # Gateway API issue or something I'm doing wrong.
+      # E2E Encryption is the goal, but for now...
+      # ¯\_(ツ)_/¯

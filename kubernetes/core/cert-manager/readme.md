@@ -24,3 +24,15 @@ cert-manager-webhook-pdns cert-manager-webhook-pdns/cert-manager-webhook-pdns \
 --namespace cert-manager \
 --values kubernetes/core/cert-manager/values.cert-manager-webhook-pdns.yaml
 ```
+
+## Troubleshooting with PowerDNS
+
+```bash
+# Get the PowerDNS API Key
+export powerdns_api_key=$(kubectl get secrets -n powerdns as-secrets -ojson | jq -r '.data."api-key"|@base64d')
+# Set the PowerDNS Zone
+export zone="example.com"
+curl -sH "X-API-Key: ${powerdns_api_key}" \
+"http://172.31.0.16:8081/api/v1/servers/localhost/zones/${zone}" | \
+jq -r '.rrsets[] | select(.name|startswith("whatever_hostname_goes_here"))'
+```
