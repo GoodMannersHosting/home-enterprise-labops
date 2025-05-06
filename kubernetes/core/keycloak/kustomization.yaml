@@ -4,6 +4,8 @@ kind: Kustomization
 resources:
 - cert.yaml
 - deployment.yaml
-- ingress.yaml
+- gateway.yaml
+- httproute.yaml
 - namespace.yaml
 - service.yaml
+- tls-policy.yaml
