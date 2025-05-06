@@ -1,0 +1,34 @@
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: core-services
+  namespace: keycloak
+spec:
+  gatewayClassName: istio
+  backendTLS:
+    clientCertificateRef:
+      name: keycloak-core-internal-tls
+      kind: Secret
+      group: ""
+  listeners:
+  - name: http
+    protocol: HTTP
+    port: 80
+    hostname: "*.capi-core.homelab.danmanners.com"
+    allowedRoutes:
+      namespaces:
+        from: All
+  - name: https
+    port: 443
+    protocol: HTTPS
+    hostname: "*.capi-core.homelab.danmanners.com"
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - name: keycloak-tls-cert
+        kind: Secret
+        group: ""
+    allowedRoutes:
+      namespaces:
+        from: All
