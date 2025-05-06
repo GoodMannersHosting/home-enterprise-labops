@@ -10,8 +10,15 @@ spec:
     kind: Service
     group: ""
     sectionName: https
+  - name: core-services
+    kind: Gateway
+    group: ""
+    sectionName: https
   validation:
     hostname: keycloak-core.keycloak.svc.cluster.local
+    subjectAltNames:
+    - hostname: keycloak-core.keycloak.svc.cluster.local
+      type: Hostname
     caCertificateRefs:
     - name: keycloak-core-internal-tls
       kind: Secret
