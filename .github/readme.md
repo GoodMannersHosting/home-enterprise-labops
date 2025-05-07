@@ -10,13 +10,13 @@ HELO: Test Big Ideas in Small Spaces.
 
 ## Tools and Technologies
 
-| Category                                | Tools & Technologies                                                                                   |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| **Infrastructure & Cluster Management** | Talos Linux, Cluster API, Cluster Autoscaler, Rook-Ceph, Proxmox                                       |
-| **Networking & Service Mesh**           | Cilium/Hubble, Istio, Gateway API, External DNS, PowerDNS                                              |
-| **Security & Identity**                 | Cert-Manager, Keycloak, OpenBao, SOPS, age, Validating Admission Policies, Mutating Admission Webhooks |
-| **Observability & Monitoring**          | Kube Prometheus Stack, Mimir, OpenTelemetry                                                            |
-| **GitOps & Delivery**                   | ArgoCD, Helm, GoTask, Talhelper                                                                        |
-| **Data & Storage**                      | Cloud Native Postgres, Rook-Ceph, Minio                                                                |
-| **Container Registry**                  | Harbor                                                                                                 |
-| **Cloud Resource Management**           | Crossplane, Vault Secrets Operator                                                                     |
+| Category                                | Tools & Technologies                                                                                                                    |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **Infrastructure & Cluster Management** | ✅ Talos Linux<br>❌ Cluster API<br>❌ Cluster Autoscaler<br>✅ Rook-Ceph<br>✅ Proxmox                                                 |
+| **Networking & Service Mesh**           | ✅ Cilium/Hubble<br>✅ Istio<br>✅ Gateway API<br>✅ External DNS<br>✅ PowerDNS                                                        |
+| **Security & Identity**                 | ✅ Cert-Manager<br>✅ Keycloak<br>❌ OpenBao<br>✅ SOPS<br>✅ age<br>❌ Validating Admission Policies<br>❌ Mutating Admission Webhooks |
+| **Observability & Monitoring**          | ❌ Kube Prometheus Stack<br>❌ Mimir<br>❌ OpenTelemetry                                                                                |
+| **GitOps & Delivery**                   | ✅ ArgoCD<br>✅ Helm<br>❌ GoTask<br>✅ Talhelper                                                                                       |
+| **Data & Storage**                      | ✅ Cloud Native Postgres<br> ✅ Rook-Ceph<br>❌ Minio                                                                                   |
+| **Container Registry**                  | ❌ Harbor                                                                                                                               |
+| **Cloud Resource Management**           | ❌ Crossplane<br>❌ Vault Secrets Operator                                                                                              |
