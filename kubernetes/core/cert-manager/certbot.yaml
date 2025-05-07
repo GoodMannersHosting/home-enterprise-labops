@@ -1,3 +1,4 @@
+---
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
@@ -8,6 +9,36 @@ spec:
     email: daniel.a.manners@gmail.com
     privateKeySecretRef:
       name: letsencrypt-dns01-key
+    solvers:
+    - dns01:
+        webhook:
+          groupName: capi-core.homelab.danmanners.com
+          solverName: pdns
+          config:
+            host: http://powerdns-gui.powerdns.svc.cluster.local:8081
+            apiKeySecretRef:
+              name: as-secrets
+              namespace: powerdns
+              key: api-key
+            # This should generally be left unset, and used
+            # only if you have a proxy in front of the PowerDNS API
+            # that requires a different value.
+            serverID: localhost
+            # TTL for DNS records
+            ttl: 120 # seconds
+            # Timeout for requests to the PDNS api server
+            timeout: 30 # seconds
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-dns01-stage
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: daniel.a.manners@gmail.com
+    privateKeySecretRef:
+      name: letsencrypt-dns01-stage-key
     solvers:
     - dns01:
         webhook:

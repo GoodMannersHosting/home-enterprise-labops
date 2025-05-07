@@ -1,0 +1,82 @@
+global:
+  domain: &url argocd.capi-core.homelab.danmanners.com
+  # domain: &url argocd-stg.capi-core.homelab.danmanners.com
+
+crds:
+  install: false
+
+redis-ha:
+  enabled: true
+
+controller:
+  replicas: 1
+
+applicationSet:
+  replicas: 2
+
+configs:
+  cm:
+    admin.enabled: true
+    url: *url
+  rbac:
+    policy.default: role:readonly
+    policy.csv: |
+      p, role:org-admin, applications, create, */*, allow
+      p, role:org-admin, applications, update, */*, allow
+      p, role:org-admin, applications, delete, */*, allow
+      p, role:org-admin, applications, sync, */*, allow
+      p, role:org-admin, applications, override, */*, allow
+      p, role:org-admin, applications, action/*, */*, allow
+      p, role:org-admin, applicationsets, get, */*, allow
+      p, role:org-admin, applicationsets, create, */*, allow
+      p, role:org-admin, applicationsets, update, */*, allow
+      p, role:org-admin, applicationsets, delete, */*, allow
+      p, role:org-admin, certificates, create, *, allow
+      p, role:org-admin, certificates, update, *, allow
+      p, role:org-admin, certificates, delete, *, allow
+      p, role:org-admin, clusters, create, *, allow
+      p, role:org-admin, clusters, update, *, allow
+      p, role:org-admin, clusters, delete, *, allow
+      p, role:org-admin, repositories, create, *, allow
+      p, role:org-admin, repositories, update, *, allow
+      p, role:org-admin, repositories, delete, *, allow
+      p, role:org-admin, projects, create, *, allow
+      p, role:org-admin, projects, update, *, allow
+      p, role:org-admin, projects, delete, *, allow
+      p, role:org-admin, accounts, update, *, allow
+      p, role:org-admin, gpgkeys, create, *, allow
+      p, role:org-admin, gpgkeys, delete, *, allow
+      p, role:org-admin, exec, create, */*, allow
+      g, GoodMannersHosting:admins, role:org-admin
+
+repoServer:
+  replicas: 2
+  # Node Selector to ensure the repo server runs on only AMD64 nodes
+  nodeSelector:
+    kubernetes.io/arch: amd64
+
+server:
+  replicas: 2
+  config:
+    application.instanceLabelKey: argocd.argoproj.io/instance
+    # url: https://argocd-stg.capi-core.homelab.danmanners.com
+    url: https://argocd.capi-core.homelab.danmanners.com
+    # Why in the HECK is this here? See below!
+    # https://argo-cd.readthedocs.io/en/stable/faq/#why-is-my-application-still-outofsync-immediately-after-a-successful-sync
+    # https://github.com/argoproj/argo-cd/blob/v3.0.0/docs/operator-manual/argocd-cm.yaml#L278
+    # Thanks a ton to @onedr0p, @toboshii, and @xUnholy for the help in figuring this out!
+  certificate:
+    enabled: true
+    secretName: argocd-tls-cert
+    duration: 1128h # 47 days
+    renewBefore: 168h # 7 days
+    commonName: *url
+    dnsNames:
+    - *url
+    issuer:
+      kind: ClusterIssuer
+      # name: letsencrypt-dns01-stage
+      name: letsencrypt-dns01
+      group: cert-manager.io
+  ingress:
+    enabled: false

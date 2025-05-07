@@ -18,11 +18,11 @@ cgroup:
 cluster:
   id: 1
   name: capi-core
-devices: ens18
+devices: e+
 endpointRoutes:
   enabled: true
 envoy:
-  enabled: false
+  enabled: true
 envoyConfig:
   enabled: false
 hubble:
@@ -76,6 +76,11 @@ securityContext:
     - NET_ADMIN
     - SYS_ADMIN
     - SYS_RESOURCE
+
+gatewayAPI:
+  enabled: true
+  gatewayClass:
+    create: "true"
 
 # socketLB:
 #   hostNamespaceOnly: true
