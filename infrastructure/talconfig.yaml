@@ -50,6 +50,68 @@ nodes:
     mtu: 8000
     addresses:
     - 172.20.32.11/20
+- hostname: capi-core-cn2.homelab.danmanners.com
+  controlPlane: true
+  installDisk: /dev/sda
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions: &extensions
+          - siderolabs/binfmt-misc
+          - siderolabs/util-linux-tools
+          - siderolabs/qemu-guest-agent
+  ipAddress: 172.21.0.12
+  disableSearchDomain: true
+  nameservers: &nameservers
+    - 10.3.0.1
+    - 172.21.0.1
+  networkInterfaces:
+  - interface: ens18
+    dhcp: false
+    mtu: 1460
+    addresses:
+    - 172.21.0.12/20
+    routes:
+    - network: 0.0.0.0/0
+      gateway: &mgmt_gateway 172.21.0.1
+    vip:
+      ip: 172.21.0.10
+  - interface: ens19
+    dhcp: false
+    mtu: 8000
+    addresses:
+    - 172.20.32.12/20
+- hostname: capi-core-cn3.homelab.danmanners.com
+  controlPlane: true
+  installDisk: /dev/sda
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions: &extensions
+          - siderolabs/binfmt-misc
+          - siderolabs/util-linux-tools
+          - siderolabs/qemu-guest-agent
+  ipAddress: 172.21.0.13
+  disableSearchDomain: true
+  nameservers: &nameservers
+    - 10.3.0.1
+    - 172.21.0.1
+  networkInterfaces:
+  - interface: ens18
+    dhcp: false
+    mtu: 1460
+    addresses:
+    - 172.21.0.13/20
+    routes:
+    - network: 0.0.0.0/0
+      gateway: &mgmt_gateway 172.21.0.1
+    vip:
+      ip: 172.21.0.10
+  - interface: ens19
+    dhcp: false
+    mtu: 8000
+    addresses:
+    - 172.20.32.13/20
 # Worker Nodes
 - hostname: capi-core-wn1.homelab.danmanners.com
   controlPlane: false
@@ -103,6 +165,32 @@ nodes:
     mtu: 8000
     addresses:
     - 172.20.32.15/20
+- hostname: capi-core-wn3.homelab.danmanners.com
+  controlPlane: false
+  installDisk: /dev/sda
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions: *extensions
+  ipAddress: 172.21.0.16
+  certSANs:
+  - capi-core-wn3.homelab.danmanners.com
+  - 172.21.0.16
+  nameservers: *nameservers
+  networkInterfaces:
+  - interface: ens18
+    dhcp: false
+    mtu: 1460
+    addresses:
+    - 172.21.0.16/20
+    routes:
+    - network: 0.0.0.0/0
+      gateway: *mgmt_gateway
+  - interface: ens19
+    dhcp: false
+    mtu: 8000
+    addresses:
+    - 172.20.32.16/20
 
 patches:
 - |-

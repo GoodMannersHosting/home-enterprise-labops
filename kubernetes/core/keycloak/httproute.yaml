@@ -22,7 +22,7 @@ spec:
     - group: ""
       kind: Service
       name: keycloak-core
-      port: 443
+      port: 80
       # TCP/443 isn't working yet, don't know if it's a
       # Gateway API issue or something I'm doing wrong.
       # E2E Encryption is the goal, but for now...
