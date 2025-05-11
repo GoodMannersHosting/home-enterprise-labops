@@ -1,0 +1,49 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istio
+  namespace: argocd
+  labels:
+    chartVersion: &istioChartVersion 1.25.1
+spec:
+  destination:
+    namespace: istio-system
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+  - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+    targetRevision: main
+    ref: values
+  - &istioHelm
+    repoURL: https://istio-release.storage.googleapis.com/charts
+    name: &ib base
+    chart: *ib
+    targetRevision: *istioChartVersion
+    helm:
+      valueFiles:
+      - $values/kubernetes/core/istio-system/istio-base.values.yaml
+  - <<: *istioHelm
+    name: &id istiod
+    chart: *id
+    helm:
+      valueFiles:
+      - $values/kubernetes/core/istio-system/istiod.values.yaml
+  - <<: *istioHelm
+    name: &cni cni
+    chart: *cni
+    helm:
+      valueFiles:
+      - $values/kubernetes/core/istio-system/cni.values.yaml
+  - <<: *istioHelm
+    name: &izt ztunnel
+    chart: *izt
+    helm:
+      valueFiles:
+      - $values/kubernetes/core/istio-system/ztunnel.values.yaml
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - ServerSideApply=true
