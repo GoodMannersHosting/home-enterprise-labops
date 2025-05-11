@@ -17,7 +17,18 @@ applicationSet:
 configs:
   cm:
     admin.enabled: true
-    url: *url
+    url: &fullUrl https://argocd.capi-core.homelab.danmanners.com
+    oidc.config: |
+      name: Keycloak
+      issuer: https://keycloak.capi-core.homelab.danmanners.com/realms/master
+      clientID: argocd
+      clientSecret: $argocd-oidc-secret:oidc.keycloak.clientSecret
+      requestedScopes: ["openid", "profile", "email", "groups"]
+      userNameKey: sub
+      overrideClaimMapping: true
+      claimMapping:
+        email: sub
+
   rbac:
     policy.default: role:readonly
     policy.csv: |
@@ -47,7 +58,7 @@ configs:
       p, role:org-admin, gpgkeys, create, *, allow
       p, role:org-admin, gpgkeys, delete, *, allow
       p, role:org-admin, exec, create, */*, allow
-      g, GoodMannersHosting:admins, role:org-admin
+      g, ArgoCDAdmins, role:org-admin
 
 repoServer:
   replicas: 2
@@ -60,7 +71,7 @@ server:
   config:
     application.instanceLabelKey: argocd.argoproj.io/instance
     # url: https://argocd-stg.capi-core.homelab.danmanners.com
-    url: https://argocd.capi-core.homelab.danmanners.com
+    url: *fullUrl
     # Why in the HECK is this here? See below!
     # https://argo-cd.readthedocs.io/en/stable/faq/#why-is-my-application-still-outofsync-immediately-after-a-successful-sync
     # https://github.com/argoproj/argo-cd/blob/v3.0.0/docs/operator-manual/argocd-cm.yaml#L278

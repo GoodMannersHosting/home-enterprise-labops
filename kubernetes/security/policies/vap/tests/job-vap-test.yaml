@@ -1,0 +1,25 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: escalator
+  namespace: testing
+spec:
+  template:
+    spec:
+      containers:
+      - name: ubuntu-privileged
+        image: docker.io/library/ubuntu:22.04
+        stdin: true
+        tty: true
+        command: [ "/bin/bash" ]
+        args: [ "-c", "echo 'Hello, World, I ran successfully!'" ]
+        volumeMounts:
+        - name: host-root
+          mountPath: /host-root
+      volumes:
+      - name: host-root
+        hostPath:
+          path: /
+          type: Directory
+      restartPolicy: Never
