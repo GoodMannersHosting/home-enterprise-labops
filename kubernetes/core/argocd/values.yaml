@@ -1,6 +1,5 @@
 global:
   domain: &url argocd.capi-core.homelab.danmanners.com
-  # domain: &url argocd-stg.capi-core.homelab.danmanners.com
 
 crds:
   install: false
@@ -24,10 +23,8 @@ configs:
       clientID: argocd
       clientSecret: $argocd-oidc-secret:oidc.keycloak.clientSecret
       requestedScopes: ["openid", "profile", "email", "groups"]
-      userNameKey: sub
+      userNameKey: email
       overrideClaimMapping: true
-      claimMapping:
-        email: sub
 
   rbac:
     policy.default: role:readonly
@@ -70,7 +67,6 @@ server:
   replicas: 2
   config:
     application.instanceLabelKey: argocd.argoproj.io/instance
-    # url: https://argocd-stg.capi-core.homelab.danmanners.com
     url: *fullUrl
     # Why in the HECK is this here? See below!
     # https://argo-cd.readthedocs.io/en/stable/faq/#why-is-my-application-still-outofsync-immediately-after-a-successful-sync
@@ -86,7 +82,6 @@ server:
     - *url
     issuer:
       kind: ClusterIssuer
-      # name: letsencrypt-dns01-stage
       name: letsencrypt-dns01
       group: cert-manager.io
   ingress:

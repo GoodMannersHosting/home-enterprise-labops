@@ -39,7 +39,7 @@ spec:
             memory: "64Mi"
       containers:
       - name: keycloak
-        image: quay.io/keycloak/keycloak:26.2
+        image: quay.io/keycloak/keycloak:26.2.4
         args:
         - start
         - --http-port=8080
