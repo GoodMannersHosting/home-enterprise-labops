@@ -1,0 +1,41 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: rook-ceph
+  namespace: argocd
+  labels:
+    chartVersion: &v v1.16.6
+spec:
+  destination:
+    namespace: rook-ceph
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+  - repoURL: &repoUrl https://github.com/GoodMannersHosting/home-enterprise-labops.git
+    targetRevision: main
+    path: kubernetes/core/rook-ceph
+  - repoURL: *repoUrl
+    targetRevision: main
+    ref: values
+  - repoURL: &chartURL https://charts.rook.io/release
+    chart: &rcc rook-ceph-cluster
+    name: *rcc
+    targetRevision: *v
+    helm:
+      valueFiles:
+      - $values/kubernetes/core/rook-ceph/cluster.values.yaml
+  - repoURL: *chartURL
+    chart: &rc rook-ceph
+    name: *rc
+    targetRevision: *v
+    helm:
+      valueFiles:
+      - $values/kubernetes/core/rook-ceph/values.yaml
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - ServerSideApply=true
+    - CreateNamespace=true
