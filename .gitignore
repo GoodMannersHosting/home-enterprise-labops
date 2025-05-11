@@ -1,4 +1,9 @@
+# Files to ignore in the repository
 *.pem
 *.key
 age.txt
 *.log
+.DS_Store
+*.swp
+
+*.venv/
