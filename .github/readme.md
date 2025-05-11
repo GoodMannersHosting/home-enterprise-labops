@@ -24,13 +24,15 @@ HELO: Test Big Ideas in Small Spaces.
 
 ## Development
 
-Make sure you have the following tools installed:
+The only tools you need to have in order to get started are:
 
-- [Python 3.13](https://www.python.org/downloads/) - `brew install python@3.13`
-- [Trufflehog](https://github.com/trufflesecurity/trufflehog) - `brew install trufflehog`
-- [uv](https://github.com/astral-sh/uv) - `brew install uv`
+- Homebrew (on MacOS) - [Homebrew](https://brew.sh/)
+- go-task (on MacOS) - `brew install go-task`
 
-Set up your environment:
+> [!TIP]
+> Other tools will be installed automatically when you run the `task` command.
+
+### Set up your environment
 
 ```bash
 # Clone the repository
