@@ -1,0 +1,29 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/yamllint.json
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: deny-root-hostmount-apps
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    # Workload resources
+    - &apps
+      apiGroups: [ "apps" ]
+      apiVersions: &v1 [ "v1" ]
+      operations: &ops [ "CREATE", "UPDATE" ]
+      resources: [ "deployments" ]
+    - <<: *apps
+      resources: [ "replicasets" ]
+    - <<: *apps
+      resources: [ "statefulsets" ]
+    - <<: *apps
+      resources: [ "daemonsets" ]
+  validations:
+  - message: "Workloads cannot mount the root of the host filesystem."
+    reason: "Forbidden"
+    expression: |-
+      object.kind in [ 'Deployment', 'ReplicaSet', 'StatefulSet', 'DaemonSet' ] ? (
+        !has(object.spec.template.spec.volumes) || object.spec.template.spec.volumes.all(volume, !has(volume.hostPath) ? true : volume.hostPath.path != "/")
+      ) : true

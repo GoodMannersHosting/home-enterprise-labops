@@ -1,0 +1,22 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/yamllint.json
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: deny-root-hostmount-jobs
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    # Job resources
+    - apiGroups: [ "batch" ]
+      apiVersions: [ "v1" ]
+      operations: [ "CREATE", "UPDATE" ]
+      resources: [ "jobs" ]
+  validations:
+  - message: "Batch jobs cannot mount the root of the host filesystem."
+    reason: "Forbidden"
+    expression: |-
+      object.kind == 'Job' ? (
+        !has(object.spec.template.spec.volumes) || object.spec.template.spec.volumes.all(volume, !has(volume.hostPath) ? true : volume.hostPath.path != "/")
+      ) : true
