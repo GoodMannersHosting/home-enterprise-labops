@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cilium
+  namespace: argocd
+spec:
+  destination:
+    namespace: kube-system
+  project: default
+  sources:
+  - repoURL: &url https://github.com/GoodMannersHosting/home-enterprise-labops.git
+    targetRevision: main
+    path: kubernetes/core/kube-system/cilium/bgp
+  - repoURL: *url
+    targetRevision: main
+    ref: values
+  - repoURL: https://helm.cilium.io/
+    chart: cilium
+    targetRevision: 1.17.2
+    helm:
+      valueFiles:
+      - $values/kubernetes/core/kube-system/cilium/values.yaml

@@ -23,6 +23,7 @@ server:
   updateStrategyType: "OnDelete"
   logLevel: ""
   logFormat: ""
+  setHostnameAsFQDN: true
   resources: {}
 
   # Ingress allows ingress services to be created to allow external access

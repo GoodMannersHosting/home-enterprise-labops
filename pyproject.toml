@@ -4,4 +4,6 @@ version = "0.1.0"
 description = "HELO: Test Big Ideas in Small Spaces."
 readme = ".github/readme.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "pre-commit>=4.2.0",
+]
