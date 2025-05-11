@@ -5,8 +5,28 @@ metadata:
   name: istio
   namespace: argocd
   labels:
-    chartVersion: &istioChartVersion 1.25.1
+    chartVersion: &istioChartVersion 1.26.0
 spec:
+  # We need the ignore differences to prevent ArgoCD from trying to
+  # update the failurePolicy to Ignore. This is a known issue with Istio
+  # and ArgoCD. See https://github.com/istio/istio/issues/52785.
+  ignoreDifferences:
+  - &istioIgnoreAdmissionWebhooks
+    group: admissionregistration.k8s.io
+    kind: ValidatingWebhookConfiguration
+    name: istiod-default-validator
+    jsonPointers:
+    - /webhooks/0/failurePolicy
+  - <<: *istioIgnoreAdmissionWebhooks
+    name: istio-validator-istio-system
+  - group: apps
+    kind: DaemonSet
+    name: istio-cni-node
+    # jsonPointers:
+    # - /spec/template/spec/containers/0/env/5/valueFrom/resourceFieldRef/divisor
+    # - /spec/template/spec/containers/0/env/6/valueFrom/resourceFieldRef/divisor
+    jqPathExpressions:
+    - .spec.template.spec.containers[].env[].valueFrom.resourceFieldRef.divisor
   destination:
     namespace: istio-system
     server: https://kubernetes.default.svc

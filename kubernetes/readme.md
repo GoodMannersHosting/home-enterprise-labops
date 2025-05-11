@@ -35,7 +35,7 @@ helm upgrade --install coredns coredns/coredns \
 
 ```bash
 # Set the Istio Version
-ISTIO_VERSION=1.25.1
+ISTIO_VERSION=1.26.0
 # Add the Istio Helm repository and update
 helm repo add istio https://istio-release.storage.googleapis.com/charts
 helm repo update
