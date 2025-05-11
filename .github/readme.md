@@ -37,8 +37,9 @@ Set up your environment:
 git clone https://github.com/GoodMannersHosting/home-enterprise-labops.git
 cd home-enterprise-labops
 
-# Create a virtual environment
-uv sync
-# Install the pre-commit hooks
-pre-commit install
+# On MacOS, make sure you have go-task installed
+brew install go-task
+
+# Initalize the environment
+task
 ```
