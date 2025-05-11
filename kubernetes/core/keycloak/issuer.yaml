@@ -1,0 +1,9 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: keycloak-internal-ca-issuer
+  namespace: keycloak
+spec:
+  ca:
+    secretName: keycloak-internal-ca-secret

@@ -6,7 +6,6 @@ metadata:
   namespace: keycloak
 spec:
   gatewayClassName: cilium
-  # gatewayClassName: istio
   backendTLS:
     clientCertificateRef:
       name: keycloak-core-internal-tls
