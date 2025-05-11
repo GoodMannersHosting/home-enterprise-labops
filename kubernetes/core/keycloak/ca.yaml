@@ -1,3 +1,4 @@
+---
 # https://cert-manager.io/docs/configuration/selfsigned/#bootstrapping-ca-issuers
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -20,12 +21,3 @@ spec:
     name: selfsigned-issuer
     kind: ClusterIssuer
     group: cert-manager.io
----
-apiVersion: cert-manager.io/v1
-kind: Issuer
-metadata:
-  name: keycloak-internal-ca-issuer
-  namespace: keycloak
-spec:
-  ca:
-    secretName: keycloak-internal-ca-secret

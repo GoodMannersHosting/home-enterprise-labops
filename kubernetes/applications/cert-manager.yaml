@@ -1,0 +1,40 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager
+  namespace: argocd
+  labels:
+    mainChartVersion: &mainChartVersion v1.17.2
+    webhookChartVersion: &webhookChartVersion 3.2.3
+spec:
+  destination:
+    namespace: cert-manager
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+  - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+    targetRevision: main
+    ref: values
+  - repoURL: https://charts.jetstack.io
+    chart: cert-manager
+    name: cert-manager
+    targetRevision: *mainChartVersion
+    helm:
+      skipCrds: true
+      valueFiles:
+      - $values/kubernetes/core/cert-manager/values.cert-manager.yaml
+  - repoURL: https://zachomedia.github.io/cert-manager-webhook-pdns
+    chart: cert-manager-webhook-pdns
+    name: cert-manager-webhook-pdns
+    targetRevision: *webhookChartVersion
+    helm:
+      valueFiles:
+      - $values/kubernetes/core/cert-manager/values.cert-manager-webhook-pdns.yaml
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - ServerSideApply=true
+    - CreateNamespace=true
