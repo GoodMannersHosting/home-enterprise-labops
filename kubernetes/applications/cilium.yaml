@@ -6,6 +6,7 @@ metadata:
 spec:
   destination:
     namespace: kube-system
+    server: https://kubernetes.default.svc
   project: default
   sources:
   - repoURL: &url https://github.com/GoodMannersHosting/home-enterprise-labops.git
@@ -20,3 +21,9 @@ spec:
     helm:
       valueFiles:
       - $values/kubernetes/core/kube-system/cilium/values.yaml
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - ServerSideApply=true

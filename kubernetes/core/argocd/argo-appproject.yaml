@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  description: App of Apps
+  clusterResourceWhitelist:
+  - group: "argoproj.io"
+    kind: "appprojects"
+  destinations:
+  - namespace: argocd
+    server: https://kubernetes.default.svc
+  sourceRepos:
+  - "https://github.com/GoodMannersHosting/home-enterprise-labops.git"

@@ -7,6 +7,8 @@ resources:
 - ingress-stg.yaml
 - oidc-secret.yaml
 - helo-repo.yaml
+- app-of-apps.yaml
+- argo-appproject.yaml
 - https://raw.githubusercontent.com/argoproj/argo-cd/refs/tags/v3.0.0/manifests/crds/application-crd.yaml
 - https://raw.githubusercontent.com/argoproj/argo-cd/refs/tags/v3.0.0/manifests/crds/applicationset-crd.yaml
 - https://raw.githubusercontent.com/argoproj/argo-cd/refs/tags/v3.0.0/manifests/crds/appproject-crd.yaml
