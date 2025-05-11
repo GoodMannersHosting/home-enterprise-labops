@@ -4,6 +4,8 @@ kind: Application
 metadata:
   name: coredns
   namespace: argocd
+  labels:
+    chartVersion: &chartVersion 1.39.2
 spec:
   destination:
     namespace: kube-system
@@ -15,7 +17,7 @@ spec:
     ref: values
   - repoURL: https://coredns.github.io/helm
     chart: coredns
-    targetRevision: 1.39.2
+    targetRevision: *chartVersion
     helm:
       valueFiles:
       - $values/kubernetes/core/kube-system/coredns/values.yaml

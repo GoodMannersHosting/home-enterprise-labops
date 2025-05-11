@@ -5,7 +5,7 @@ metadata:
   name: metrics-server
   namespace: argocd
   labels:
-    chartVersion: &version 3.12.2
+    chartVersion: &chartVersion 3.12.2
 spec:
   destination:
     namespace: kube-system
@@ -17,7 +17,7 @@ spec:
     ref: values
   - repoURL: https://kubernetes-sigs.github.io/metrics-server
     chart: metrics-server
-    targetRevision: *version
+    targetRevision: *chartVersion
     helm:
       valueFiles:
       - $values/kubernetes/core/kube-system/metrics-server/values.yaml
