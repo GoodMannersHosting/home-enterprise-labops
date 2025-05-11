@@ -22,9 +22,6 @@ spec:
   - group: apps
     kind: DaemonSet
     name: istio-cni-node
-    # jsonPointers:
-    # - /spec/template/spec/containers/0/env/5/valueFrom/resourceFieldRef/divisor
-    # - /spec/template/spec/containers/0/env/6/valueFrom/resourceFieldRef/divisor
     jqPathExpressions:
     - .spec.template.spec.containers[].env[].valueFrom.resourceFieldRef.divisor
   destination:
