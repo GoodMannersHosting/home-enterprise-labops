@@ -5,7 +5,7 @@ metadata:
   name: cnpg
   namespace: argocd
   labels:
-    chartVersion: &version 0.23.2
+    chartVersion: &chartVersion 0.23.2
 spec:
   destination:
     namespace: cnpg-system
@@ -14,7 +14,7 @@ spec:
   sources:
   - repoURL: https://cloudnative-pg.github.io/charts
     chart: cloudnative-pg
-    targetRevision: *version
+    targetRevision: *chartVersion
   syncPolicy:
     automated:
       prune: true

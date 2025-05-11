@@ -5,7 +5,7 @@ metadata:
   name: istio-ingress
   namespace: argocd
   labels:
-    chartVersion: &istioChartVersion 1.26.0
+    chartVersion: &chartVersion 1.26.0
 spec:
   destination:
     namespace: istio-system
@@ -15,7 +15,7 @@ spec:
   - repoURL: https://istio-release.storage.googleapis.com/charts
     name: &gw gateway
     chart: *gw
-    targetRevision: *istioChartVersion
+    targetRevision: *chartVersion
   syncPolicy:
     automated:
       prune: true
