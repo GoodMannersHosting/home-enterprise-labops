@@ -7,9 +7,9 @@ metadata:
   labels:
     chartVersion: &istioChartVersion 1.26.0
 spec:
-  # We need the ignore differences to prevent ArgoCD from trying to
-  # update the failurePolicy to Ignore. This is a known issue with Istio
-  # and ArgoCD. See https://github.com/istio/istio/issues/52785.
+  # Need the ignore differences to prevent ArgoCD from trying to update
+  # the failurePolicy to Ignore. This is a known issue with Istio and
+  # ArgoCD. See https://github.com/istio/istio/issues/52785.
   ignoreDifferences:
   - &istioIgnoreAdmissionWebhooks
     group: admissionregistration.k8s.io
@@ -19,6 +19,9 @@ spec:
     - /webhooks/0/failurePolicy
   - <<: *istioIgnoreAdmissionWebhooks
     name: istio-validator-istio-system
+  # Need to ignore the 'divisor' field in the resourceFieldRef for the
+  # istio-cni-node DaemonSet. This is a known issue with Istio and
+  # ArgoCD. See https://github.com/istio/istio/issues/53001.
   - group: apps
     kind: DaemonSet
     name: istio-cni-node
