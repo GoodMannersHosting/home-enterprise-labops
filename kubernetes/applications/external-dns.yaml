@@ -1,0 +1,29 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: external-dns
+  namespace: argocd
+  labels:
+    chartVersion: &chartVersion 1.16.1
+spec:
+  destination:
+    namespace: kube-system
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+  - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+    targetRevision: main
+    ref: values
+  - repoURL: https://kubernetes-sigs.github.io/external-dns/
+    chart: external-dns
+    targetRevision: *chartVersion
+    helm:
+      valueFiles:
+      - $values/kubernetes/core/kube-system/external-dns/values.yaml
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - ServerSideApply=true
