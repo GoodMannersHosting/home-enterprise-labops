@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: cilium
+  name: coredns
   namespace: argocd
 spec:
   destination:
@@ -10,18 +10,15 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   sources:
-  - repoURL: &url https://github.com/GoodMannersHosting/home-enterprise-labops.git
-    targetRevision: main
-    path: kubernetes/core/kube-system/cilium/bgp
-  - repoURL: *url
+  - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
     targetRevision: main
     ref: values
-  - repoURL: https://helm.cilium.io/
-    chart: cilium
-    targetRevision: 1.17.2
+  - repoURL: https://coredns.github.io/helm
+    chart: coredns
+    targetRevision: 1.39.2
     helm:
       valueFiles:
-      - $values/kubernetes/core/kube-system/cilium/values.yaml
+      - $values/kubernetes/core/kube-system/coredns/values.yaml
   syncPolicy:
     automated:
       prune: true
