@@ -1,0 +1,22 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/yamllint.json
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: deny-root-hostmount-cronjobs
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    # Cronjob resources
+    - apiGroups: [ "batch" ]
+      apiVersions: [ "v1" ]
+      operations: [ "CREATE", "UPDATE" ]
+      resources: [ "cronjobs" ]
+  validations:
+  - message: "Batch jobs cannot mount the root of the host filesystem."
+    reason: "Forbidden"
+    expression: |-
+      object.kind == 'CronJob' ? (
+        !has(object.spec.jobTemplate.spec.template.spec.volumes) || object.spec.jobTemplate.spec.template.spec.volumes.all(volume, !has(volume.hostPath) ? true : volume.hostPath.path != "/")
+      ) : true
