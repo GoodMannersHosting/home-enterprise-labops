@@ -1,0 +1,18 @@
+core:
+  cluster-api:
+    version: v1.9.6
+bootstrap:
+  talos:
+    version: v0.6.9
+controlPlane:
+  talos:
+    version: v0.5.10
+infrastructure:
+  proxmox:
+    version: v0.7.0
+addon:
+  helm:
+    version: v3.1.0
+ipam:
+  in-cluster:
+    version: v1.0.1
