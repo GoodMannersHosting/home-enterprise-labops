@@ -8,3 +8,4 @@ resources:
 - deny-root-hostmount-cronjobs.yaml
 - deny-root-hostmount-jobs.yaml
 - deny-root-hostmount-pods.yaml
+- restrict-namespace-delete.yaml

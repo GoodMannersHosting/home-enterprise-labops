@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=https://json.schemastore.org/yamllint.json
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: restrict-namespace-delete
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    # Namespace resources
+    - apiGroups: [ "" ]
+      apiVersions: [ "v1" ]
+      operations: [ "DELETE" ]
+      resources: [ "namespaces" ]
+  validations:
+  - message: "Namespace deletion is restricted. Remove the security label to delete."
+    reason: "Forbidden"
+    expression: |
+      oldObject.kind == 'Namespace'
