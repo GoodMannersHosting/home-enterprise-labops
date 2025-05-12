@@ -1,21 +1,21 @@
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: cluster-api
-  namespace: argocd
-spec:
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: ""
-  project: default
-  sources:
-  - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
-    targetRevision: main
-    path: kubernetes/cluster-api
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-    - ServerSideApply=true
+# ---
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: cluster-api
+#   namespace: argocd
+# spec:
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: ""
+#   project: default
+#   sources:
+#   - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+#     targetRevision: main
+#     path: kubernetes/cluster-api
+#   syncPolicy:
+#     automated:
+#       prune: true
+#       selfHeal: true
+#     syncOptions:
+#     - ServerSideApply=true
