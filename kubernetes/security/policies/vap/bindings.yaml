@@ -54,3 +54,17 @@ spec:
     namespaceSelector:
       matchLabels:
         security: restricted
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/refs/heads/master/v1.32.3/validatingadmissionpolicybinding.json
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: restrict-namespace-delete
+spec:
+  policyName: restrict-namespace-delete
+  validationActions:
+  - Deny
+  matchResources:
+    namespaceSelector:
+      matchLabels:
+        security: restricted
