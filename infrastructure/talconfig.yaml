@@ -1,6 +1,6 @@
 clusterName: capi-core
-talosVersion: v1.9.5
-kubernetesVersion: 1.32.2
+talosVersion: v1.10.1
+kubernetesVersion: 1.33.0
 endpoint: "https://k8s-capi-core.homelab.danmanners.com:6443"
 cniConfig:
   name: none
