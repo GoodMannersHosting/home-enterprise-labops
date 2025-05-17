@@ -9,8 +9,7 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   sources:
-  - &source
-    repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+  - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
     targetRevision: main
     path: kubernetes/security/policies/vap
   syncPolicy:

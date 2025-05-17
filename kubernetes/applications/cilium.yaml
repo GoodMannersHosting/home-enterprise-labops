@@ -4,6 +4,9 @@ kind: Application
 metadata:
   name: cilium
   namespace: argocd
+  labels:
+    # renovate: datasource=helm chartLocation=https://helm.cilium.io/ chart=cilium
+    chartVersion: &chartVersion 1.17.2
 spec:
   destination:
     namespace: kube-system
@@ -18,7 +21,7 @@ spec:
     ref: values
   - repoURL: https://helm.cilium.io/
     chart: cilium
-    targetRevision: 1.17.2
+    targetRevision: *chartVersion
     helm:
       valueFiles:
       - $values/kubernetes/core/kube-system/cilium/values.yaml

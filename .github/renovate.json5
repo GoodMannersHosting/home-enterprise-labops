@@ -1,0 +1,35 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: ["config:base"],
+  dependencyDashboard: true,
+  packageRules: [
+    {
+      matchPackageNames: ["kustomize"],
+      enabled: false,
+    },
+  ],
+  regexManagers: [
+    {
+      fileMatch: ["kustomization.ya??ml$"],
+      matchStrings: [
+        "datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\n*[^/]+://[^/]+/[^/]+/[^/]+/(?<currentValue>[^/]+)/",
+      ],
+      datasourceTemplate: "github-releases",
+    },
+    {
+      fileMatch: ["(\\S+.ya??ml$)"],
+      matchStrings: [
+        "datasource=(?<datasource>\\S+) chartLocation=(?<depName>\\S+) chart=(?<packageName>\\S+)\n*[^/]+:\\s\\S+\\s(?<currentValue>[^/]+)\n",
+      ],
+      datasourceTemplate: "helm",
+    },
+    {
+      customType: "regex",
+      datasourceTemplate: "docker",
+      managerFilePatterns: ["/(^|/)Chart\\.yaml$/"],
+      matchStrings: [
+        '#\\s?renovate: image=(?<depName>.*?)\\s?appVersion:\\s?\\"?(?<currentValue>[\\w+\\.\\-]*)"',
+      ],
+    },
+  ],
+}

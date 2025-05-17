@@ -5,6 +5,7 @@ metadata:
   name: istio
   namespace: argocd
   labels:
+    # renovate: datasource=helm chartLocation=https://istio-release.storage.googleapis.com/charts chart=base
     chartVersion: &chartVersion 1.26.0
 spec:
   # Need the ignore differences to prevent ArgoCD from trying to update

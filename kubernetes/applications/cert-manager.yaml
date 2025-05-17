@@ -5,7 +5,9 @@ metadata:
   name: cert-manager
   namespace: argocd
   labels:
+    # renovate: datasource=helm chartLocation=https://charts.jetstack.io chart=cert-manager
     mainChartVersion: &mainChartVersion v1.17.2
+    # renovate: datasource=helm chartLocation=https://zachomedia.github.io/cert-manager-webhook-pdns cert-manager-webhook-pdns
     webhookChartVersion: &webhookChartVersion 3.2.3
 spec:
   destination:

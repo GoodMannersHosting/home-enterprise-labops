@@ -5,6 +5,7 @@ metadata:
   name: coredns
   namespace: argocd
   labels:
+    # renovate: datasource=helm chartLocation=https://coredns.github.io/helm chart=coredns
     chartVersion: &chartVersion 1.39.2
 spec:
   destination:

@@ -5,6 +5,7 @@ metadata:
   name: cnpg
   namespace: argocd
   labels:
+    # renovate: datasource=helm chartLocation=https://cloudnative-pg.github.io/charts chart=cloudnative-pg
     chartVersion: &chartVersion 0.23.2
 spec:
   destination:

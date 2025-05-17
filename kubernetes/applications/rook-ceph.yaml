@@ -5,6 +5,7 @@ metadata:
   name: rook-ceph
   namespace: argocd
   labels:
+    # renovate: datasource=helm chartLocation=https://charts.rook.io/release chart=rook-ceph
     chartVersion: &chartVersion v1.16.6
 spec:
   destination:
