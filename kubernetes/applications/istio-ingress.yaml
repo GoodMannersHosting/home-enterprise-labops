@@ -5,6 +5,7 @@ metadata:
   name: istio-ingress
   namespace: argocd
   labels:
+    # renovate: datasource=helm chartLocation=https://istio-release.storage.googleapis.com/charts chart=gateway
     chartVersion: &chartVersion 1.26.0
 spec:
   destination:
