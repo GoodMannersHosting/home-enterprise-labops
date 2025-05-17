@@ -6,7 +6,7 @@ metadata:
   namespace: argocd
   labels:
     # renovate: datasource=helm chartLocation=https://emberstack.github.io/helm-charts chart=reflector
-    chartVersion: &chartVersion 9.0.344
+    chartVersion: &chartVersion 9.1.7
 spec:
   destination:
     namespace: kube-system
