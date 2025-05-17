@@ -191,6 +191,58 @@ nodes:
     mtu: 8000
     addresses:
     - 172.20.32.16/20
+- hostname: capi-core-wn4.homelab.danmanners.com
+  controlPlane: false
+  installDisk: /dev/sda
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions: *extensions
+  ipAddress: 172.21.0.17
+  certSANs:
+  - capi-core-wn4.homelab.danmanners.com
+  - 172.21.0.17
+  nameservers: *nameservers
+  networkInterfaces:
+  - interface: eth0
+    dhcp: false
+    mtu: 1460
+    addresses:
+    - 172.21.0.17/20
+    routes:
+    - network: 0.0.0.0/0
+      gateway: *mgmt_gateway
+  - interface: eth1
+    dhcp: false
+    mtu: 8000
+    addresses:
+    - 172.20.32.17/20
+- hostname: capi-core-wn5.homelab.danmanners.com
+  controlPlane: false
+  installDisk: /dev/sda
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions: *extensions
+  ipAddress: 172.21.0.18
+  certSANs:
+  - capi-core-wn5.homelab.danmanners.com
+  - 172.21.0.18
+  nameservers: *nameservers
+  networkInterfaces:
+  - interface: eth0
+    dhcp: false
+    mtu: 1460
+    addresses:
+    - 172.21.0.18/20
+    routes:
+    - network: 0.0.0.0/0
+      gateway: *mgmt_gateway
+  - interface: eth1
+    dhcp: false
+    mtu: 8000
+    addresses:
+    - 172.20.32.18/20
 
 patches:
 - |-
