@@ -20,13 +20,6 @@
       ],
       datasourceTemplate: "github-releases",
     },
-    // {
-    //   fileMatch: ["(\\S+.ya??ml$)"],
-    //   matchStrings: [
-    //     "datasource=(?<datasource>\\S+) chartLocation=(?<depName>\\S+) chart=(?<packageName>\\S+)\n*[^/]+:\\s\\S+\\s(?<currentValue>[^\\r\\n]+)\\r?\\n",
-    //   ],
-    //   datasourceTemplate: "helm",
-    // },
     {
       customType: "regex",
       datasourceTemplate: "docker",
