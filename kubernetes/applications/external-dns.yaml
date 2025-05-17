@@ -5,6 +5,7 @@ metadata:
   name: external-dns
   namespace: argocd
   labels:
+    # renovate: datasource=helm chartLocation=https://kubernetes-sigs.github.io/external-dns/ chart=external-dns
     chartVersion: &chartVersion 1.16.1
 spec:
   destination:

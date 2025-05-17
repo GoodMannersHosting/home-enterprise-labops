@@ -5,6 +5,7 @@ metadata:
   name: metrics-server
   namespace: argocd
   labels:
+    # renovate: datasource=helm chartLocation=https://kubernetes-sigs.github.io/metrics-server chart=metrics-server
     chartVersion: &chartVersion 3.12.2
 spec:
   destination:
