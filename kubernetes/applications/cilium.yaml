@@ -6,7 +6,7 @@ metadata:
   namespace: argocd
   labels:
     # renovate: datasource=helm chartLocation=https://helm.cilium.io/ chart=cilium
-    chartVersion: &chartVersion 1.17.2
+    chartVersion: &chartVersion 1.17.4
 spec:
   destination:
     namespace: kube-system
