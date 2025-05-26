@@ -1,0 +1,33 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nvdp
+  namespace: argocd
+  labels:
+    chartVersion: &chartVersion 0.17.1
+spec:
+  destination:
+    namespace: nvidia-device-plugin
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+  - repoURL: https://nvidia.github.io/k8s-device-plugin
+    chart: nvidia-device-plugin
+    targetRevision: *chartVersion
+    helm:
+      valuesObject:
+        runtimeClassName: nvidia
+        gfd:
+          enabled: true
+  - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+    targetRevision: main
+    path: kubernetes/core/runtimes
+    directory:
+      recurse: true
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - ServerSideApply=true

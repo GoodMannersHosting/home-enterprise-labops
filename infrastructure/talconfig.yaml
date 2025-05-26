@@ -243,6 +243,54 @@ nodes:
     mtu: 8000
     addresses:
     - 172.20.32.18/20
+- hostname: capi-core-wn99.homelab.danmanners.com
+  controlPlane: false
+  installDisk: /dev/sda
+  # During Installation the kernel modules MUST NOT be loaded and
+  # the below SHOULD BE COMMENTED OUT. Once the system is installed,
+  # the kernel modules should be uncommented, the config re-generated,
+  # and the system rebooted. This is to avoid issues where the NVIDIA
+  # kernel modules cannot be loaded during the installation process,
+  # which makes sure the Talos installer fails.
+  kernelModules:
+  - name: nvidia
+  - name: nvidia_uvm
+  - name: nvidia_drm
+  - name: nvidia_modeset
+  patches:
+  - |-
+    - op: add
+      path: /machine/sysctls
+      value:
+        net.core.bpf_jit_harden: 1
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions:
+        - siderolabs/binfmt-misc
+        - siderolabs/nonfree-kmod-nvidia-production
+        - siderolabs/nvidia-container-toolkit-production
+        - siderolabs/qemu-guest-agent
+        - siderolabs/util-linux-tools
+  ipAddress: 172.21.0.99
+  certSANs:
+  - capi-core-wn99.homelab.danmanners.com
+  - 172.21.0.99
+  nameservers: *nameservers
+  networkInterfaces:
+  - interface: eth0
+    dhcp: false
+    mtu: 1460
+    addresses:
+    - 172.21.0.99/20
+    routes:
+    - network: 0.0.0.0/0
+      gateway: *mgmt_gateway
+  - interface: eth1
+    dhcp: false
+    mtu: 8000
+    addresses:
+    - 172.20.32.99/20
 
 patches:
 - |-
