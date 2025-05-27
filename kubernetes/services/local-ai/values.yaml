@@ -1,0 +1,255 @@
+nameOverride: ""
+namespaceOverride: ""
+ollama:
+  enabled: true
+  fullnameOverride: "open-webui-ollama"
+  ollama:
+    gpu:
+      enabled: false
+      # type: 'nvidia'
+      # number: 1
+    models:
+      pull:
+      - deepseek-r1
+      - gemma3
+      - llama3
+      - qwen3
+      run:
+      # - llama3
+      - deepseek-r1
+      - gemma3
+  runtimeClassName: nvidia
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          # On discrete-GPU based systems NFD adds the following label where 10de is the NVIDIA PCI vendor ID
+          - key: feature.node.kubernetes.io/pci-0300_10de.present
+            operator: In
+            values:
+            - "true"
+        - matchExpressions:
+          # We allow a GPU deployment to be forced by setting the following label to "true"
+          - key: "nvidia.com/gpu.present"
+            operator: In
+            values:
+            - "true"
+  persistentVolume:
+    enabled: true
+    size: 80Gi
+    storageClass: ceph-rbd-retain
+    accessModes:
+    - ReadWriteOnce
+
+pipelines:
+  enabled: false
+
+# -- A list of Ollama API endpoints. These can be added in lieu of automatically installing the Ollama Helm chart, or in addition to it.
+ollamaUrls: []
+
+# -- Disables taking Ollama Urls from `ollamaUrls`  list
+ollamaUrlsFromExtraEnv: false
+
+# -- Value of cluster domain
+clusterDomain: cluster.local
+
+image:
+  repository: ghcr.io/open-webui/open-webui
+  tag: ""
+  pullPolicy: "IfNotPresent"
+
+serviceAccount:
+  enable: true
+
+copyAppData:
+  resources: {}
+
+managedCertificate:
+  enabled: false
+
+ingress:
+  enabled: false
+
+persistence:
+  enabled: true
+  size: 20Gi
+  accessModes:
+  - ReadWriteOnce
+  storageClass: ceph-rbd-retain
+  provider: local
+
+# -- Service values to expose Open WebUI pods to cluster
+service:
+  type: ClusterIP
+  port: 80
+  containerPort: 8080
+
+# -- Enables the use of OpenAI APIs
+enableOpenaiApi: false
+
+# -- Env vars added to the Open WebUI deployment. Most up-to-date environment variables can be found here: https://docs.openwebui.com/getting-started/env-configuration/
+extraEnvVars:
+# -- Default API key value for Pipelines. Should be updated in a production deployment, or be changed to the required API key if not using Pipelines
+- name: OPENAI_API_KEY
+  valueFrom:
+    secretKeyRef:
+      name: openai-api-key
+      key: api-key
+
+sso:
+  # -- **Enable SSO authentication globally** must enable to use SSO authentication
+  # @section -- SSO Configuration
+  enabled: false
+  # -- Enable account creation when logging in with OAuth (distinct from regular signup)
+  # @section -- SSO Configuration
+  enableSignup: false
+  # -- Allow logging into accounts that match email from OAuth provider (considered insecure)
+  # @section -- SSO Configuration
+  mergeAccountsByEmail: false
+  # -- Enable OAuth role management through access token roles claim
+  # @section -- SSO Configuration
+  enableRoleManagement: false
+  # -- Enable OAuth group management through access token groups claim
+  # @section -- SSO Configuration
+  enableGroupManagement: false
+
+  google:
+    # -- Enable Google OAuth
+    # @section -- Google OAuth configuration
+    enabled: false
+    # -- Google OAuth client ID
+    # @section -- Google OAuth configuration
+    clientId: ""
+    # -- Google OAuth client secret (ignored if clientExistingSecret is set)
+    # @section -- Google OAuth configuration
+    clientSecret: ""
+    # -- Google OAuth client secret from existing secret
+    # @section -- Google OAuth configuration
+    clientExistingSecret: ""
+    # -- Google OAuth client secret key from existing secret
+    # @section -- Google OAuth configuration
+    clientExistingSecretKey: ""
+
+  microsoft:
+    # -- Enable Microsoft OAuth
+    # @section -- Microsoft OAuth configuration
+    enabled: false
+    # -- Microsoft OAuth client ID
+    # @section -- Microsoft OAuth configuration
+    clientId: ""
+    # -- Microsoft OAuth client secret (ignored if clientExistingSecret is set)
+    # @section -- Microsoft OAuth configuration
+    clientSecret: ""
+    # -- Microsoft OAuth client secret from existing secret
+    # @section -- Microsoft OAuth configuration
+    clientExistingSecret: ""
+    # -- Microsoft OAuth client secret key from existing secret
+    # @section -- Microsoft OAuth configuration
+    clientExistingSecretKey: ""
+    # -- Microsoft tenant ID - use 9188040d-6c67-4c5b-b112-36a304b66dad for personal accounts
+    # @section -- Microsoft OAuth configuration
+    tenantId: ""
+
+  github:
+    # -- Enable GitHub OAuth
+    # @section -- GitHub OAuth configuration
+    enabled: false
+    # -- GitHub OAuth client ID
+    # @section -- GitHub OAuth configuration
+    clientId: ""
+    # -- GitHub OAuth client secret (ignored if clientExistingSecret is set)
+    # @section -- GitHub OAuth configuration
+    clientSecret: ""
+    # -- GitHub OAuth client secret from existing secret
+    # @section -- GitHub OAuth configuration
+    clientExistingSecret: ""
+    # -- GitHub OAuth client secret key from existing secret
+    # @section -- GitHub OAuth configuration
+    clientExistingSecretKey: ""
+
+  oidc:
+    # -- Enable OIDC authentication
+    # @section -- OIDC configuration
+    enabled: false
+    # -- OIDC client ID
+    # @section -- OIDC configuration
+    clientId: ""
+    # -- OIDC client secret (ignored if clientExistingSecret is set)
+    # @section -- OIDC configuration
+    clientSecret: ""
+    # -- OICD client secret from existing secret
+    # @section -- OIDC configuration
+    clientExistingSecret: ""
+    # -- OIDC client secret key from existing secret
+    # @section -- OIDC configuration
+    clientExistingSecretKey: ""
+    # -- OIDC provider well known URL
+    # @section -- OIDC configuration
+    providerUrl: ""
+    # -- Name of the provider to show on the UI
+    # @section -- OIDC configuration
+    providerName: "SSO"
+    # -- Scopes to request (space-separated).
+    # @section -- OIDC configuration
+    scopes: "openid email profile"
+
+  roleManagement:
+    # -- The claim that contains the roles (can be nested, e.g., user.roles)
+    # @section -- Role management configuration
+    rolesClaim: "roles"
+    # -- Comma-separated list of roles allowed to log in (receive open webui role user)
+    # @section -- Role management configuration
+    allowedRoles: ""
+    # -- Comma-separated list of roles allowed to log in as admin (receive open webui role admin)
+    # @section -- Role management configuration
+    adminRoles: ""
+
+  groupManagement:
+    # -- The claim that contains the groups (can be nested, e.g., user.memberOf)
+    # @section -- SSO Configuration
+    groupsClaim: "groups"
+
+  trustedHeader:
+    # -- Enable trusted header authentication
+    # @section -- SSO trusted header authentication
+    enabled: false
+    # -- Header containing the user's email address
+    # @section -- SSO trusted header authentication
+    emailHeader: ""
+    # -- Header containing the user's name (optional, used for new user creation)
+    # @section -- SSO trusted header authentication
+    nameHeader: ""
+
+# -- Extra resources to deploy with Open WebUI
+extraResources: []
+  # - apiVersion: v1
+  #   kind: ConfigMap
+  #   metadata:
+  #     name: example-configmap
+  #   data:
+  #     example-key: example-value
+
+# -- Configure database URL, needed to work with Postgres (example: `postgresql://<user>:<password>@<service>:<port>/<database>`), leave empty to use the default sqlite database
+databaseUrl: ""
+
+# -- Postgresql configuration (see. https://artifacthub.io/packages/helm/bitnami/postgresql)
+postgresql:
+  enabled: false
+  fullnameOverride: open-webui-postgres
+  architecture: standalone
+  auth:
+    database: open-webui
+    postgresPassword: 0p3n-w3bu!
+    username: open-webui
+    password: 0p3n-w3bu!
+  primary:
+    persistence:
+      size: 1Gi
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 250m
+      limits:
+        memory: 512Mi
+        cpu: 500m

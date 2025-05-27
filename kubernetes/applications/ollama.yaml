@@ -1,0 +1,32 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ollama
+  namespace: argocd
+  labels:
+    chartVersion: &chartVersion 6.16.0
+spec:
+  destination:
+    namespace: aiml
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+  - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+    targetRevision: main
+    ref: values
+  - repoURL: https://helm.openwebui.com/
+    chart: open-webui
+    targetRevision: *chartVersion
+    helm:
+      valueFiles:
+      - $values/kubernetes/services/local-ai/values.yaml
+  - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+    targetRevision: main
+    path: kubernetes/services/local-ai
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - ServerSideApply=true
