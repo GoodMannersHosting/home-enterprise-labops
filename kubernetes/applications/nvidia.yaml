@@ -17,9 +17,31 @@ spec:
     targetRevision: *chartVersion
     helm:
       valuesObject:
+        config:
+          map:
+            default: |-
+              version: v1
+              flags:
+                migStrategy: none
+            mig-single: |-
+              version: v1
+              flags:
+                migStrategy: single
+            mig-mixed: |-
+              version: v1
+              flags:
+                migStrategy: mixed
+          # Default config name within the ConfigMap
+          default: "default"
+          # List of fallback strategies to attempt if no config is selected and no default is provided
+          fallbackStrategies: [ "named", "single" ]
         runtimeClassName: nvidia
+        nodeSelector:
+          feature.node.kubernetes.io/pci-0300_10de.present: "true"
+        # Subcharts
+        nfd: {}
         gfd:
-          enabled: true
+          enabled: false
   - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
     targetRevision: main
     path: kubernetes/core/runtimes
