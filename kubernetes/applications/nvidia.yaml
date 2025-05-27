@@ -38,7 +38,22 @@ spec:
         runtimeClassName: nvidia
         nodeSelector:
           feature.node.kubernetes.io/pci-0300_10de.present: "true"
-        # Subcharts
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+              - matchExpressions:
+                # On discrete-GPU based systems NFD adds the following label where 10de is the NVIDIA PCI vendor ID
+                - key: feature.node.kubernetes.io/pci-0300_10de.present
+                  operator: In
+                  values:
+                  - "true"
+              - matchExpressions:
+                # We allow a GPU deployment to be forced by setting the following label to "true"
+                - key: "nvidia.com/gpu.present"
+                  operator: In
+                  values:
+                  - "true"
         nfd: {}
         gfd:
           enabled: false
