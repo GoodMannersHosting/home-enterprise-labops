@@ -260,9 +260,25 @@ nodes:
   patches:
   - |-
     - op: add
-      path: /machine/sysctls
+      path: /machine/files
       value:
-        net.core.bpf_jit_harden: 1
+        - op: create
+          path: /etc/cri/conf.d/20-customization.part
+          content: |
+            [plugins."io.containerd.grpc.v1.cri"]
+              enable_unprivileged_ports = true
+              enable_unprivileged_icmp = true
+            [plugins."io.containerd.grpc.v1.cri".containerd]
+              discard_unpacked_layers = false
+            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+              discard_unpacked_layers = false
+            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia]
+              privileged_without_host_devices = false
+              runtime_engine = ""
+              runtime_root = ""
+              runtime_type = "io.containerd.runc.v2"
+            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.options]
+              BinaryName = "/usr/bin/nvidia-container-runtime"
   schematic:
     customization:
       systemExtensions:
@@ -297,6 +313,7 @@ patches:
   - op: add
     path: /machine/sysctls
     value:
+      net.core.bpf_jit_harden: 1
       vm.max_map_count: 524288
       fs.file-max: 131072
       fs.inotify.max_user_watches: 1048576
