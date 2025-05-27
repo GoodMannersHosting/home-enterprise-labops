@@ -3,3 +3,4 @@ kind: Kustomization
 
 resources:
 - cephfs-retain-sc.yaml
+- ceph-rbd-retain-sc.yaml
