@@ -10,14 +10,14 @@ ollama:
       # number: 1
     models:
       pull:
-      - deepseek-r1
-      - gemma3
+      # - deepseek-r1
+      # - gemma3
       - llama3
       - qwen3
       run:
       # - llama3
-      - deepseek-r1
-      - gemma3
+      - qwen3
+      # - gemma3
   runtimeClassName: nvidia
   affinity:
     nodeAffinity:
