@@ -20,10 +20,10 @@ spec:
     targetRevision: *chartVersion
     helm:
       valueFiles:
-      - $values/kubernetes/services/local-ai/values.yaml
+      - $values/kubernetes/services/open-webui/values.yaml
   - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
     targetRevision: main
-    path: kubernetes/services/local-ai
+    path: kubernetes/services/open-webui
   syncPolicy:
     automated:
       prune: true
