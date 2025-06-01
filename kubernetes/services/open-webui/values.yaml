@@ -87,7 +87,7 @@ sso:
   enableSignup: true
   mergeAccountsByEmail: true
   enableRoleManagement: false
-  enableGroupManagement: false
+  enableGroupManagement: true
 
   oidc:
     enabled: true
