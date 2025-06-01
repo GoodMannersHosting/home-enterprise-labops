@@ -283,8 +283,9 @@ nodes:
     customization:
       systemExtensions:
         officialExtensions:
-        - siderolabs/amd-ucode
         - siderolabs/binfmt-misc
+        - siderolabs/i915
+        - siderolabs/intel-ucode
         - siderolabs/nonfree-kmod-nvidia-production
         - siderolabs/nvidia-container-toolkit-production
         - siderolabs/qemu-guest-agent
