@@ -1,0 +1,15 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: "dev-to-kube-apiserver"
+  namespace: aiml
+spec:
+  endpointSelector:
+    # This is necessary to allow the JupyterHub hub to
+    # communicate with the Kubernetes API server.
+    matchLabels:
+      app: jupyterhub
+      component: hub
+  egress:
+  - toEntities:
+    - kube-apiserver

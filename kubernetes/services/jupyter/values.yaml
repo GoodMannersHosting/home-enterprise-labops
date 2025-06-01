@@ -1,0 +1,31 @@
+# fullnameOverride and nameOverride distinguishes blank strings, null values,
+# and non-blank strings. For more details, see the configuration reference.
+fullnameOverride: ""
+nameOverride:
+
+hub:
+  db:
+    type: sqlite-pvc
+    pvc:
+      accessModes:
+      - ReadWriteOnce
+      storage: 10Gi
+      storageClassName: ceph-rbd-retain
+
+proxy:
+  service:
+    type: ClusterIP
+  networkPolicy:
+    ingress:
+    - from:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: open-webui-ollama
+            app.kubernetes.io/instance: ollama
+
+singleuser:
+  storage:
+    type: dynamic
+    dynamic:
+      storageClass: ceph-rbd
+      pvcNameTemplate: "temp-pvc"

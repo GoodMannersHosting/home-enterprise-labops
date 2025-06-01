@@ -1,0 +1,22 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard
+  namespace: istio-ingress
+  annotations:
+    cert-manager.io/issuer-kind: ClusterIssuer
+    cert-manager.io/issuer-name: letsencrypt-dns01
+spec:
+  secretName: wildcard
+  duration: 1128h # 47 days
+  renewBefore: 168h # 7 days
+  commonName: "*.capi-core.homelab.danmanners.com"
+  dnsNames:
+  - "*.capi-core.homelab.danmanners.com"
+  issuerRef:
+    name: letsencrypt-dns01
+    kind: ClusterIssuer
+    group: cert-manager.io
+  usages:
+  - server auth
+  - client auth
