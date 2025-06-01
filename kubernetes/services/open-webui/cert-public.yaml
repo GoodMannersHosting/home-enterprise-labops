@@ -13,6 +13,7 @@ spec:
   commonName: chat.capi-core.homelab.danmanners.com
   dnsNames:
   - chat.capi-core.homelab.danmanners.com
+  - ollama.capi-core.homelab.danmanners.com
   issuerRef:
     name: letsencrypt-dns01
     kind: ClusterIssuer
