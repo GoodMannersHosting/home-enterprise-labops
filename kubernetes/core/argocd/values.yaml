@@ -22,10 +22,9 @@ configs:
       issuer: https://keycloak.capi-core.homelab.danmanners.com/realms/master
       clientID: argocd
       clientSecret: $argocd-oidc-secret:oidc.keycloak.clientSecret
-      requestedScopes: ["openid", "profile", "email", "groups", "org:read"]
+      requestedScopes: ["openid", "profile", "email", "groups"]
       userNameKey: email
       overrideClaimMapping: true
-
   rbac:
     policy.default: role:readonly
     policy.csv: |
