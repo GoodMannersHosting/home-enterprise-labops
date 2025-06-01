@@ -17,9 +17,9 @@ spec:
     sectionName: https
   rules:
   - backendRefs:
-    - name: proxy-public
+    - group: ""
       kind: Service
-      group: ""
+      name: proxy-public
       port: 80
       weight: 1
     matches:
