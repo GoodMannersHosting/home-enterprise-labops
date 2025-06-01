@@ -84,7 +84,7 @@ enableOpenaiApi: false
 
 sso:
   enabled: true
-  enableSignup: false
+  enableSignup: true
   mergeAccountsByEmail: true
   enableRoleManagement: false
   enableGroupManagement: false
@@ -94,7 +94,7 @@ sso:
     clientId: aiml-open-webui
     clientExistingSecret: open-webui-oidc-secret
     clientExistingSecretKey: clientSecret
-    providerUrl: https://keycloak.capi-core.homelab.danmanners.com/realms/master
+    providerUrl: https://keycloak.capi-core.homelab.danmanners.com/realms/master/.well-known/openid-configuration
     providerName: "SSO"
     scopes: "openid email profile"
 
