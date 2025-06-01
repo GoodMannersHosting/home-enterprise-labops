@@ -3,7 +3,6 @@ kind: Kustomization
 
 resources:
 - cert-public.yaml
-- gateway.yaml
 - httproute.yaml
 - namespace.yaml
 - secret.yaml
