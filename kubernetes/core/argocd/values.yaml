@@ -1,5 +1,9 @@
 global:
   domain: &url argocd.capi-core.homelab.danmanners.com
+  hostAliases:
+  - ip: "172.31.0.17"
+    hostnames:
+    - "keycloak.cloud.danmanners.com"
 
 crds:
   install: false
@@ -19,7 +23,7 @@ configs:
     url: &fullUrl https://argocd.capi-core.homelab.danmanners.com
     oidc.config: |
       name: Keycloak
-      issuer: https://keycloak.capi-core.homelab.danmanners.com/realms/master
+      issuer: https://keycloak.cloud.danmanners.com/realms/master
       clientID: argocd
       clientSecret: $argocd-oidc-secret:oidc.keycloak.clientSecret
       requestedScopes: ["openid", "profile", "email", "groups"]
