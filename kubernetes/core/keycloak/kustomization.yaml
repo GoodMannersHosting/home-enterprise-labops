@@ -5,11 +5,12 @@ resources:
 - ca.yaml
 - cert-internal.yaml
 - cert-public.yaml
+- cnpg-db
 - deployment.yaml
+- external-dns.yaml
 - gateway.yaml
 - httproute.yaml
 - issuer.yaml
 - namespace.yaml
 - service.yaml
 - tls-policy.yaml
-- cnpg-db
