@@ -7,11 +7,43 @@ metadata:
   annotations:
     external-dns.alpha.kubernetes.io/hostname: keycloak.capi-core.homelab.danmanners.com
     external-dns.alpha.kubernetes.io/ingress-hostname-source: annotation-only
-  labels:
-    ingress: keycloak-httproute
 spec:
   hostnames:
   - keycloak.capi-core.homelab.danmanners.com
+  parentRefs:
+  - kind: Gateway
+    group: gateway.networking.k8s.io
+    name: gwapi
+    namespace: istio-ingress
+    sectionName: https
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: keycloak-core
+      port: 80
+      # TCP/443 isn't working yet, don't know if it's a
+      # Gateway API issue or something I'm doing wrong.
+      # E2E Encryption is the goal, but for now...
+      # ¯\_(ツ)_/¯
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
+    timeouts:
+      backendRequest: 0s
+      request: 0s
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: keycloak-cloud
+  namespace: keycloak
+  annotations:
+    external-dns.alpha.kubernetes.io/controller: "false"
+spec:
+  hostnames:
   - keycloak.cloud.danmanners.com
   parentRefs:
   - kind: Gateway
@@ -25,10 +57,6 @@ spec:
       kind: Service
       name: keycloak-core
       port: 80
-      # TCP/443 isn't working yet, don't know if it's a
-      # Gateway API issue or something I'm doing wrong.
-      # E2E Encryption is the goal, but for now...
-      # ¯\_(ツ)_/¯
       weight: 1
     matches:
     - path:

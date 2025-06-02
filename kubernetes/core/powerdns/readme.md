@@ -31,7 +31,7 @@ If you want to use Cert-Manager to generate valid Let's Encrypt certificates, yo
 - Forwarding Port: 53
 - Protocol: UDP
 
-## Setting up your zones
+## Creating a new zone
 
 ```bash
 curl -X POST \
@@ -47,4 +47,48 @@ curl -X POST \
 }' \
     -vH "X-API-Key: $(kubectl get secrets -n powerdns as-secrets -ojson | jq -r '.data."api-key"|@base64d')" \
     http://172.31.0.16:8081/api/v1/servers/localhost/zones
+```
+
+## Deleting TXT Records
+
+```bash
+for RECORD in \
+    k8s.capi-core.cname-ollama \
+    k8s.capi-core.ollama \
+    ollama \
+    k8s.capi-core.a-keycloak \
+    k8s.capi-core.keycloak \
+    keycloak; do
+    curl -X PATCH --data '{
+    "rrsets": [
+        {
+            "changetype": "DELETE",
+            "type": "A",
+            "name": "'${RECORD}'.cloud.danmanners.com."
+        }
+    ]
+}' -H "X-API-Key: $(kubectl get secrets -n powerdns as-secrets -ojson | jq -r '.data."api-key"|@base64d')" \
+        "http://172.31.0.16:8081/api/v1/servers/localhost/zones/cloud.danmanners.com"
+        echo "Deleted ${RECORD}.cloud.danmanners.com"
+done
+```
+
+## Deleting A Records
+
+```bash
+for RECORD in \
+    ollama \
+    keycloak; do
+    curl -X PATCH --data '{
+    "rrsets": [
+        {
+            "changetype": "DELETE",
+            "type": "A",
+            "name": "'${RECORD}'.cloud.danmanners.com."
+        }
+    ]
+}' -H "X-API-Key: $(kubectl get secrets -n powerdns as-secrets -ojson | jq -r '.data."api-key"|@base64d')" \
+        "http://172.31.0.16:8081/api/v1/servers/localhost/zones/cloud.danmanners.com"
+        echo "Deleted ${RECORD}.cloud.danmanners.com"
+done
 ```

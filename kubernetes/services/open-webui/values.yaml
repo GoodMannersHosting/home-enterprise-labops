@@ -82,6 +82,11 @@ service:
 # -- Enables the use of OpenAI APIs
 enableOpenaiApi: false
 
+hostAliases:
+- ip: "172.31.0.17"
+  hostnames:
+  - "keycloak.cloud.danmanners.com"
+
 sso:
   enabled: true
   enableSignup: true
