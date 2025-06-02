@@ -3,7 +3,7 @@ kind: Kustomization
 
 resources:
 - cert-public.yaml
-# - external-dns.yaml
+- external-dns.yaml
 - httproute.yaml
 - namespace.yaml
 - oidc-secret.yaml
