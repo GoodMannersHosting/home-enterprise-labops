@@ -6,6 +6,7 @@ metadata:
   namespace: aiml
   annotations:
     external-dns.alpha.kubernetes.io/hostname: chat.capi-core.homelab.danmanners.com
+    external-dns.alpha.kubernetes.io/ingress-hostname-source: annotation-only
 spec:
   hostnames:
   - chat.capi-core.homelab.danmanners.com
@@ -36,8 +37,10 @@ metadata:
   name: aiml-cloud
   namespace: aiml
   annotations:
+    external-dns.alpha.kubernetes.io/controller: "false"
     external-dns.alpha.kubernetes.io/hostname: ollama.cloud.danmanners.com
     external-dns.alpha.kubernetes.io/target: unifi-home.homelab.danmanners.com
+    external-dns.alpha.kubernetes.io/ingress-hostname-source: annotation-only
     external-dns.alpha.kubernetes.io/ttl: "300"
 spec:
   hostnames:

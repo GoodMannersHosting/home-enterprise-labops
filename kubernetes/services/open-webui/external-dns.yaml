@@ -9,4 +9,3 @@ metadata:
 spec:
   type: ExternalName
   externalName: unifi-home.homelab.danmanners.com
-  sessionAffinity: None
