@@ -30,3 +30,21 @@ If you want to use Cert-Manager to generate valid Let's Encrypt certificates, yo
 - Forwarding IP Address: `<BGP IP of your PowerDNS server>`
 - Forwarding Port: 53
 - Protocol: UDP
+
+## Setting up your zones
+
+```bash
+curl -X POST \
+    --data '{
+    "name": "cloud.danmanners.com.",
+    "kind": "Master",
+    "dnssec": false,
+    "soa-edit": "INCEPTION-INCREMENT",
+    "masters": [],
+    "nameservers": [
+        "172.31.0.15."
+    ]
+}' \
+    -vH "X-API-Key: $(kubectl get secrets -n powerdns as-secrets -ojson | jq -r '.data."api-key"|@base64d')" \
+    http://172.31.0.16:8081/api/v1/servers/localhost/zones
+```

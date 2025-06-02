@@ -26,5 +26,6 @@ sources:
 txtOwnerId: capi-core
 txtPrefix: k8s.capi-core.
 domainFilters:
+- "cloud.danmanners.com"
 - "capi-core.homelab.danmanners.com"
 - "core.goodmannershosting.com"

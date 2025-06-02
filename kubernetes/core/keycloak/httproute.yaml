@@ -11,6 +11,7 @@ metadata:
 spec:
   hostnames:
   - keycloak.capi-core.homelab.danmanners.com
+  - keycloak.cloud.danmanners.com
   parentRefs:
   - kind: Gateway
     group: gateway.networking.k8s.io
