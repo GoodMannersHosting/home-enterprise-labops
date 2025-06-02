@@ -13,6 +13,7 @@ spec:
   commonName: "*.capi-core.homelab.danmanners.com"
   dnsNames:
   - "*.capi-core.homelab.danmanners.com"
+  - "*.cloud.danmanners.com"
   issuerRef:
     name: letsencrypt-dns01
     kind: ClusterIssuer
