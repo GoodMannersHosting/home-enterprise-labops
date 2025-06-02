@@ -12,10 +12,10 @@ spec:
   hostnames:
   - keycloak.capi-core.homelab.danmanners.com
   parentRefs:
-  - group: gateway.networking.k8s.io
-    kind: Gateway
-    name: core-services
-    namespace: keycloak
+  - kind: Gateway
+    group: gateway.networking.k8s.io
+    name: gwapi
+    namespace: istio-ingress
     sectionName: https
   rules:
   - backendRefs:
