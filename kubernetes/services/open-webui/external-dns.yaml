@@ -4,7 +4,7 @@ kind: Service
 metadata:
   name: ollama-extname
   annotations:
-    external-dns.alpha.kubernetes.io/hostname: ollama.capi-core.homelab.danmanners.com
+    external-dns.alpha.kubernetes.io/hostname: ollama.cloud.danmanners.com
     external-dns.alpha.kubernetes.io/ttl: "300"
 spec:
   type: ExternalName

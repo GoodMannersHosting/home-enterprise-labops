@@ -8,7 +8,6 @@ resources:
 - cnpg-db
 - deployment.yaml
 - external-dns.yaml
-- gateway.yaml
 - httproute.yaml
 - issuer.yaml
 - namespace.yaml
