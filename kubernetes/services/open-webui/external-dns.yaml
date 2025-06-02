@@ -9,7 +9,4 @@ metadata:
 spec:
   type: ExternalName
   externalName: unifi-home.homelab.danmanners.com
-  selector:
-    app.kubernetes.io/instance: ollama
-    app.kubernetes.io/component: open-webui
   sessionAffinity: None

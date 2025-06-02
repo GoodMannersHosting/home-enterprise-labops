@@ -6,6 +6,7 @@ metadata:
   namespace: keycloak
   annotations:
     external-dns.alpha.kubernetes.io/hostname: keycloak.capi-core.homelab.danmanners.com
+    external-dns.alpha.kubernetes.io/ingress-hostname-source: annotation-only
   labels:
     ingress: keycloak-httproute
 spec:

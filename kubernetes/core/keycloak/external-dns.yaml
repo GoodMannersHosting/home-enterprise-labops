@@ -4,7 +4,7 @@ kind: Service
 metadata:
   name: keycloak-extname
   annotations:
-    external-dns.alpha.kubernetes.io/hostname: keycloak.capi-core.homelab.danmanners.com
+    external-dns.alpha.kubernetes.io/hostname: keycloak.cloud.danmanners.com
     external-dns.alpha.kubernetes.io/ttl: "300"
 spec:
   type: ExternalName

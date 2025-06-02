@@ -13,6 +13,7 @@ spec:
   commonName: keycloak.capi-core.homelab.danmanners.com
   dnsNames:
   - keycloak.capi-core.homelab.danmanners.com
+  - keycloak.cloud.danmanners.com
   issuerRef:
     name: letsencrypt-dns01
     kind: ClusterIssuer
