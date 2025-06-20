@@ -1,6 +1,6 @@
 clusterName: capi-core
-talosVersion: v1.10.1
-kubernetesVersion: 1.33.0
+talosVersion: v1.10.4
+kubernetesVersion: 1.33.1
 endpoint: "https://k8s-capi-core.homelab.danmanners.com:6443"
 cniConfig:
   name: none
@@ -204,7 +204,7 @@ nodes:
   - 172.21.0.17
   nameservers: *nameservers
   networkInterfaces:
-  - interface: eth0
+  - interface: ens18
     dhcp: false
     mtu: 1460
     addresses:
@@ -212,7 +212,7 @@ nodes:
     routes:
     - network: 0.0.0.0/0
       gateway: *mgmt_gateway
-  - interface: eth1
+  - interface: ens19
     dhcp: false
     mtu: 8000
     addresses:
@@ -230,7 +230,7 @@ nodes:
   - 172.21.0.18
   nameservers: *nameservers
   networkInterfaces:
-  - interface: eth0
+  - interface: ens18
     dhcp: false
     mtu: 1460
     addresses:
@@ -238,7 +238,7 @@ nodes:
     routes:
     - network: 0.0.0.0/0
       gateway: *mgmt_gateway
-  - interface: eth1
+  - interface: ens19
     dhcp: false
     mtu: 8000
     addresses:
@@ -364,7 +364,7 @@ nodes:
   - 172.21.0.99
   nameservers: *nameservers
   networkInterfaces:
-  - interface: eth0
+  - interface: ens18
     dhcp: false
     mtu: 1460
     addresses:
@@ -372,7 +372,7 @@ nodes:
     routes:
     - network: 0.0.0.0/0
       gateway: *mgmt_gateway
-  - interface: eth1
+  - interface: ens19
     dhcp: false
     mtu: 8000
     addresses:

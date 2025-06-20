@@ -13,7 +13,7 @@ spec:
   - kind: Gateway
     group: gateway.networking.k8s.io
     name: gwapi
-    namespace: istio-ingress
+    namespace: default
     sectionName: https
   rules:
   - backendRefs:

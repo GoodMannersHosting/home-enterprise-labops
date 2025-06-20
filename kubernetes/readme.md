@@ -2,6 +2,12 @@
 
 These commands will be wrapped behind GoTasks in the future.
 
+## Gateway API
+
+```bash
+kubectl apply --server-side -k kubernetes/core/gateway-api
+```
+
 ## Install Cilium
 
 ```bash
@@ -11,7 +17,7 @@ helm repo update
 
 # Install Cilium
 helm upgrade --install cilium cilium/cilium \
---namespace=kube-system --version 1.17.2 \
+--namespace=kube-system --version 1.17.5 \
 --values kubernetes/core/kube-system/cilium/values.yaml
 
 # Set up the BGP config
@@ -43,36 +49,28 @@ helm repo update
 # Install Istio
 helm upgrade --install istio-base istio/base \
 --create-namespace --namespace istio-system \
---version ${ISTIO_VERSION}$ \
+--version ${ISTIO_VERSION} \
 --values kubernetes/core/istio-system/istio-base.values.yaml
 
 # Install Istiod
 helm upgrade --install istiod istio/istiod -n istio-system \
---version ${ISTIO_VERSION}$ \
+--version ${ISTIO_VERSION} \
 --values kubernetes/core/istio-system/istiod.values.yaml \
 --wait
 
 # Install Istio CNI
 helm upgrade --install istio-cni istio/cni \
 --namespace istio-system \
---version ${ISTIO_VERSION}$ \
+--version ${ISTIO_VERSION} \
 --values kubernetes/core/istio-system/cni.values.yaml \
 --wait
 
 # Install Istio ZTunnel
 helm upgrade --install istio-ztunnel istio/ztunnel \
 --namespace istio-system \
---version ${ISTIO_VERSION}$ \
+--version ${ISTIO_VERSION} \
 --values kubernetes/core/istio-system/ztunnel.values.yaml \
 --wait
-```
-
-## Gateway API
-
-```bash
-kubectl get crd gateways.gateway.networking.k8s.io &> /dev/null || \
-kubectl apply --server-side \
--f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.1/standard-install.yaml
 ```
 
 ## Istio Ingress
