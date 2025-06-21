@@ -7,11 +7,15 @@ env:
       name: as-secrets
       key: api-key
 extraArgs:
-- --pdns-server=http://powerdns-gui.powerdns.svc.cluster.local:8081
+- --pdns-server=http://powerdns-api.powerdns.svc.cluster.local
 # On MacOS, you can generate a server-id with:
 # uuidgen | tr '[:upper:]' '[:lower:]' | tr -dc '0-9a-zA-Z'
 - --pdns-server-id=localhost
 - --pdns-api-key=$(PDNS_API_KEY)
+podSecurityContext:
+  runAsNonRoot: false
+SecurityContext:
+  runAsNonRoot: true
 interval: 30s
 logFormat: json
 logLevel: debug
@@ -29,3 +33,46 @@ domainFilters:
 - "cloud.danmanners.com"
 - "capi-core.homelab.danmanners.com"
 - "core.goodmannershosting.com"
+initContainers:
+- name: wait-for-powerdns
+  image: docker.io/library/alpine:3.22
+  env:
+  - name: EXTERNAL_DNS_DOMAIN_FILTER
+    value: "cloud.danmanners.com,capi-core.homelab.danmanners.com,core.goodmannershosting.com"
+  - name: POWERDNS_HTTP_API_URL
+    value: powerdns-api.powerdns.svc.cluster.local
+  - name: EXTERNAL_DNS_PDNS_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: as-secrets
+        key: api-key
+  command:
+  - /bin/ash
+  args:
+  - -c
+  # Script below adapted from this comment: https://github.com/kubernetes-sigs/external-dns/issues/1400#issuecomment-722324037, thanks @andye2004!
+  - |
+    # Install Packages
+    apk add --no-cache curl jq netcat-openbsd
+
+    # Wait for PowerDNS HTTP API to be available
+    until nc -w1 -vz ${POWERDNS_HTTP_API_URL} 80 2&>1 > /dev/null; do
+      echo "The endpoint ${POWERDNS_HTTP_API_URL} is not yet responsive, sleeping..."
+      sleep 3
+    done
+
+    for zone in $(echo "${EXTERNAL_DNS_DOMAIN_FILTER}" | tr ',' ' '); do
+      echo "Checking if zone [${zone}] already exists..."
+      if ! curl -sH "X-API-Key: ${EXTERNAL_DNS_PDNS_API_KEY}" "http://${POWERDNS_HTTP_API_URL}/api/v1/servers/localhost/zones/${zone}." | jq . > /dev/null 2>&1; then
+        echo "Creating zone for ${zone}..."
+        curl -s -d '{
+            "name": "'${zone}'.",
+            "kind": "Native",
+            "masters": [],
+            "nameservers": [ "'${zone}'." ] }' \
+            -H "X-API-Key: ${EXTERNAL_DNS_PDNS_API_KEY}" \
+            "http://${POWERDNS_HTTP_API_URL}/api/v1/servers/localhost/zones" | jq .
+      else
+        echo "Zone already exists for ${zone}..."
+      fi
+    done

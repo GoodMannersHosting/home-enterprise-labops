@@ -187,7 +187,7 @@ service:
         port: 53
         protocol: UDP
         targetPort: dns-udp
-  http:
+  api:
     enabled: true
     controller: main
     primary: true
@@ -200,7 +200,7 @@ service:
         targetPort: webserver
 
 route:
-  gui:
+  api:
     enabled: true
     kind: HTTPRoute
     parentRefs:
