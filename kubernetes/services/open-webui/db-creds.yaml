@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: ollama-db-creds
+  namespace: aiml
+stringData:
+  POSTGRES_ADMIN_PASSWORD: 3a164918&2c2c&461E&9C90&7ABA4AC50056
+  POSTGRES_USER_PASSWORD: 657429c7&1d97&4bdc&b2c6&3809a3bd68a0
