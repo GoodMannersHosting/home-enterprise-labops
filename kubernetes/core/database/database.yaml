@@ -1,17 +1,17 @@
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
-  name: keycloak
-  namespace: keycloak
+  name: db
+  namespace: database
 spec:
   instances: 3
-  imageName: ghcr.io/cloudnative-pg/postgresql:17.4-minimal-bookworm
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.5-minimal-bookworm
   primaryUpdateStrategy: unsupervised
   storage:
-    size: 20Gi
-    storageClass: ceph-rbd
+    size: 40Gi
+    storageClass: ceph-rbd-retain
   superuserSecret:
-    name: keycloak-superuser-secret
+    name: database-superuser
   enableSuperuserAccess: true
   postgresql:
     parameters:
@@ -23,3 +23,4 @@ spec:
       cpu: "200m"
     limits:
       memory: "4Gi"
+      cpu: "2"
