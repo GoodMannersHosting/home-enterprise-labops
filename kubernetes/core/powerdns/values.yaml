@@ -80,6 +80,16 @@ controllers:
     revisionHistoryLimit: 2
     containers:
       dns:
+        ports:
+        - name: dns-tcp
+          containerPort: 5353
+          protocol: TCP
+        - name: dns-udp
+          containerPort: 5353
+          protocol: UDP
+        - name: webserver
+          containerPort: 8081
+          protocol: TCP
         image:
           repository: docker.io/powerdns/pdns-auth-49
           tag: "4.9.5"
@@ -95,8 +105,10 @@ controllers:
         - --query-logging=yes
         - --version-string=powerdns
         - --webserver-loglevel=normal
-        - --webserver-allow-from=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+        - --webserver-allow-from=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.1/32
+        - --webserver-password=$(PDNS_AUTH_WEB_KEY)
         - --webserver-address=0.0.0.0
+        - --webserver-port=8081
         - --webserver=yes
         - --api=yes
         - --gpgsql-port=5432
@@ -120,6 +132,11 @@ controllers:
             secretKeyRef:
               name: as-secrets
               key: ci-job-id
+        - name: PDNS_AUTH_WEB_KEY
+          valueFrom:
+            secretKeyRef:
+              name: as-secrets
+              key: key
         - name: PDNS_AUTH_API_KEY
           valueFrom:
             secretKeyRef:
@@ -161,16 +178,26 @@ service:
     ports:
       tcp:
         enabled: true
-        primary: true
         port: 53
         protocol: TCP
-        targetPort: 5353
+        targetPort: dns-tcp
       udp:
         enabled: true
         primary: false
         port: 53
         protocol: UDP
-        targetPort: 5353
+        targetPort: dns-udp
+  http:
+    enabled: true
+    controller: main
+    primary: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        port: 80
+        protocol: TCP
+        targetPort: webserver
 
 route:
   gui:
