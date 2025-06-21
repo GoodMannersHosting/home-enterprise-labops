@@ -42,6 +42,10 @@ helm upgrade --install --create-namespace \
 --set operatorNamespace=$operatorNamespace rook-release/rook-ceph-cluster \
 -f kubernetes/core/rook-ceph/cluster.values.yaml
 
-# Add the CephFS Retain StorageClass
+# Once you import the variables from the python script, we can run this script to import and create the necessary resources:
+
+curl -s https://raw.githubusercontent.com/rook/rook/refs/heads/release-1.17/deploy/examples/import-external-cluster.sh | bash
+
+# Finally, add the CephFS Retain StorageClass
 kubectl apply -k kubernetes/core/rook-ceph
 ```

@@ -3,10 +3,7 @@ kind: Kustomization
 namespace: powerdns
 
 resources:
-- as-cm.yaml
-- as-deployment.yaml
-- as-job.yaml
 - as-secret.yaml
-- as-services.yaml
+- db-creds.yaml
+- db-superuser.yaml
 - namespace.yaml
-- sqlite3-storage.yaml
