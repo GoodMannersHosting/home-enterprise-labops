@@ -15,7 +15,7 @@ spec:
           groupName: capi-core.homelab.danmanners.com
           solverName: pdns
           config:
-            host: http://powerdns-gui.powerdns.svc.cluster.local:8081
+            host: http://powerdns-api.powerdns.svc.cluster.local
             apiKeySecretRef:
               name: as-secrets
               namespace: powerdns
@@ -45,7 +45,7 @@ spec:
           groupName: capi-core.homelab.danmanners.com
           solverName: pdns
           config:
-            host: http://powerdns-gui.powerdns.svc.cluster.local:8081
+            host: http://powerdns-api.powerdns.svc.cluster.local
             apiKeySecretRef:
               name: as-secrets
               namespace: powerdns

@@ -4,4 +4,4 @@ kind: Kustomization
 resources:
 - certbot.yaml
 - self-signed-issuer.yaml
-- https://github.com/cert-manager/cert-manager/releases/download/v1.17.1/cert-manager.crds.yaml
+- https://github.com/cert-manager/cert-manager/releases/download/v1.17.2/cert-manager.crds.yaml

@@ -2,8 +2,7 @@
 
 ```bash
 # Install the CRDs
-kubectl apply --server-side \
--f https://github.com/cert-manager/cert-manager/releases/download/v1.17.2/cert-manager.crds.yaml
+kubectl apply --server-side -k kubernetes/core/cert-manager
 
 # Configure the Helm repositories
 helm repo add jetstack https://charts.jetstack.io

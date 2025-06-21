@@ -213,8 +213,8 @@ route:
     - pdns.capi-core.homelab.danmanners.com
     rules:
     - backendRefs:
-      - name: powerdns-dns
-        port: 8081
+      - name: powerdns-api
+        port: 80
       matches:
       - path:
           type: PathPrefix
