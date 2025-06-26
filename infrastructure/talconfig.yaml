@@ -243,6 +243,32 @@ nodes:
     mtu: 8000
     addresses:
     - 172.20.32.18/20
+- hostname: capi-core-wn6.homelab.danmanners.com
+  controlPlane: false
+  installDisk: /dev/sda
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions: *extensions
+  ipAddress: 172.21.0.19
+  certSANs:
+  - capi-core-wn6.homelab.danmanners.com
+  - 172.21.0.19
+  nameservers: *nameservers
+  networkInterfaces:
+  - interface: ens18
+    dhcp: false
+    mtu: 1460
+    addresses:
+    - 172.21.0.19/20
+    routes:
+    - network: 0.0.0.0/0
+      gateway: *mgmt_gateway
+  - interface: ens19
+    dhcp: false
+    mtu: 8000
+    addresses:
+    - 172.20.32.19/20
 - hostname: capi-core-wn98.homelab.danmanners.com
   controlPlane: false
   installDisk: /dev/sda
@@ -309,74 +335,6 @@ nodes:
     mtu: 8000
     addresses:
     - 172.20.32.98/20
-- hostname: capi-core-wn99.homelab.danmanners.com
-  controlPlane: false
-  installDisk: /dev/sda
-  # During Installation the kernel modules MUST NOT be loaded and
-  # the below SHOULD BE COMMENTED OUT. Once the system is installed,
-  # the kernel modules should be uncommented, the config re-generated,
-  # and the system rebooted. This is to avoid issues where the NVIDIA
-  # kernel modules cannot be loaded during the installation process,
-  # which makes sure the Talos installer fails.
-  kernelModules:
-  - name: nvidia
-  - name: nvidia_uvm
-  - name: nvidia_drm
-  - name: nvidia_modeset
-  patches:
-  - |-
-    - op: add
-      path: /machine/files
-      value:
-        - op: create
-          path: /etc/cri/conf.d/20-customization.part
-          content: |
-            [plugins."io.containerd.grpc.v1.cri"]
-              enable_unprivileged_ports = true
-              enable_unprivileged_icmp = true
-            [plugins."io.containerd.grpc.v1.cri".containerd]
-              discard_unpacked_layers = false
-            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
-              discard_unpacked_layers = false
-            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia]
-              privileged_without_host_devices = false
-              runtime_engine = ""
-              runtime_root = ""
-              runtime_type = "io.containerd.runc.v2"
-            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.options]
-              BinaryName = "/usr/bin/nvidia-container-runtime"
-  schematic:
-    customization:
-      systemExtensions:
-        officialExtensions:
-        - siderolabs/binfmt-misc
-        - siderolabs/nonfree-kmod-nvidia-production
-        - siderolabs/nvidia-container-toolkit-production
-        - siderolabs/qemu-guest-agent
-        - siderolabs/util-linux-tools
-  ipAddress: 172.21.0.99
-  machineSpec:
-    arch: amd64
-    useUKI: true
-    secureboot: true
-  certSANs:
-  - capi-core-wn99.homelab.danmanners.com
-  - 172.21.0.99
-  nameservers: *nameservers
-  networkInterfaces:
-  - interface: ens18
-    dhcp: false
-    mtu: 1460
-    addresses:
-    - 172.21.0.99/20
-    routes:
-    - network: 0.0.0.0/0
-      gateway: *mgmt_gateway
-  - interface: ens19
-    dhcp: false
-    mtu: 8000
-    addresses:
-    - 172.20.32.99/20
 
 patches:
 - |-
