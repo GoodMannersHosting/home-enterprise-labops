@@ -1,0 +1,4 @@
+namespace: palworld
+resources:
+- namespace.yaml
+- secrets.yaml

@@ -6,18 +6,22 @@ ollama:
   fullnameOverride: ""
   ollama:
     gpu:
-      enabled: false
+      enabled: true
+      type: nvidia
     models:
-      pull:
-      - llama3.1:8b
-      - gemma3:4b
-      run:
-      - gemma3:4b
+      pull: []
+      run: []
   image:
     tag: "0.9.2"
   extraEnv:
   - name: "OLLAMA_NUM_PARALLEL"
-    value: "4"
+    value: "1"
+  - name: "OLLAMA_FLASH_ATTENTION"
+    value: "1"
+  - name: "OLLAMA_DEBUG"
+    value: "1"
+  - name: "OLLAMA_MAX_LOADED_MODELS"
+    value: "1"
   runtimeClassName: nvidia
   affinity:
     nodeAffinity:
@@ -156,9 +160,6 @@ extraResources:
         - path:
             type: PathPrefix
             value: /
-        # timeouts:
-        #   backendRequest: 0s
-        #   request: 0s
 - apiVersion: gateway.networking.k8s.io/v1
   kind: HTTPRoute
   metadata:

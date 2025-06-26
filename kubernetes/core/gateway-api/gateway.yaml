@@ -46,3 +46,23 @@ spec:
       - name: wildcard
         kind: Secret
         group: ""
+  - name: palworld-server
+    protocol: UDP
+    port: 8211
+    allowedRoutes:
+      namespaces:
+        from: Selector
+        selector:
+          matchLabels:
+            app.kubernetes.io/instance: palworld
+            app.kubernetes.io/name: palworld
+  - name: palworld-steam
+    protocol: UDP
+    port: 27015
+    allowedRoutes:
+      namespaces:
+        from: Selector
+        selector:
+          matchLabels:
+            app.kubernetes.io/instance: palworld
+            app.kubernetes.io/name: palworld

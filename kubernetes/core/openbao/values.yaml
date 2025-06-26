@@ -61,8 +61,6 @@ server:
   # The purpose is to make it easy to share volumes between containers.
   volumes: null
 
-  nodeSelector:
-    kubernetes.io/arch: amd64
   networkPolicy:
     enabled: false
     ingress:
