@@ -12,7 +12,6 @@ controllers:
     enabled: true
     type: statefulset
     replicas: 1
-    # strategy: Recreate
     revisionHistoryLimit: 2
     containers:
       core:
@@ -48,6 +47,8 @@ controllers:
               key: SERVER_PASSWORD
         - name: MULTITHREADING
           value: "true"
+        - name: REST_API_ENABLED
+          value: "true"
         - name: RCON_ENABLED
           value: "true"
         - name: RCON_PORT
@@ -77,6 +78,112 @@ controllers:
         lifecycle: {}
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
+      backup:
+        image:
+          repository: docker.io/library/alpine
+          tag: "3.22"
+          pullPolicy: "IfNotPresent"
+        securityContext:
+          allowPrivilegeEscalation: false
+        command: [ "/bin/ash" ]
+        args: [ "-c", "/opt/backup/backup.sh" ]
+        env:
+        - name: BIN_VERSION
+          value: "1.7.0"
+        - name: BACKUP_DIR
+          value: /palworld/backups/
+        - name: AWS_REGION
+          valueFrom:
+            secretKeyRef:
+              name: aws-backup-secrets
+              key: AWS_REGION
+        - name: AWS_TRUST_ANCHOR_ARN
+          valueFrom:
+            secretKeyRef:
+              name: aws-backup-secrets
+              key: AWS_TRUST_ANCHOR_ARN
+        - name: AWS_PROFILE_ARN
+          valueFrom:
+            secretKeyRef:
+              name: aws-backup-secrets
+              key: AWS_PROFILE_ARN
+        - name: AWS_ROLE_ARN
+          valueFrom:
+            secretKeyRef:
+              name: aws-backup-secrets
+              key: AWS_ROLE_ARN
+        - name: S3_BUCKET
+          valueFrom:
+            secretKeyRef:
+              name: aws-backup-secrets
+              key: AWS_S3_BUCKET
+        - name: S3_BUCKET_PATH
+          value: palworld-dedicated/
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+        lifecycle: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+
+configMaps:
+  palworld:
+    enabled: true
+    data:
+      backup.sh: |
+        #!/bin/ash
+        # Install necessary packages and tools
+        echo "Installing required packages..."
+        apk add --no-cache --quiet --no-progress \
+        curl jq yq aws-cli ca-certificates
+        echo "Packages installed."
+
+        # Create the AWS credentials directory
+        mkdir -p ~/.aws
+
+        echo "Downloading AWS Signing Helper..."
+        # Download the AWS Signing Helper binary and make it executable
+        curl -so /usr/local/bin/aws_signing_helper \
+          https://rolesanywhere.amazonaws.com/releases/${BIN_VERSION}/X86_64/Linux/aws_signing_helper
+        chmod +x /usr/local/bin/aws_signing_helper
+        echo "AWS Signing Helper downloaded and made executable."
+
+        # Infinite loop to run the command every hour
+        echo "Starting backup service...will run every hour on the hour."
+        while true; do
+          current_minute=$(date +%M)
+          if [ "$current_minute" -eq "00" ]; then
+              echo "$(date) - Generating AWS credentials and starting backup..."
+              # Run the command
+              /usr/local/bin/aws_signing_helper credential-process \
+                  --region ${AWS_REGION} \
+                  --certificate /opt/certs/aws.cert \
+                  --private-key /opt/certs/aws.key \
+                  --trust-anchor-arn "${AWS_TRUST_ANCHOR_ARN}" \
+                  --profile-arn "${AWS_PROFILE_ARN}" \
+                  --role-arn "${AWS_ROLE_ARN}" > ~/keys.json
+              cat <<EOF > ~/.aws/credentials
+        [default]
+        aws_access_key_id = $(cat ~/keys.json | jq -rc '.AccessKeyId')
+        aws_secret_access_key = $(cat ~/keys.json | jq -rc '.SecretAccessKey')
+        region = ${AWS_REGION}
+        EOF
+              # Backup the directory to the specified S3 bucket
+              s3_bucket="${S3_BUCKET}/${S3_BUCKET_PATH}/"
+              aws s3 cp ${BACKUP_DIR} s3://$s3_bucket --recursive
+              if [ $? -eq 0 ]; then
+                echo "Backup completed successfully at $(date)"
+                echo "Removing old local backups..."
+                # Remove local backups older than 7 days
+                find ${BACKUP_DIR} -type f -mtime +7 -exec rm {} \
+                echo "Old local backups removed."
+              else
+                echo "Backup failed at $(date)"
+              fi
+          fi
+          sleep 60
+        done
 
 service:
   core:
@@ -212,3 +319,24 @@ persistence:
     globalMounts:
     - path: /palworld
       readOnly: false
+  backup:
+    enabled: true
+    type: configMap
+    name: palworld
+    defaultMode: 0740
+    advancedMounts:
+      main:
+        backup:
+        - path: /opt/backup/
+          mountPropagation: None
+          readOnly: false
+  certs:
+    enabled: true
+    type: secret
+    name: aws-backup-secrets
+    advancedMounts:
+      main:
+        keycloak:
+        - path: /opt/certs/
+          mountPropagation: None
+          readOnly: true

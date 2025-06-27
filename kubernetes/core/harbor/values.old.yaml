@@ -1,0 +1,84 @@
+externalURL: https://core.harbor.homelab.danmanners.com
+logLevel: debug
+
+expose:
+  type: clusterIP
+  # tls:
+  #   certSource: secret
+  #   secret:
+  #     secretName: harbor-cert
+  #     notarySecretName: harbor-cert
+  # ingress:
+  #   className: nginx
+  #   hosts:
+  #     core: core.harbor.homelab.danmanners.com
+  #     notary: notary.harbor.homelab.danmanners.com
+
+internalTLS:
+  enabled: true # Using Cert-Manager for internal certs
+  # certSource: auto
+  certSource: secret # Default: auto
+  core:
+    secretName: harbor-core-internal-tls
+  jobservice:
+    secretName: harbor-jobservice-internal-tls
+  registry:
+    secretName: harbor-registry-internal-tls
+  portal:
+    secretName: harbor-portal-internal-tls
+  trivy:
+    secretName: harbor-trivy-internal-tls
+
+# Generate secrets on MacOS with this command; based on https://gist.github.com/earthgecko/3089509:
+# LC_CTYPE=C LANG=C cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1
+# on Linux, it should simply be:
+# cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1
+# Use 'fold -w 16' for secrets, and '32' for the xsrfKey
+core:
+  secret: YhZkafJx56lQU3vy
+  secretName: harbor-token-ca-secret
+  xsrfKey: dwwCm08DxpQQhYChKT0foRjDdwZM8xYm
+jobservice:
+  secret: xh5bbKhL4GyUy8Mw
+registry:
+  secret: 23rBD7yi9jncZ9d4
+  credentials:
+    # Generate this with:
+    # htpasswd -nbBC10 username password | tr -d '\n'
+    htpasswdString: harbor_registry_user:$2y$10$Tmg75VWdGknjlXGMIGW/D.7dmnfGJQKKoAHOuMqesPQZZE3Qjkbui
+notary:
+  secretName: harbor-notary-signer
+
+ipFamily:
+  ipv4:
+    enabled: true
+  ipv6:
+    enabled: false
+
+persistence:
+  persistentVolumeClaim:
+    registry:
+      storageClass: ceph-rbd
+      accessMode: ReadWriteOnce
+      size: 100Gi
+    jobservice:
+      jobLog:
+        storageClass: ceph-rbd
+        accessMode: ReadWriteOnce
+        size: 2Gi
+    database:
+      storageClass: ceph-rbd
+      accessMode: ReadWriteOnce
+      size: 4Gi
+    redis:
+      storageClass: ceph-rbd
+      accessMode: ReadWriteOnce
+      size: 4Gi
+    trivy:
+      storageClass: ceph-rbd
+      accessMode: ReadWriteOnce
+      size: 8Gi
+
+existingSecretSecretKey: harbor-creds
+existingSecretAdminPassword: harbor-creds
+existingSecretAdminPasswordKey: HARBOR_ADMIN_PASSWORD

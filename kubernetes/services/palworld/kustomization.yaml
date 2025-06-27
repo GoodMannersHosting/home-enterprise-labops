@@ -1,4 +1,5 @@
 namespace: palworld
 resources:
+- aws-secrets.yaml
 - namespace.yaml
 - secrets.yaml
