@@ -1,0 +1,391 @@
+# If Harbor is deployed behind the proxy, set it as the URL of proxy
+externalURL: https://harbor.capi-core.homelab.danmanners.com
+
+expose:
+  type: clusterIP
+  tls:
+    enabled: true
+    certSource: secret
+    secret:
+      secretName: "" # DO CERT-MANAGER STUFF HERE
+  clusterIP:
+    name: harbor
+    ports:
+      httpPort: 80
+      httpsPort: 443
+
+persistence:
+  enabled: true
+  resourcePolicy: "keep"
+  persistentVolumeClaim:
+    registry:
+      storageClass: "ceph-rbd"
+      accessMode: ReadWriteOnce
+      size: 120Gi
+    jobservice:
+      jobLog:
+        storageClass: "ceph-rbd"
+        accessMode: ReadWriteOnce
+        size: 4Gi
+      # If external database is used, the following settings for database will
+      # be ignored
+    database:
+      storageClass: "ceph-rbd"
+      accessMode: ReadWriteOnce
+      size: 20Gi
+    # If external Redis is used, the following settings for Redis will
+    # be ignored
+    redis:
+      storageClass: "ceph-rbd"
+      accessMode: ReadWriteOnce
+      size: 4Gi
+    trivy:
+      storageClass: "ceph-rbd"
+      accessMode: ReadWriteOnce
+      size: 32Gi
+  # Define which storage backend is used for registry to store
+  # images and charts. Refer to
+  # https://github.com/distribution/distribution/blob/release/2.8/docs/configuration.md#storage
+  # for the detail.
+  imageChartStorage:
+    disableredirect: false
+    type: filesystem
+    filesystem:
+      rootdirectory: /storage
+
+existingSecretAdminPasswordKey: HARBOR_ADMIN_PASSWORD
+harborAdminPassword: "Harbor12345"
+
+internalTLS:
+  enabled: true
+  strong_ssl_ciphers: false
+  certSource: "secret"
+  core:
+    secretName: harbor-core-internal-tls
+  jobservice:
+    secretName: harbor-jobservice-internal-tls
+  registry:
+    secretName: harbor-registry-internal-tls
+  portal:
+    secretName: harbor-portal-internal-tls
+  trivy:
+    secretName: harbor-trivy-internal-tls
+
+ipFamily:
+  ipv4:
+    enabled: true
+  ipv6:
+    enabled: false
+
+imagePullPolicy: IfNotPresent
+# imagePullSecrets: #  - name: docker-registry-secret
+
+# The update strategy for deployments with persistent volumes(jobservice, registry): "RollingUpdate" or "Recreate"
+# Set it as "Recreate" when "RWM" for volumes isn't supported
+updateStrategy:
+  type: RollingUpdate
+
+# debug, info, warning, error or fatal
+logLevel: info
+
+# The secret key used for encryption. Must be a string of 16 chars.
+secretKey: "not-a-secure-key"
+# If using existingSecretSecretKey, the key must be secretKey
+existingSecretSecretKey: ""
+
+# Run the migration job via helm hook
+enableMigrateHelmHook: false
+
+metrics:
+  enabled: false
+
+trace:
+  enabled: false
+
+## set Container Security Context to comply with PSP restricted policy if necessary
+## each of the conatiner will apply the same security context
+## containerSecurityContext:{} is initially an empty yaml that you could edit it on demand, we just filled with a common template for convenience
+containerSecurityContext:
+  privileged: false
+  allowPrivilegeEscalation: false
+  seccompProfile:
+    type: RuntimeDefault
+  runAsNonRoot: true
+  # capabilities:
+  #   drop:
+  #   - ALL
+
+portal:
+  image:
+    repository: goharbor/harbor-portal
+    tag: v2.13.0
+  # set the service account to be used, default if left empty
+  serviceAccountName: ""
+  # mount the service account token
+  automountServiceAccountToken: false
+  replicas: 1
+  revisionHistoryLimit: 10
+  # resources:
+  #  requests:
+  #    memory: 256Mi
+  #    cpu: 100m
+  # Spread Pods across failure-domains like regions, availability zones or nodes
+  topologySpreadConstraints: []
+  # - maxSkew: 1
+  #   topologyKey: topology.kubernetes.io/zone
+  #   nodeTaintsPolicy: Honor
+  #   whenUnsatisfiable: DoNotSchedule
+
+core:
+  image:
+    repository: goharbor/harbor-core
+    tag: v2.13.0
+  replicas: 1
+  revisionHistoryLimit: 3
+  startupProbe:
+    enabled: true
+    initialDelaySeconds: 10
+  # resources:
+  #  requests:
+  #    memory: 256Mi
+  #    cpu: 100m
+  # Spread Pods across failure-domains like regions, availability zones or nodes
+  topologySpreadConstraints: []
+  # - maxSkew: 1
+  #   topologyKey: topology.kubernetes.io/zone
+  #   nodeTaintsPolicy: Honor
+  #   whenUnsatisfiable: DoNotSchedule
+  configureUserSettings: # The provider for updating project quota(usage), there are 2 options, redis or db.
+  quotaUpdateProvider: db # Or redis
+  # Secret is used when core server communicates with other components.
+  # If a secret key is not specified, Helm will generate one. Alternatively set existingSecret to use an existing secret
+  # Must be a string of 16 chars.
+  secret: ""
+  # Fill in the name of a kubernetes secret if you want to use your own
+  # If using existingSecret, the key must be secret
+  existingSecret: ""
+  # Fill the name of a kubernetes secret if you want to use your own
+  # TLS certificate and private key for token encryption/decryption.
+  # The secret must contain keys named:
+  # "tls.key" - the private key
+  # "tls.crt" - the certificate
+  secretName: ""
+  # If not specifying a preexisting secret, a secret can be created from tokenKey and tokenCert and used instead.
+  # If none of secretName, tokenKey, and tokenCert are specified, an ephemeral key and certificate will be autogenerated.
+  # tokenKey and tokenCert must BOTH be set or BOTH unset.
+  # The tokenKey value is formatted as a multiline string containing a PEM-encoded RSA key, indented one more than tokenKey on the following line.
+  tokenKey: ""
+  # If tokenKey is set, the value of tokenCert must be set as a PEM-encoded certificate signed by tokenKey, and supplied as a multiline string, indented one more than tokenCert on the following line.
+  tokenCert: ""
+  # The XSRF key. Will be generated automatically if it isn't specified
+  # While you specified, Please make sure it is 32 characters, otherwise would have validation issue at the harbor-core runtime
+  # https://github.com/goharbor/harbor/pull/21154 
+  xsrfKey: ""
+  # If using existingSecret, the key is defined by core.existingXsrfSecretKey
+  existingXsrfSecret: ""
+  # If using existingSecret, the key
+  existingXsrfSecretKey: CSRF_KEY
+  # The time duration for async update artifact pull_time and repository
+  # pull_count, the unit is second. Will be 10 seconds if it isn't set.
+  # eg. artifactPullAsyncFlushDuration: 10
+  artifactPullAsyncFlushDuration:
+  gdpr:
+    deleteUser: false
+    auditLogsCompliant: false
+
+jobservice:
+  image:
+    repository: goharbor/harbor-jobservice
+    tag: v2.13.0
+  automountServiceAccountToken: false
+  replicas: 1
+  revisionHistoryLimit: 3
+  # resources:
+  #   requests:
+  #     memory: 256Mi
+  #     cpu: 100m
+  # Spread Pods across failure-domains like regions, availability zones or nodes
+  maxJobWorkers: 10
+  # The logger for jobs: "file", "database" or "stdout"
+  jobLoggers:
+  - file
+  # - database
+  # - stdout
+  # The jobLogger sweeper duration (ignored if `jobLogger` is `stdout`)
+  loggerSweeperDuration: 7 #days
+  notification:
+    webhook_job_max_retry: 3
+    webhook_job_http_client_timeout: 3 # in seconds
+  reaper:
+    max_update_hours: 12
+    # the max time for execution in running state without new task created
+    max_dangling_hours: 168
+  # Secret is used when job service communicates with other components.
+  # If a secret key is not specified, Helm will generate one.
+  # Must be a string of 16 chars.
+  secret: ""
+  # Use an existing secret resource
+  existingSecret: ""
+  # Key within the existing secret for the job service secret
+  existingSecretKey: JOBSERVICE_SECRET
+
+registry:
+  registry:
+    image:
+      repository: goharbor/registry-photon
+      tag: v2.13.0
+    # resources:
+    #  requests:
+    #    memory: 256Mi
+    #    cpu: 100m
+  controller:
+    image:
+      repository: goharbor/harbor-registryctl
+      tag: v2.13.0
+    # resources:
+    #  requests:
+    #    memory: 256Mi
+    #    cpu: 100m
+  replicas: 2
+  revisionHistoryLimit: 3
+  # Spread Pods across failure-domains like regions, availability zones or nodes
+  topologySpreadConstraints: []
+  # - maxSkew: 1
+  #   topologyKey: topology.kubernetes.io/zone
+  #   nodeTaintsPolicy: Honor
+  #   whenUnsatisfiable: DoNotSchedule
+  ## Additional deployment annotations
+
+  # Secret is used to secure the upload state from client
+  # and registry storage backend.
+  # See: https://github.com/distribution/distribution/blob/release/2.8/docs/configuration.md#http
+  # If a secret key is not specified, Helm will generate one.
+  # Must be a string of 16 chars.
+  secret: ""
+  # Use an existing secret resource
+  existingSecret: ""
+  # Key within the existing secret for the registry service secret
+  existingSecretKey: REGISTRY_HTTP_SECRET
+  # If true, the registry returns relative URLs in Location headers. The client is responsible for resolving the correct URL.
+  relativeurls: false
+  credentials:
+    # If using existingSecret, the key must be REGISTRY_PASSWD and REGISTRY_HTPASSWD
+    existingSecret: ""
+    # Login and password in htpasswd string format. Excludes `registry.credentials.username`  and `registry.credentials.password`. May come in handy when integrating with tools like argocd or flux. This allows the same line to be generated each time the template is rendered, instead of the `htpasswd` function from helm, which generates different lines each time because of the salt.
+    # htpasswdString: $apr1$XLefHzeG$Xl4.s00sMSCCcMyJljSZb0 # example string
+    htpasswdString: ""
+  middleware:
+    enabled: false
+  # enable purge _upload directories
+  upload_purging:
+    enabled: true
+    age: 48h
+    interval: 24h
+    dryrun: false
+
+trivy:
+  enabled: true
+  image:
+    repository: goharbor/trivy-adapter-photon
+    tag: v2.13.0
+  replicas: 1
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+  # vulnType a comma-separated list of vulnerability types. Possible values are `os` and `library`.
+  vulnType: "os,library"
+  # severity a comma-separated list of severities to be checked
+  severity: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+  # ignoreUnfixed the flag to display only fixed vulnerabilities
+  ignoreUnfixed: false
+  # insecure the flag to skip verifying registry certificate
+  insecure: false
+  # You might want to set the value of this flag to `true` in test or CI/CD environments to avoid GitHub rate limiting issues.
+  # If the value is set to `true` you have to manually download the `trivy.db` file and mount it in the
+  # `/home/scanner/.cache/trivy/db/trivy.db` path.
+  skipUpdate: false
+  # Comma-separated list of what security issues to detect. Defaults to `vuln`.
+  securityCheck: "vuln"
+  # The duration to wait for scan completion
+  timeout: 5m0s
+
+database:
+  type: internal
+  internal:
+    image:
+      repository: goharbor/harbor-db
+      tag: v2.13.0
+    # resources:
+    #  requests:
+    #    memory: 256Mi
+    #    cpu: 100m
+    # The timeout used in livenessProbe; 1 to 5 seconds
+    livenessProbe:
+      timeoutSeconds: 1
+    # The timeout used in readinessProbe; 1 to 5 seconds
+    readinessProbe:
+      timeoutSeconds: 1
+    # The initial superuser password for internal database
+    password: "changeit"
+    # The size limit for Shared memory, pgSQL use it for shared_buffer
+    # More details see:
+    # https://github.com/goharbor/harbor/issues/15034
+    shmSizeLimit: 512Mi
+    initContainer:
+      migrator: {}
+      # resources:
+      #  requests:
+      #    memory: 128Mi
+      #    cpu: 100m
+      permissions: {}
+      # resources:
+      #  requests:
+      #    memory: 128Mi
+      #    cpu: 100m
+  external:
+    host: "192.168.0.1"
+    port: "5432"
+    username: "user"
+    password: "password"
+    coreDatabase: "registry"
+    # if using existing secret, the key must be "password"
+    existingSecret: ""
+    sslmode: "disable"
+  maxIdleConns: 100
+  maxOpenConns: 900
+  podAnnotations: {}
+  podLabels: {}
+
+redis:
+  type: internal
+  internal:
+    image:
+      repository: goharbor/redis-photon
+      tag: v2.13.0
+    # resources:
+    #  requests:
+    #    memory: 256Mi
+    #    cpu: 100m
+    jobserviceDatabaseIndex: "1"
+    registryDatabaseIndex: "2"
+    trivyAdapterIndex: "5"
+
+exporter:
+  image:
+    repository: goharbor/harbor-exporter
+    tag: v2.13.0
+  serviceAccountName: ""
+  # mount the service account token
+  automountServiceAccountToken: false
+  replicas: 1
+  revisionHistoryLimit: 10
+  # resources:
+  #  requests:
+  #    memory: 256Mi
+  #    cpu: 100m
+  cacheDuration: 23
+  cacheCleanInterval: 14400
