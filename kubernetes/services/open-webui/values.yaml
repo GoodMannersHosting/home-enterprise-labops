@@ -4,6 +4,13 @@ ollama:
   name: "ollama"
   enabled: true
   fullnameOverride: ""
+  resources:
+    requests:
+      nvidia.com/gpu: "1"
+    limits:
+      memory: "8Gi"
+      cpu: "2"
+      nvidia.com/gpu: "1"
   ollama:
     gpu:
       enabled: true
@@ -18,30 +25,14 @@ ollama:
     value: "1"
   - name: "OLLAMA_FLASH_ATTENTION"
     value: "1"
-  - name: "OLLAMA_DEBUG"
-    value: "1"
+  # - name: "OLLAMA_DEBUG"
+  #   value: "1"
   - name: "OLLAMA_MAX_LOADED_MODELS"
     value: "1"
   runtimeClassName: nvidia
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-        - matchExpressions:
-          # On discrete-GPU based systems NFD adds the following label where 10de is the NVIDIA PCI vendor ID
-          - key: feature.node.kubernetes.io/pci-0300_10de.present
-            operator: In
-            values:
-            - "true"
-        - matchExpressions:
-          # We allow a GPU deployment to be forced by setting the following label to "true"
-          - key: "nvidia.com/gpu.present"
-            operator: In
-            values:
-            - "true"
   persistentVolume:
     enabled: true
-    size: 100Gi
+    size: 160Gi
     storageClass: ceph-rbd-retain
     accessModes:
     - ReadWriteOnce
