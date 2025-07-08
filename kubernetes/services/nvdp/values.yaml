@@ -1,9 +1,46 @@
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        # On discrete-GPU based systems NFD adds the following label where 10de is the NVIDIA PCI vendor ID
+        - key: feature.node.kubernetes.io/pci-10de.present
+          operator: In
+          values:
+          - "true"
+      - matchExpressions:
+        # We allow a GPU deployment to be forced by setting the following label to "true"
+        - key: "nvidia.com/gpu.present"
+          operator: In
+          values:
+          - "true"
 config:
   map:
     default: |-
       version: v1
       flags:
-        migStrategy: none
+        migStrategy: "none"
+        failOnInitError: true
+        nvidiaDriverRoot: "/"
+        nvidiaDevRoot: "/"
+        plugin:
+          passDeviceSpecs: true
+          deviceListStrategy: "envvar"
+          deviceIDStrategy: "uuid"
+        gfd:
+          oneshot: false
+          noTimestamp: false
+          outputFile: "/etc/kubernetes/node-feature-discovery/features.d/gfd"
+          sleepInterval: "60s"
+      sharing:
+        timeSlicing:
+          resources:
+          - name: "nvidia.com/gpu"
+            replicas: 4
+      resources:
+        gpus:
+        - pattern: "*"
+          name: "nvidia.com/gpu"
     mig-single: |-
       version: v1
       flags:
@@ -16,25 +53,10 @@ config:
   default: "default"
   # List of fallback strategies to attempt if no config is selected and no default is provided
   fallbackStrategies: [ "named", "single" ]
+gfd:
+  enabled: true
+nfd:
+  enabled: true
 runtimeClassName: nvidia
 nodeSelector:
-  feature.node.kubernetes.io/pci-0300_10de.present: "true"
-affinity:
-  nodeAffinity:
-    requiredDuringSchedulingIgnoredDuringExecution:
-      nodeSelectorTerms:
-      - matchExpressions:
-        # On discrete-GPU based systems NFD adds the following label where 10de is the NVIDIA PCI vendor ID
-        - key: feature.node.kubernetes.io/pci-0300_10de.present
-          operator: In
-          values:
-          - "true"
-      - matchExpressions:
-        # We allow a GPU deployment to be forced by setting the following label to "true"
-        - key: "nvidia.com/gpu.present"
-          operator: In
-          values:
-          - "true"
-nfd: {}
-gfd:
-  enabled: false
+  feature.node.kubernetes.io/pci-10de.present: "true"

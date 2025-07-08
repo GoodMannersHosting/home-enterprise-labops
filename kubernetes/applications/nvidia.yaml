@@ -12,51 +12,15 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   sources:
-  - repoURL: https://nvidia.github.io/k8s-device-plugin
-    chart: nvidia-device-plugin
+  - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
     targetRevision: *chartVersion
+    ref: main
+  - repoURL: https://nvidia.github.io/k8s-device-plugin
+    targetRevision: *chartVersion
+    chart: nvidia-device-plugin
     helm:
-      valuesObject:
-        config:
-          map:
-            default: |-
-              version: v1
-              flags:
-                migStrategy: none
-            mig-single: |-
-              version: v1
-              flags:
-                migStrategy: single
-            mig-mixed: |-
-              version: v1
-              flags:
-                migStrategy: mixed
-          # Default config name within the ConfigMap
-          default: "default"
-          # List of fallback strategies to attempt if no config is selected and no default is provided
-          fallbackStrategies: [ "named", "single" ]
-        runtimeClassName: nvidia
-        nodeSelector:
-          feature.node.kubernetes.io/pci-0300_10de.present: "true"
-        affinity:
-          nodeAffinity:
-            requiredDuringSchedulingIgnoredDuringExecution:
-              nodeSelectorTerms:
-              - matchExpressions:
-                # On discrete-GPU based systems NFD adds the following label where 10de is the NVIDIA PCI vendor ID
-                - key: feature.node.kubernetes.io/pci-0300_10de.present
-                  operator: In
-                  values:
-                  - "true"
-              - matchExpressions:
-                # We allow a GPU deployment to be forced by setting the following label to "true"
-                - key: "nvidia.com/gpu.present"
-                  operator: In
-                  values:
-                  - "true"
-        nfd: {}
-        gfd:
-          enabled: false
+      valueFiles:
+      - $values/kubernetes/services/nvdp/values.yaml
   - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
     targetRevision: main
     path: kubernetes/core/runtimes
