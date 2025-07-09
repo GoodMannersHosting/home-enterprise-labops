@@ -1,0 +1,289 @@
+---
+defaultPodOptions:
+  automountServiceAccountToken: true
+  enableServiceLinks: false
+  restartPolicy: Always
+  securityContext:
+    fsGroup: 1000
+    fsGroupChangePolicy: OnRootMismatch
+
+controllers:
+  main:
+    enabled: true
+    type: deployment
+    replicas: 1
+    revisionHistoryLimit: 2
+    containers:
+      k8s:
+        image:
+          repository: docker.io/mcp/kubernetes
+          tag: "latest"
+          pullPolicy: "IfNotPresent"
+        securityContext:
+          allowPrivilegeEscalation: false
+        ports:
+        - name: sse
+          containerPort: 3001
+          protocol: TCP
+        env:
+        - name: ALLOW_ONLY_NON_DESTRUCTIVE_TOOLS
+          value: "true"
+        - name: ENABLE_UNSAFE_SSE_TRANSPORT
+          value: "1"
+        - name: PORT
+          value: "3001"
+        - name: HOST
+          value: "0.0.0.0"
+        resources:
+          limits:
+            cpu: 1
+            memory: 2Gi
+          requests:
+            cpu: 250m
+            memory: 1Gi
+        lifecycle: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      mcpo:
+        image:
+          repository: ghcr.io/open-webui/mcpo
+          tag: "main"
+          pullPolicy: "IfNotPresent"
+        ports:
+        - name: api
+          containerPort: 8000
+          protocol: TCP
+        env:
+        - name: MCPO_API_KEY
+          value: "top-secret"
+        securityContext:
+          allowPrivilegeEscalation: false
+        resources:
+          limits:
+            cpu: 1
+            memory: 2Gi
+          requests:
+            cpu: 250m
+            memory: 1Gi
+        command:
+        - mcpo
+        args:
+        - --port
+        - "8000"
+        - --api-key
+        - "$(MCPO_API_KEY)"
+        - --server-type
+        - "sse"
+        - --
+        - http://0.0.0.0:3001/sse
+
+service:
+  core:
+    enabled: true
+    controller: main
+    primary: true
+    type: ClusterIP
+    ports:
+      api:
+        enabled: true
+        port: 8000
+        targetPort: api
+        protocol: TCP
+      sse:
+        enabled: true
+        port: 3001
+        targetPort: sse
+        protocol: TCP
+
+serviceAccount:
+  k8s-mcp:
+    enabled: true
+
+rbac:
+  roles:
+    cluster-readonly:
+      enabled: true
+      type: ClusterRole
+      rules:
+      - apiGroups: [ "" ]
+        resources:
+        - bindings
+        - componentstatuses
+        - configmaps
+        - endpoints
+        - events
+        - limitranges
+        - namespaces
+        - nodes
+        - persistentvolumeclaims
+        - persistentvolumes
+        - pods
+        - podtemplates
+        - replicationcontrollers
+        - resourcequotas
+        - serviceaccounts
+        - services
+        - challenges
+        - orders
+        - mutatingwebhookconfigurations
+        - validatingadmissionpolicies
+        - validatingadmissionpolicybindings
+        - validatingwebhookconfigurations
+        - compositeresourcedefinitions
+        - compositionrevisions
+        - compositions
+        - environmentconfigs
+        - usages
+        - customresourcedefinitions
+        - apiservices
+        - controllerrevisions
+        - daemonsets
+        - deployments
+        - replicasets
+        - statefulsets
+        - selfsubjectreviews
+        - tokenreviews
+        - horizontalpodautoscalers
+        - cronjobs
+        - jobs
+        - sealedsecrets
+        - cephblockpoolradosnamespaces
+        - cephblockpools
+        - cephbucketnotifications
+        - cephbuckettopics
+        - cephclients
+        - cephclusters
+        - cephcosidrivers
+        - cephfilesystemmirrors
+        - cephfilesystems
+        - cephfilesystemsubvolumegroups
+        - cephnfses
+        - cephobjectrealms
+        - cephobjectstores
+        - cephobjectstoreusers
+        - cephobjectzonegroups
+        - cephobjectzones
+        - cephrbdmirrors
+        - certificaterequests
+        - certificates
+        - clusterissuers
+        - issuers
+        - certificatesigningrequests
+        - ciliumbgpadvertisements
+        - ciliumbgpclusterconfigs
+        - ciliumbgpnodeconfigoverrides
+        - ciliumbgpnodeconfigs
+        - ciliumbgppeerconfigs
+        - ciliumbgppeeringpolicies
+        - ciliumcidrgroups
+        - ciliumclusterwideenvoyconfigs
+        - ciliumclusterwidenetworkpolicies
+        - ciliumendpoints
+        - ciliumenvoyconfigs
+        - ciliumexternalworkloads
+        - ciliumidentities
+        - ciliuml2announcementpolicies
+        - ciliumloadbalancerippools
+        - ciliumlocalredirectpolicies
+        - ciliumnetworkpolicies
+        - ciliumnodeconfigs
+        - ciliumnodes
+        - ciliumpodippools
+        - ingressclassparameterses
+        - tcpingresses
+        - udpingresses
+        - leases
+        - endpointslices
+        - events
+        - wasmplugins
+        - dnsendpoints
+        - flowschemas
+        - prioritylevelconfigurations
+        - backendtlspolicies
+        - gatewayclasses
+        - gateways
+        - grpcroutes
+        - httproutes
+        - referencegrants
+        - tcproutes
+        - tlsroutes
+        - udproutes
+        - xbackendtrafficpolicies
+        - xlistenersets
+        - volumegroupsnapshotclasses
+        - volumegroupsnapshotcontents
+        - volumegroupsnapshots
+        - nodes
+        - pods
+        - destinationrules
+        - envoyfilters
+        - gateways
+        - proxyconfigs
+        - serviceentries
+        - sidecars
+        - virtualservices
+        - workloadentries
+        - workloadgroups
+        - ingressclasses
+        - ingresses
+        - ipaddresses
+        - networkpolicies
+        - servicecidrs
+        - nodefeaturegroups
+        - nodefeaturerules
+        - nodefeatures
+        - runtimeclasses
+        - clusterpolicies
+        - nvidiadrivers
+        - objectbucketclaims
+        - objectbuckets
+        - configurationrevisions
+        - configurations
+        - controllerconfigs
+        - deploymentruntimeconfigs
+        - functionrevisions
+        - functions
+        - imageconfigs
+        - locks
+        - providerrevisions
+        - providers
+        - poddisruptionbudgets
+        - backups
+        - clusterimagecatalogs
+        - clusters
+        - databases
+        - imagecatalogs
+        - poolers
+        - publications
+        - scheduledbackups
+        - subscriptions
+        - priorityclasses
+        - storeconfigs
+        - authorizationpolicies
+        - peerauthentications
+        - requestauthentications
+        - volumesnapshotclasses
+        - volumesnapshotcontents
+        - volumesnapshots
+        - csidrivers
+        - csinodes
+        - csistoragecapacities
+        - storageclasses
+        - volumeattachments
+        - telemetries
+        verbs: [ "get", "list", "watch" ]
+      - apiGroups: [ "" ]
+        resources: [ "secrets" ]
+        verbs: [ "list" ]
+  bindings:
+    cluster-readonly:
+      enabled: true
+      type: ClusterRoleBinding
+      roleRef:
+        kind: ClusterRole
+        name: k8s-mcp
+        apiGroup: rbac.authorization.k8s.io
+      subjects:
+      - kind: ServiceAccount
+        name: k8s-mcp
+        namespace: aiml
