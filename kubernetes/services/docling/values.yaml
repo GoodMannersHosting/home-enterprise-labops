@@ -2,6 +2,7 @@
 defaultPodOptions:
   automountServiceAccountToken: false
   enableServiceLinks: false
+  runtimeClassName: nvidia
   restartPolicy: Always
   securityContext:
     fsGroup: 1000
