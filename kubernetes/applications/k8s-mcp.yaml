@@ -2,20 +2,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: powerdns
+  name: k8s-mcp
   namespace: argocd
   labels:
     chartVersion: &chartVersion 4.1.2
 spec:
   destination:
-    namespace: powerdns
+    namespace: aiml
     server: https://kubernetes.default.svc
   project: default
   sources:
-  - repoURL: &repo https://github.com/GoodMannersHosting/home-enterprise-labops.git
-    targetRevision: main
-    path: kubernetes/core/powerdns
-  - repoURL: *repo
+  - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
     targetRevision: main
     ref: values
   - repoURL: https://bjw-s-labs.github.io/helm-charts
@@ -23,7 +20,7 @@ spec:
     targetRevision: *chartVersion
     helm:
       valueFiles:
-      - $values/kubernetes/core/powerdns/values.yaml
+      - $values/kubernetes/services/k8s-mcp/values.yaml
   syncPolicy:
     automated:
       prune: true
