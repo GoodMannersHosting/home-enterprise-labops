@@ -1,0 +1,86 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: harbor-core-internal-tls
+spec:
+  secretName: harbor-core-internal-tls
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth
+  - client auth
+  dnsNames:
+  - harbor-core
+  - harbor-portal
+  - 127.0.0.1
+  issuerRef:
+    kind: Issuer
+    name: harbor-internal-ca-issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: harbor-jobservice-internal-tls
+spec:
+  secretName: harbor-jobservice-internal-tls
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth
+  - client auth
+  dnsNames:
+  - harbor-jobservice
+  issuerRef:
+    kind: Issuer
+    name: harbor-internal-ca-issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: harbor-registry-internal-tls
+spec:
+  secretName: harbor-registry-internal-tls
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth
+  - client auth
+  dnsNames:
+  - harbor-registry
+  issuerRef:
+    kind: Issuer
+    name: harbor-internal-ca-issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: harbor-portal-internal-tls
+spec:
+  secretName: harbor-portal-internal-tls
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth
+  - client auth
+  dnsNames:
+  - harbor-portal
+  issuerRef:
+    kind: Issuer
+    name: harbor-internal-ca-issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: harbor-trivy-internal-tls
+spec:
+  secretName: harbor-trivy-internal-tls
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth
+  - client auth
+  dnsNames:
+  - harbor-trivy
+  issuerRef:
+    kind: Issuer
+    name: harbor-internal-ca-issuer

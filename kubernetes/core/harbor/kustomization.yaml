@@ -1,0 +1,6 @@
+namespace: harbor
+resources:
+- certs
+- networking
+- namespace.yaml
+- secret.yaml
