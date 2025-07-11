@@ -1,0 +1,4 @@
+resources:
+- harbor-internal-ca.yaml
+- harbor-internal-certs.yaml
+- harbor-token-ca.yaml

@@ -1,0 +1,29 @@
+# https://cert-manager.io/docs/configuration/selfsigned/#bootstrapping-ca-issuers
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: harbor-token-ca
+spec:
+  isCA: true
+  commonName: harbor-token-ca
+  secretName: harbor-token-ca-secret
+  privateKey:
+    algorithm: RSA
+    size: 2048
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth
+  - client auth
+  issuerRef:
+    name: selfsigned-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: harbor-token-ca-issuer
+spec:
+  ca:
+    secretName: harbor-token-ca-secret

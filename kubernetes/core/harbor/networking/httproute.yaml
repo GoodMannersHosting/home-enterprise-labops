@@ -1,0 +1,22 @@
+---
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TLSRoute
+metadata:
+  name: harbor
+spec:
+  hostnames:
+  - harbor.cloud.danmanners.com
+  parentRefs:
+  - kind: Gateway
+    group: gateway.networking.k8s.io
+    name: gwapi
+    namespace: default
+    sectionName: harbor
+  rules:
+  - name: harbor-portal
+    backendRefs:
+    - group: ""
+      kind: Service
+      name: harbor
+      port: 443
+      weight: 1

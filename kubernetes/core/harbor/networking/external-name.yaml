@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: harbor-extname
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: harbor.cloud.danmanners.com
+    external-dns.alpha.kubernetes.io/ttl: "300"
+spec:
+  type: ExternalName
+  externalName: unifi-home.homelab.danmanners.com
+  sessionAffinity: None
