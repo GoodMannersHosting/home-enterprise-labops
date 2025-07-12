@@ -56,10 +56,7 @@ nodes:
   schematic:
     customization:
       systemExtensions:
-        officialExtensions: &extensions
-          - siderolabs/binfmt-misc
-          - siderolabs/util-linux-tools
-          - siderolabs/qemu-guest-agent
+        officialExtensions: *extensions
   ipAddress: 172.21.0.12
   disableSearchDomain: true
   nameservers: &nameservers
@@ -87,10 +84,7 @@ nodes:
   schematic:
     customization:
       systemExtensions:
-        officialExtensions: &extensions
-          - siderolabs/binfmt-misc
-          - siderolabs/util-linux-tools
-          - siderolabs/qemu-guest-agent
+        officialExtensions: *extensions
   ipAddress: 172.21.0.13
   disableSearchDomain: true
   nameservers: &nameservers

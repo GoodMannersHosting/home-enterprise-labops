@@ -10,7 +10,7 @@ spec:
   secretName: wildcard
   duration: 1128h # 47 days
   renewBefore: 168h # 7 days
-  commonName: "*.capi-core.homelab.danmanners.com"
+  commonName: "*.cloud.danmanners.com"
   dnsNames:
   - "*.capi-core.homelab.danmanners.com"
   - "*.cloud.danmanners.com"

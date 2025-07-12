@@ -46,15 +46,15 @@ spec:
       - name: wildcard
         kind: Secret
         group: ""
-  - name: harbor
-    protocol: TLS
-    port: 443
-    hostname: "harbor.cloud.danmanners.com"
-    allowedRoutes:
-      namespaces:
-        from: All
-    tls:
-      mode: Passthrough
+  # - name: harbor
+  #   protocol: TLS
+  #   port: 443
+  #   hostname: "harbor.cloud.danmanners.com"
+  #   allowedRoutes:
+  #     namespaces:
+  #       from: All
+  #   tls:
+  #     mode: Passthrough
   - name: palworld-server
     protocol: UDP
     port: 8211
