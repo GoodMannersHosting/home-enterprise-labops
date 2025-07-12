@@ -8,10 +8,10 @@ externalURL: https://harbor.cloud.danmanners.com
 expose:
   type: clusterIP
   tls:
-    enabled: true
-    certSource: secret
+    enabled: false # Gateway API and TLS ain't working so well :(
+    certSource: none
     secret:
-      secretName: wildcard
+      secretName: "wildcard"
   clusterIP:
     name: harbor
     ports:

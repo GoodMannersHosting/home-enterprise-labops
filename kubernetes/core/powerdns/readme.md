@@ -31,6 +31,16 @@ If you want to use Cert-Manager to generate valid Let's Encrypt certificates, yo
 - Forwarding Port: 53
 - Protocol: UDP
 
+## Deploying PowerDNS
+
+```bash
+kubectl apply -k kubernetes/core/powerdns
+
+helm upgrade --install powerdns bjw-s/app-template \
+--version 4.1.2 --namespace powerdns \
+-f kubernetes/core/powerdns/values.yaml
+```
+
 ## Creating a new zone
 
 ```bash

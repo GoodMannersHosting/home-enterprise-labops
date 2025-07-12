@@ -2,24 +2,27 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: cnpg
+  name: envoy-gateway
   namespace: argocd
   labels:
-    # renovate: datasource=helm chartLocation=https://cloudnative-pg.github.io/charts chart=cloudnative-pg
-    chartVersion: &chartVersion 0.24.0
+    chartVersion: &chartVersion v1.4.2
 spec:
   destination:
-    namespace: cnpg-system
+    namespace: envoy-gateway-system
     server: https://kubernetes.default.svc
   project: default
   sources:
-  - repoURL: https://cloudnative-pg.github.io/charts
-    chart: cloudnative-pg
+  - repoURL: docker.io/envoyproxy
     targetRevision: *chartVersion
+    chart: gateway-helm
+  - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+    targetRevision: main
+    path: kubernetes/core/envoy-gateway
+    directory:
+      recurse: true
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
     - ServerSideApply=true
-    - CreateNamespace=true

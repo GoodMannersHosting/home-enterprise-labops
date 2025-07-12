@@ -2,13 +2,7 @@
 
 These commands will be wrapped behind GoTasks in the future.
 
-## Gateway API
-
-```bash
-kubectl apply --server-side -k kubernetes/core/gateway-api
-```
-
-## Install Cilium
+## Install Core Required Resources
 
 ```bash
 # Add the Cilium Helm repository and update
@@ -20,28 +14,45 @@ helm upgrade --install cilium cilium/cilium \
 --namespace=kube-system --version 1.17.5 \
 --values kubernetes/core/kube-system/cilium/values.yaml
 
+sleep 20
+
 # Set up the BGP config
 kubectl apply --server-side -k kubernetes/core/kube-system/cilium/bgp
-```
 
-## CoreDNS
+# Set the Cert Manager version
+export CERT_MANAGER_VERSION="v1.17.1"
 
-```bash
+# Add the Cert Manager Helm repository and update
+kubectl apply --server-side \
+-f "https://github.com/cert-manager/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.crds.yaml"
+
+## Gateway API
+kubectl apply --server-side -k kubernetes/core/gateway-api
+
 # Add the CoreDNS Helm repository and update
 helm repo add coredns https://coredns.github.io/helm
 helm repo update
 
 # Install CoreDNS
 helm upgrade --install coredns coredns/coredns \
---namespace=kube-system --version 1.39.2 \
+--namespace=kube-system --version 1.43.0 \
 --values kubernetes/core/kube-system/coredns/values.yaml
+
+# Add the Jetstack Helm repository and update
+helm repo add jetstack https://charts.jetstack.io
+helm repo update
+
+# Install Cert Manager
+helm upgrade --install cert-manager jetstack/cert-manager \
+--create-namespace --namespace cert-manager \
+--version ${CERT_MANAGER_VERSION}
 ```
 
 ## Istio
 
 ```bash
 # Set the Istio Version
-ISTIO_VERSION=1.26.0
+export ISTIO_VERSION=1.26.2
 # Add the Istio Helm repository and update
 helm repo add istio https://istio-release.storage.googleapis.com/charts
 helm repo update
@@ -71,20 +82,24 @@ helm upgrade --install istio-ztunnel istio/ztunnel \
 --version ${ISTIO_VERSION} \
 --values kubernetes/core/istio-system/ztunnel.values.yaml \
 --wait
-```
 
-## Istio Ingress
-
-```bash
-helm install istio-ingress istio/gateway \
+# Install Istio Gateway API
+helm upgrade --install istio-ingress istio/gateway \
+--version ${ISTIO_VERSION} \
 --create-namespace -n istio-ingress --wait
 ```
 
-## Validation Steps
+## Metrics Server
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.25/samples/bookinfo/platform/kube/bookinfo.yaml
-kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.25/samples/bookinfo/gateway-api/bookinfo-gateway.yaml
+# Add the Metrics Server Helm repository and update
+helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
+helm repo update
+
+# Install the Metrics Server
+helm upgrade --install metrics-server metrics-server/metrics-server \
+--namespace kube-system --version 3.12.2 \
+--values kubernetes/core/kube-system/metrics-server/values.yaml
 ```
 
 ## Sealed Secrets
@@ -112,39 +127,6 @@ sealedsecrets.bitnami.com/sealed-secrets-key=true
 helm upgrade --install sealed-secrets sealed-secrets/sealed-secrets \
 --namespace sealed-secrets \
 --version 2.17.2 --values kubernetes/core/sealed-secrets/values.yaml
-```
-
-## Cert Manager
-
-```bash
-# Set the Cert Manager version
-export CERT_MANAGER_VERSION="v1.17.1"
-
-# Add the Cert Manager Helm repository and update
-kubectl apply --server-side \
--f "https://github.com/cert-manager/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.crds.yaml"
-
-# Add the Jetstack Helm repository and update
-helm repo add jetstack https://charts.jetstack.io
-helm repo update
-
-# Install Cert Manager
-helm upgrade --install cert-manager jetstack/cert-manager \
---create-namespace --namespace cert-manager \
---version ${CERT_MANAGER_VERSION}
-```
-
-## Metrics Server
-
-```bash
-# Add the Metrics Server Helm repository and update
-helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
-helm repo update
-
-# Install the Metrics Server
-helm upgrade --install metrics-server metrics-server/metrics-server \
---namespace kube-system --version 3.12.2 \
---values kubernetes/core/kube-system/metrics-server/values.yaml
 ```
 
 ## Cluster API Initialization

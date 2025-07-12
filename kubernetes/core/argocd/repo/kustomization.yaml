@@ -1,0 +1,2 @@
+resources:
+- envoy-gateway.yaml
