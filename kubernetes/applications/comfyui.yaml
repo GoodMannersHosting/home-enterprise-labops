@@ -20,7 +20,7 @@ spec:
     targetRevision: *chartVersion
     helm:
       valueFiles:
-      - $values/kubernetes/core/comfyui/values.yaml
+      - $values/kubernetes/services/comfyui/values.yaml
   syncPolicy:
     automated:
       prune: true
