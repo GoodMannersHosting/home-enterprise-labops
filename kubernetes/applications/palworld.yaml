@@ -14,7 +14,7 @@ spec:
   sources:
   - repoURL: &repo https://github.com/GoodMannersHosting/home-enterprise-labops.git
     targetRevision: main
-    path: kubernetes/core/palworld
+    path: kubernetes/services/palworld
   - repoURL: *repo
     targetRevision: main
     ref: values

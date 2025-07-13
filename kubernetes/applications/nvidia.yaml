@@ -13,7 +13,12 @@ spec:
   project: default
   sources:
   - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
-    targetRevision: *chartVersion
+    targetRevision: main
+    path: kubernetes/core/runtimes
+    directory:
+      recurse: true
+  - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+    targetRevision: main
     ref: main
   - repoURL: https://nvidia.github.io/k8s-device-plugin
     targetRevision: *chartVersion
@@ -21,11 +26,6 @@ spec:
     helm:
       valueFiles:
       - $values/kubernetes/services/nvdp/values.yaml
-  - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
-    targetRevision: main
-    path: kubernetes/core/runtimes
-    directory:
-      recurse: true
   syncPolicy:
     automated:
       prune: true
