@@ -1,9 +1,5 @@
 global:
-  domain: &url argocd.capi-core.homelab.danmanners.com
-  hostAliases:
-  - ip: "172.31.0.17"
-    hostnames:
-    - "keycloak.cloud.danmanners.com"
+  domain: &url argocd.cloud.danmanners.com
 
 crds:
   install: false
@@ -20,7 +16,7 @@ applicationSet:
 configs:
   cm:
     admin.enabled: true
-    url: &fullUrl https://argocd.capi-core.homelab.danmanners.com
+    url: &fullUrl https://argocd.cloud.danmanners.com
     oidc.config: |
       name: Keycloak
       issuer: https://keycloak.cloud.danmanners.com/realms/master

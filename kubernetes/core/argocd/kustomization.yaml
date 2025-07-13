@@ -4,12 +4,10 @@ kind: Kustomization
 resources:
 - repo
 - namespace.yaml
-- ingress.yaml
-- ingress-stg.yaml
+- external-dns.yaml
 - oidc-secret.yaml
 - helo-repo.yaml
+- tlsroute.yaml
 - app-of-apps.yaml
 - argo-appproject.yaml
-- https://raw.githubusercontent.com/argoproj/argo-cd/refs/tags/v3.0.0/manifests/crds/application-crd.yaml
-- https://raw.githubusercontent.com/argoproj/argo-cd/refs/tags/v3.0.0/manifests/crds/applicationset-crd.yaml
-- https://raw.githubusercontent.com/argoproj/argo-cd/refs/tags/v3.0.0/manifests/crds/appproject-crd.yaml
+- https://github.com/argoproj/argo-cd/manifests/crds?ref=v3.0.11
