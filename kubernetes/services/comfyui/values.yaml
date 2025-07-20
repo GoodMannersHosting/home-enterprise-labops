@@ -30,11 +30,11 @@ controllers:
         - name: NVIDIA_DRIVER_CAPABILITIES
           value: all
         - name: CLI_ARGS
-          value: "--verbose=DEBUG --fp8_e4m3fn-unet"
+          value: "--verbose=DEBUG"
         resources:
           limits:
             cpu: 1
-            memory: 4Gi
+            memory: 6Gi
             nvidia.com/gpu: "1"
           requests:
             cpu: 250m
