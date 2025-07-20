@@ -22,7 +22,7 @@ controllers:
           protocol: TCP
         image:
           repository: docker.io/yanwk/comfyui-boot
-          tag: "cu121"
+          tag: "cu124-slim"
           pullPolicy: "IfNotPresent"
         env:
         - name: NVIDIA_VISIBLE_DEVICES
