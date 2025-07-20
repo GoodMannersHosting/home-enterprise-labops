@@ -1,6 +1,7 @@
 # Temporary Setup Commands
 
-These commands will be wrapped behind GoTasks in the future.
+> [!NOTE]
+> These commands will be wrapped behind GoTasks in the future.
 
 ## Install Core Required Resources
 
@@ -9,13 +10,11 @@ These commands will be wrapped behind GoTasks in the future.
 helm repo add cilium https://helm.cilium.io/
 helm repo update
 
-# Install Cilium
 helm upgrade --install cilium cilium/cilium \
 --namespace=kube-system --version 1.17.5 \
 --values kubernetes/core/kube-system/cilium/values.yaml
 
 sleep 20
-
 # Set up the BGP config
 kubectl apply --server-side -k kubernetes/core/kube-system/cilium/bgp
 
@@ -28,6 +27,13 @@ kubectl apply --server-side \
 
 ## Gateway API
 kubectl apply --server-side -k kubernetes/core/gateway-api
+
+# Install Cilium
+helm upgrade --install cilium cilium/cilium \
+--namespace=kube-system --version 1.17.5 \
+--values kubernetes/core/kube-system/cilium/values.yaml
+
+sleep 20
 
 # Add the CoreDNS Helm repository and update
 helm repo add coredns https://coredns.github.io/helm

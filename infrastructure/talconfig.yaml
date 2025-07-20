@@ -1,5 +1,5 @@
 clusterName: capi-core
-talosVersion: v1.10.4
+talosVersion: v1.10.5
 kubernetesVersion: 1.33.1
 endpoint: "https://k8s-capi-core.homelab.danmanners.com:6443"
 cniConfig:
@@ -22,6 +22,10 @@ nodes:
 - hostname: capi-core-cn1.homelab.danmanners.com
   controlPlane: true
   installDisk: /dev/sda
+  machineSpec:
+    useUKI: true
+    mode: nocloud
+    secureboot: true
   schematic:
     customization:
       systemExtensions:
@@ -53,6 +57,10 @@ nodes:
 - hostname: capi-core-cn2.homelab.danmanners.com
   controlPlane: true
   installDisk: /dev/sda
+  machineSpec:
+    useUKI: true
+    mode: nocloud
+    secureboot: true
   schematic:
     customization:
       systemExtensions:
@@ -81,6 +89,10 @@ nodes:
 - hostname: capi-core-cn3.homelab.danmanners.com
   controlPlane: true
   installDisk: /dev/sda
+  machineSpec:
+    useUKI: true
+    mode: nocloud
+    secureboot: true
   schematic:
     customization:
       systemExtensions:
@@ -110,6 +122,10 @@ nodes:
 - hostname: capi-core-wn1.homelab.danmanners.com
   controlPlane: false
   installDisk: /dev/sda
+  machineSpec:
+    useUKI: true
+    mode: nocloud
+    secureboot: true
   schematic:
     customization:
       systemExtensions:
@@ -136,6 +152,10 @@ nodes:
 - hostname: capi-core-wn2.homelab.danmanners.com
   controlPlane: false
   installDisk: /dev/sda
+  machineSpec:
+    useUKI: true
+    mode: nocloud
+    secureboot: true
   schematic:
     customization:
       systemExtensions:
@@ -162,6 +182,10 @@ nodes:
 - hostname: capi-core-wn3.homelab.danmanners.com
   controlPlane: false
   installDisk: /dev/sda
+  machineSpec:
+    useUKI: true
+    mode: nocloud
+    secureboot: true
   schematic:
     customization:
       systemExtensions:
@@ -188,6 +212,10 @@ nodes:
 - hostname: capi-core-wn4.homelab.danmanners.com
   controlPlane: false
   installDisk: /dev/sda
+  machineSpec:
+    useUKI: true
+    mode: nocloud
+    secureboot: true
   schematic:
     customization:
       systemExtensions:
@@ -214,6 +242,10 @@ nodes:
 - hostname: capi-core-wn5.homelab.danmanners.com
   controlPlane: false
   installDisk: /dev/sda
+  machineSpec:
+    useUKI: true
+    mode: nocloud
+    secureboot: true
   schematic:
     customization:
       systemExtensions:
@@ -240,6 +272,10 @@ nodes:
 - hostname: capi-core-wn6.homelab.danmanners.com
   controlPlane: false
   installDisk: /dev/sda
+  machineSpec:
+    useUKI: true
+    mode: nocloud
+    secureboot: true
   schematic:
     customization:
       systemExtensions:
@@ -266,12 +302,16 @@ nodes:
 - hostname: capi-core-wn98.homelab.danmanners.com
   controlPlane: false
   installDisk: /dev/sda
+  machineSpec:
+    useUKI: true
+    mode: nocloud
+    secureboot: true
   # During Installation the kernel modules MUST NOT be loaded and
   # the below SHOULD BE COMMENTED OUT. Once the system is installed,
   # the kernel modules should be uncommented, the config re-generated,
   # and the system rebooted. This is to avoid issues where the NVIDIA
   # kernel modules cannot be loaded during the installation process,
-  # which makes sure the Talos installer fails.
+  # which makes sure the Talos installer fail.
   kernelModules:
   - name: nvidia
   - name: nvidia_uvm
@@ -306,7 +346,10 @@ nodes:
         - siderolabs/binfmt-misc
         - siderolabs/i915
         - siderolabs/intel-ucode
-        - siderolabs/nonfree-kmod-nvidia-production
+        # - siderolabs/nonfree-kmod-nvidia-production # Do not use this with the 50XX series of NVIDIA GPUs.
+        #   You can read more about it here:
+        #   https://developer.nvidia.com/blog/nvidia-transitions-fully-towards-open-source-gpu-kernel-modules/
+        - siderolabs/nvidia-open-gpu-kernel-modules-production
         - siderolabs/nvidia-container-toolkit-production
         - siderolabs/qemu-guest-agent
         - siderolabs/util-linux-tools
