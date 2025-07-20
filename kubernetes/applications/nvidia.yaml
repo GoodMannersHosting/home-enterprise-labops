@@ -5,7 +5,7 @@ metadata:
   name: nvdp
   namespace: argocd
   labels:
-    chartVersion: &chartVersion 0.17.1
+    chartVersion: &chartVersion 0.17.2
 spec:
   destination:
     namespace: nvidia-device-plugin
@@ -19,7 +19,7 @@ spec:
       recurse: true
   - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
     targetRevision: main
-    ref: main
+    ref: values
   - repoURL: https://nvidia.github.io/k8s-device-plugin
     targetRevision: *chartVersion
     chart: nvidia-device-plugin

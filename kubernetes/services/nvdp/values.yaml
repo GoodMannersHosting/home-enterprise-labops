@@ -8,12 +8,12 @@ affinity:
           operator: In
           values:
           - "true"
-      - matchExpressions:
-        # We allow a GPU deployment to be forced by setting the following label to "true"
-        - key: "nvidia.com/gpu.present"
-          operator: In
-          values:
-          - "true"
+      # - matchExpressions:
+      #   # We allow a GPU deployment to be forced by setting the following label to "true"
+      #   - key: "nvidia.com/gpu.present"
+      #     operator: In
+      #     values:
+      #     - "true"
 config:
   map:
     default: |-
