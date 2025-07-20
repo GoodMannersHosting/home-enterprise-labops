@@ -17,6 +17,9 @@ expose:
     ports:
       httpPort: 80
       httpsPort: 443
+  ingress:
+    hosts:
+      core: harbor.cloud.danmanners.com
 
 persistence:
   enabled: true
@@ -53,7 +56,7 @@ existingSecretAdminPassword: "harbor-service-secrets"
 existingSecretAdminPasswordKey: HARBOR_ADMIN_PASSWORD
 
 internalTLS:
-  enabled: true
+  enabled: false
   certSource: "secret"
   core:
     secretName: harbor-core-internal-tls
