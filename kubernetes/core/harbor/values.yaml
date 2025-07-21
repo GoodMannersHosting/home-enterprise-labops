@@ -114,6 +114,8 @@ core:
     initialDelaySeconds: 10
   quotaUpdateProvider: db # Or redis
   secretName: harbor-token-ca-secret
+  # existingSecret: "harbor-service-secrets"
+  # existingSecretSecretKey: CORE_SECRET
   existingXsrfSecret: "harbor-service-secrets"
   existingXsrfSecretKey: CSRF_KEY
   gdpr:
@@ -135,6 +137,8 @@ jobservice:
   reaper:
     max_update_hours: 12
     max_dangling_hours: 168
+  # existingSecret: "harbor-service-secrets"
+  # existingSecretKey: JOBSERVICE_SECRET
 
 registry:
   registry:
@@ -147,7 +151,11 @@ registry:
       tag: *tagVersion
   replicas: 2
   revisionHistoryLimit: 3
+  existingSecret: "harbor-service-secrets"
+  existingSecretKey: REGISTRY_HTPASSWD
   relativeurls: false
+  credentials:
+    existingSecret: "harbor-service-secrets"
   upload_purging:
     enabled: true
     age: 48h
