@@ -14,32 +14,32 @@ spec:
     sectionName: https-cloud
   rules:
   # API Endpoints
-  - name: harbor-core
-    backendRefs:
-    - group: ''
-      kind: Service
-      name: harbor-core
-      port: 80
-      weight: 1
-    matches:
-    - path:
-        type: PathPrefix
-        value: /c/
-    - path:
-        type: PathPrefix
-        value: /api/
-    - path:
-        type: PathPrefix
-        value: /service/
-    - path:
-        type: PathPrefix
-        value: /v2/
-    - path:
-        type: PathPrefix
-        value: /chartrepo/
-    timeouts:
-      backendRequest: 0s
-      request: 0s
+  # - name: harbor-core
+  #   backendRefs:
+  #   - group: ''
+  #     kind: Service
+  #     name: harbor-core
+  #     port: 80
+  #     weight: 1
+  #   matches:
+  #   - path:
+  #       type: PathPrefix
+  #       value: /c/
+  #   - path:
+  #       type: PathPrefix
+  #       value: /api/
+  #   - path:
+  #       type: PathPrefix
+  #       value: /service/
+  #   - path:
+  #       type: PathPrefix
+  #       value: /v2/
+  #   - path:
+  #       type: PathPrefix
+  #       value: /chartrepo/
+  #   timeouts:
+  #     backendRequest: 0s
+  #     request: 0s
   # Every Other endpoint
   - name: harbor
     backendRefs:
@@ -47,7 +47,7 @@ spec:
       kind: Service
       name: harbor
       port: 80
-      weight: 10
+      weight: 1
     matches:
     - path:
         type: PathPrefix
