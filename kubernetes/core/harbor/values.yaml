@@ -20,6 +20,7 @@ expose:
   ingress:
     hosts:
       core: harbor.cloud.danmanners.com
+      notary: notary.cloud.danmanners.com
 
 persistence:
   enabled: true
@@ -52,6 +53,7 @@ persistence:
     filesystem:
       rootdirectory: /storage
 
+existingSecret: "harbor-service-secrets"
 existingSecretAdminPassword: "harbor-service-secrets"
 existingSecretAdminPasswordKey: HARBOR_ADMIN_PASSWORD
 
@@ -79,8 +81,6 @@ logLevel: info
 imagePullPolicy: IfNotPresent
 updateStrategy:
   type: RollingUpdate
-
-existingSecret: "harbor-service-secrets"
 
 enableMigrateHelmHook: false
 metrics:
