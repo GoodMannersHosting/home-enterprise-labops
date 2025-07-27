@@ -1,2 +1,3 @@
 resources:
 - gh-app-creds.yaml
+- runner.yaml

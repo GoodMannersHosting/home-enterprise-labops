@@ -1,0 +1,206 @@
+---
+# Source: gha-runner-scale-set/templates/no_permission_serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: shr-gha-rs-no-permission
+  namespace: github
+  labels:
+    actions.github.com/scale-set-name: shr
+    actions.github.com/scale-set-namespace: github
+  finalizers:
+  - actions.github.com/cleanup-protection
+---
+# Source: gha-runner-scale-set/templates/manager_role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: shr-gha-rs-manager
+  namespace: github
+  labels:
+    actions.github.com/scale-set-name: shr
+    actions.github.com/scale-set-namespace: github
+    app.kubernetes.io/component: manager-role
+  finalizers:
+  - actions.github.com/cleanup-protection
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - create
+  - delete
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - pods/status
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - rolebindings
+  verbs:
+  - create
+  - delete
+  - get
+  - patch
+  - update
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - roles
+  verbs:
+  - create
+  - delete
+  - get
+  - patch
+  - update
+---
+# Source: gha-runner-scale-set/templates/manager_role_binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: shr-gha-rs-manager
+  namespace: github
+  labels:
+    actions.github.com/scale-set-name: shr
+    actions.github.com/scale-set-namespace: github
+    app.kubernetes.io/component: manager-role-binding
+  finalizers:
+  - actions.github.com/cleanup-protection
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: shr-gha-rs-manager
+subjects:
+- kind: ServiceAccount
+  name: arc
+  namespace: github
+---
+# Source: gha-runner-scale-set/templates/autoscalingrunnerset.yaml
+apiVersion: actions.github.com/v1alpha1
+kind: AutoscalingRunnerSet
+metadata:
+  name: shr
+  namespace: github
+  labels:
+    actions.github.com/scale-set-name: shr
+    actions.github.com/scale-set-namespace: github
+  annotations:
+    actions.github.com/values-hash: 1319406b35e3b13fe35f9169db4bed59945400809fcce4de085b7570ab8dca9
+    actions.github.com/cleanup-manager-role-binding: shr-gha-rs-manager
+    actions.github.com/cleanup-manager-role-name: shr-gha-rs-manager
+    actions.github.com/cleanup-no-permission-service-account-name: shr-gha-rs-no-permission
+spec:
+  githubConfigUrl: https://github.com/goodmannershosting
+  githubConfigSecret: gh-app-goodmannershosting
+  runnerGroup: default
+  runnerScaleSetName: shr
+  maxRunners: 6
+  minRunners: 1
+  template:
+    spec:
+      hostAliases:
+      - ip: "172.31.0.10"
+        hostnames:
+        - "harbor.cloud.danmanners.com"
+        - "ollama.cloud.danmanners.com"
+        - "n8n.cloud.danmanners.com"
+      restartPolicy: Never
+      serviceAccountName: shr-gha-rs-no-permission
+      initContainers:
+      - name: init-dind-externals
+        image: ghcr.io/actions/actions-runner:latest
+        command: [ "cp" ]
+        args: [ "-r", "/home/runner/externals/.", "/home/runner/tmpDir/" ]
+        volumeMounts:
+        - name: dind-externals
+          mountPath: /home/runner/tmpDir
+      - name: dind
+        image: docker:dind
+        args:
+        - dockerd
+        - --host=unix:///var/run/docker.sock
+        - --group=$(DOCKER_GROUP_GID)
+        env:
+        - name: DOCKER_GROUP_GID
+          value: "123"
+        securityContext:
+          privileged: true
+        restartPolicy: Always
+        startupProbe:
+          exec:
+            command:
+            - docker
+            - info
+          initialDelaySeconds: 0
+          failureThreshold: 24
+          periodSeconds: 5
+        volumeMounts:
+        - name: work
+          mountPath: /home/runner/_work
+        - name: dind-sock
+          mountPath: /var/run
+        - name: dind-externals
+          mountPath: /home/runner/externals
+      containers:
+      - name: runner
+        command:
+        - /home/runner/run.sh
+        image: ghcr.io/actions/actions-runner:latest
+        env:
+        - name: DOCKER_HOST
+          value: unix:///var/run/docker.sock
+        - name: RUNNER_WAIT_FOR_DOCKER_IN_SECONDS
+          value: "120"
+        volumeMounts:
+        - name: work
+          mountPath: /home/runner/_work
+        - name: dind-sock
+          mountPath: /var/run
+      volumes:
+      - name: dind-sock
+        emptyDir: {}
+      - name: dind-externals
+        ephemeral:
+          volumeClaimTemplate:
+            spec:
+              accessModes: [ "ReadWriteOnce" ]
+              storageClassName: "ceph-rbd"
+              resources:
+                requests:
+                  storage: 20Gi
+      - name: work
+        ephemeral:
+          volumeClaimTemplate:
+            spec:
+              accessModes: [ "ReadWriteOnce" ]
+              storageClassName: "ceph-rbd"
+              resources:
+                requests:
+                  storage: 12Gi
