@@ -1,107 +1,4 @@
 ---
-# Source: gha-runner-scale-set/templates/no_permission_serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: shr-gha-rs-no-permission
-  namespace: github
-  labels:
-    actions.github.com/scale-set-name: shr
-    actions.github.com/scale-set-namespace: github
-  finalizers:
-  - actions.github.com/cleanup-protection
----
-# Source: gha-runner-scale-set/templates/manager_role.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: shr-gha-rs-manager
-  namespace: github
-  labels:
-    actions.github.com/scale-set-name: shr
-    actions.github.com/scale-set-namespace: github
-    app.kubernetes.io/component: manager-role
-  finalizers:
-  - actions.github.com/cleanup-protection
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  verbs:
-  - create
-  - delete
-  - get
-- apiGroups:
-  - ""
-  resources:
-  - pods/status
-  verbs:
-  - get
-- apiGroups:
-  - ""
-  resources:
-  - secrets
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-- apiGroups:
-  - ""
-  resources:
-  - serviceaccounts
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-- apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
-  - rolebindings
-  verbs:
-  - create
-  - delete
-  - get
-  - patch
-  - update
-- apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
-  - roles
-  verbs:
-  - create
-  - delete
-  - get
-  - patch
-  - update
----
-# Source: gha-runner-scale-set/templates/manager_role_binding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: shr-gha-rs-manager
-  namespace: github
-  labels:
-    actions.github.com/scale-set-name: shr
-    actions.github.com/scale-set-namespace: github
-    app.kubernetes.io/component: manager-role-binding
-  finalizers:
-  - actions.github.com/cleanup-protection
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: shr-gha-rs-manager
-subjects:
-- kind: ServiceAccount
-  name: arc
-  namespace: github
----
 # Source: gha-runner-scale-set/templates/autoscalingrunnerset.yaml
 apiVersion: actions.github.com/v1alpha1
 kind: AutoscalingRunnerSet
@@ -112,6 +9,7 @@ metadata:
     actions.github.com/scale-set-name: shr
     actions.github.com/scale-set-namespace: github
     app.kubernetes.io/component: "autoscaling-runner-set"
+    app.kubernetes.io/version: 0.12.1
   annotations:
     actions.github.com/values-hash: 1319406b35e3b13fe35f9169db4bed59945400809fcce4de085b7570ab8dca9
     actions.github.com/cleanup-manager-role-binding: shr-gha-rs-manager
@@ -134,14 +32,23 @@ spec:
         - "n8n.cloud.danmanners.com"
       restartPolicy: Never
       serviceAccountName: shr-gha-rs-no-permission
+      securityContext:
+        fsGroup: 123
       initContainers:
       - name: init-dind-externals
         image: ghcr.io/actions/actions-runner:latest
         command: [ "cp" ]
-        args: [ "-r", "/home/runner/externals/.", "/home/runner/tmpDir/" ]
+        args: [ "-r", "-v", "/home/runner/externals/.", "/home/runner/tmpDir/" ]
         volumeMounts:
         - name: dind-externals
           mountPath: /home/runner/tmpDir
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsUser: 1001
+          runAsGroup: 123
+          capabilities:
+            drop:
+            - ALL
       - name: dind
         image: docker:dind
         args:
