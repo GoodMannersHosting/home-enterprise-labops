@@ -111,6 +111,7 @@ metadata:
   labels:
     actions.github.com/scale-set-name: shr
     actions.github.com/scale-set-namespace: github
+    app.kubernetes.io/component: "autoscaling-runner-set"
   annotations:
     actions.github.com/values-hash: 1319406b35e3b13fe35f9169db4bed59945400809fcce4de085b7570ab8dca9
     actions.github.com/cleanup-manager-role-binding: shr-gha-rs-manager
