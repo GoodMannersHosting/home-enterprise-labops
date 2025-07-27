@@ -22,13 +22,11 @@ ollama:
     tag: "0.9.6"
   extraEnv:
   - name: "OLLAMA_NUM_PARALLEL"
-    value: "1"
+    value: "2"
   - name: "OLLAMA_FLASH_ATTENTION"
     value: "1"
-  # - name: "OLLAMA_DEBUG"
-  #   value: "1"
   - name: "OLLAMA_MAX_LOADED_MODELS"
-    value: "1"
+    value: "2"
   runtimeClassName: nvidia
   persistentVolume:
     enabled: true

@@ -1,0 +1,41 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gh-runners
+  namespace: argocd
+  labels:
+    controllerChartVersion: &chartVersion 0.12.1
+spec:
+  destination:
+    namespace: github
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+  - repoURL: &url https://github.com/GoodMannersHosting/home-enterprise-labops.git
+    targetRevision: &branch main
+    path: kubernetes/services/github-action-runners/runners
+  - repoURL: *url
+    targetRevision: *branch
+    ref: values
+  - name: controller
+    repoURL: ghcr.io/actions/actions-runner-controller-charts
+    chart: gha-runner-scale-set-controller
+    targetRevision: *chartVersion
+    helm:
+      valueFiles:
+      - $values/kubernetes/services/github-action-runners/controller/values.yaml
+  - name: runner
+    repoURL: ghcr.io/actions/actions-runner-controller-charts
+    chart: gha-runner-scale-set
+    targetRevision: *chartVersion
+    helm:
+      valueFiles:
+      - $values/kubernetes/services/github-action-runners/runners/values.yaml
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    syncOptions:
+    - ServerSideApply=true
+    - CreateNamespace=true
