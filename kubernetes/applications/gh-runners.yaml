@@ -38,13 +38,6 @@ spec:
     helm:
       valueFiles:
       - $values/kubernetes/services/github-action-runners/controller/values.yaml
-  - name: runner
-    repoURL: ghcr.io/actions/actions-runner-controller-charts
-    chart: gha-runner-scale-set
-    targetRevision: *chartVersion
-    helm:
-      valueFiles:
-      - $values/kubernetes/services/github-action-runners/runners/values.yaml
   syncPolicy:
     automated:
       prune: true
