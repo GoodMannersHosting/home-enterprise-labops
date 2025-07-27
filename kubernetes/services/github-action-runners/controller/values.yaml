@@ -9,7 +9,7 @@ serviceAccount:
   create: true
 
 flags:
-  logLevel: "error"
+  logLevel: "debug"
   logFormat: "json"
   runnerMaxConcurrentReconciles: 4
   updateStrategy: "eventual"

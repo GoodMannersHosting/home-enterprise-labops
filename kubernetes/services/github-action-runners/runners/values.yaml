@@ -1,6 +1,6 @@
 githubConfigUrl: "https://github.com/goodmannershosting"
 githubConfigSecret: gh-app-goodmannershosting
-minRunners: 0
+minRunners: 1
 maxRunners: 6
 runnerGroup: "default"
 runnerScaleSetName: "shr"
