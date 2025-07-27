@@ -152,7 +152,7 @@ registry:
   replicas: 2
   revisionHistoryLimit: 3
   existingSecret: "harbor-service-secrets"
-  existingSecretKey: REGISTRY_HTTP_SECRET
+  existingSecretKey: REGISTRY_HTPASSWD
   relativeurls: false
   credentials:
     existingSecret: "harbor-service-secrets"

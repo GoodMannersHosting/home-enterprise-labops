@@ -80,7 +80,14 @@ template:
                 requests:
                   storage: 10Gi
       - name: dind-sock
-        emptyDir: {}
+        ephemeral:
+          volumeClaimTemplate:
+            spec:
+              accessModes: [ "ReadWriteOnce" ]
+              storageClassName: "ceph-rbd"
+              resources:
+                requests:
+                  storage: 10Gi
       - name: dind-externals
         ephemeral:
           volumeClaimTemplate:
@@ -89,4 +96,4 @@ template:
               storageClassName: "ceph-rbd"
               resources:
                 requests:
-                  storage: 25Gi
+                  storage: 10Gi
