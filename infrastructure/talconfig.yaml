@@ -376,6 +376,15 @@ nodes:
 patches:
 - |-
   - op: add
+    path: /machine/network/extraHostEntries
+    value:
+      - ip: 172.31.0.10
+        aliases:
+          - harbor.cloud.danmanners.com
+          - ollama.cloud.danmanners.com
+          - n8n.cloud.danmanners.com
+- |-
+  - op: add
     path: /machine/sysctls
     value:
       net.core.bpf_jit_harden: 1
