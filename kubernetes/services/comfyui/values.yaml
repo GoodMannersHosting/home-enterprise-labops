@@ -73,8 +73,8 @@ persistence:
     type: persistentVolumeClaim
     storageClass: ceph-rbd-retain
     accessMode: ReadWriteOnce
-    size: 100Gi
+    size: 200Gi
     retain: true
     globalMounts:
-    - path: /home/runner
+    - path: /app/ComfyUI/models/
       readOnly: false
