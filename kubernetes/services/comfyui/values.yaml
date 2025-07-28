@@ -18,11 +18,11 @@ controllers:
       core:
         ports:
         - name: http
-          containerPort: &port 8188
+          containerPort: &port 8848
           protocol: TCP
         image:
-          repository: docker.io/yanwk/comfyui-boot
-          tag: "cu124-slim"
+          repository: harbor.cloud.danmanners.com/library/danmanners/comfyui
+          tag: v0.3.45
           pullPolicy: "IfNotPresent"
         env:
         - name: NVIDIA_VISIBLE_DEVICES
