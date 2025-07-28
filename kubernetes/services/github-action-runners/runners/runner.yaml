@@ -23,6 +23,7 @@ spec:
   minRunners: 1
   template:
     spec:
+      dnsPolicy: ClusterFirstWithHostNet
       hostAliases:
       - ip: "172.31.0.10"
         hostnames:
