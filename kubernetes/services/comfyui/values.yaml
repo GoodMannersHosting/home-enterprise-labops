@@ -33,8 +33,8 @@ controllers:
           value: "--verbose=DEBUG"
         resources:
           limits:
-            cpu: 1
-            memory: 6Gi
+            cpu: 8
+            memory: 20Gi
             nvidia.com/gpu: "1"
           requests:
             cpu: 250m
