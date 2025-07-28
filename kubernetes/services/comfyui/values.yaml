@@ -58,16 +58,6 @@ service:
         protocol: TCP
 
 persistence:
-  data:
-    enabled: true
-    type: persistentVolumeClaim
-    storageClass: ceph-rbd-retain
-    accessMode: ReadWriteOnce
-    size: 10Gi
-    retain: true
-    globalMounts:
-    - path: /root
-      readOnly: false
   home:
     enabled: true
     type: persistentVolumeClaim
