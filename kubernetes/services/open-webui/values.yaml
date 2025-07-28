@@ -22,7 +22,7 @@ ollama:
     tag: "0.11.0"
   extraEnv:
   - name: "OLLAMA_NUM_PARALLEL"
-    value: "2"
+    value: "3"
   - name: "OLLAMA_FLASH_ATTENTION"
     value: "1"
   - name: "OLLAMA_MAX_LOADED_MODELS"
@@ -195,8 +195,8 @@ postgresql:
         memory: 256Mi
         cpu: 250m
       limits:
-        memory: 8Gi
-        cpu: 4
+        memory: 1Gi
+        cpu: 1000m
 
 extraEnvVars:
 - name: "POSTGRES_ADMIN_PASSWORD"
