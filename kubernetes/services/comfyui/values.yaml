@@ -23,7 +23,7 @@ controllers:
         image:
           repository: harbor.cloud.danmanners.com/library/danmanners/comfyui
           tag: v0.3.45
-          pullPolicy: "IfNotPresent"
+          pullPolicy: Always
         env:
         - name: NVIDIA_VISIBLE_DEVICES
           value: all
