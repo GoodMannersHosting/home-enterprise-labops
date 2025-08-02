@@ -22,7 +22,7 @@ controllers:
           protocol: TCP
         image:
           repository: harbor.cloud.danmanners.com/library/danmanners/comfyui
-          tag: v0.3.45
+          tag: v0.3.48
           pullPolicy: Always
         env:
         - name: NVIDIA_VISIBLE_DEVICES
