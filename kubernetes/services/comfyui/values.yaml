@@ -58,7 +58,7 @@ service:
         protocol: TCP
 
 persistence:
-  home:
+  models:
     enabled: true
     type: persistentVolumeClaim
     storageClass: ceph-rbd-retain
@@ -67,4 +67,14 @@ persistence:
     retain: true
     globalMounts:
     - path: /app/ComfyUI/models/
+      readOnly: false
+  output:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-rbd-retain
+    accessMode: ReadWriteOnce
+    size: 40Gi
+    retain: true
+    globalMounts:
+    - path: /app/ComfyUI/output/
       readOnly: false
