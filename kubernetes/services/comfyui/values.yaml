@@ -112,3 +112,13 @@ persistence:
     globalMounts:
     - path: /app/ComfyUI/output/
       readOnly: false
+  workflows:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-rbd-retain
+    accessMode: ReadWriteOnce
+    size: 4Gi
+    retain: true
+    globalMounts:
+    - path: /app/ComfyUI/user/default/workflows/
+      readOnly: false
