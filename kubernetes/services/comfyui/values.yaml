@@ -59,6 +59,17 @@ controllers:
           protocol: TCP
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+          allowPrivilegeEscalation: false
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "96Mi"
+          limits:
+            cpu: "2000m"
+            memory: "800Mi"
       core:
         ports:
         - name: http
@@ -87,6 +98,34 @@ controllers:
         lifecycle: {}
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
+
+configMaps:
+  browser:
+    enabled: true
+    data:
+      config.yaml: |
+        server:
+          port: 80
+          baseURL:  "/"
+          logging:
+            - levels: "info|warning|error"
+          sources:
+            - path: "/app/ComfyUI/output"
+        userDefaults:
+          preview:
+            image: true
+            popup: true
+            video: false
+            office: false
+            highQuality: false
+          darkMode: true
+          disableSettings: false
+          singleClick: false
+          permissions:
+            admin: false
+            modify: false
+            share: false
+            api: false
 
 service:
   core:
@@ -147,3 +186,13 @@ persistence:
     globalMounts:
     - path: /app/ComfyUI/custom_nodes/
       readOnly: false
+  browser:
+    type: configMap
+    name: comfyui
+    advancedMounts:
+      main:
+        browser:
+        - path: /home/filebrowser/data/config.yaml
+          mountPropagation: None
+          readOnly: false
+          subPath: config.yaml
