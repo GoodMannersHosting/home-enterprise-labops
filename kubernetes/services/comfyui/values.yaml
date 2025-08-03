@@ -110,7 +110,15 @@ configMaps:
           logging:
             - levels: "info|warning|error"
           sources:
-            - path: "/app/ComfyUI/output"
+            - path: /app/ComfyUI/output
+              name: ComfyUI Output
+              defaultEnabled: true
+            - path: /app/ComfyUI/models
+              name: ComfyUI Models
+              defaultEnabled: true
+            - path: /
+              name: ComfyUI Root
+              defaultEnabled: true
         userDefaults:
           preview:
             image: true
