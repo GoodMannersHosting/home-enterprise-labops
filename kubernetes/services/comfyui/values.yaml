@@ -57,11 +57,14 @@ controllers:
         - name: browser
           containerPort: 80
           protocol: TCP
+        env:
+        - name: FILEBROWSER_CONFIG
+          value: /home/filebrowser/data/config.yaml
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
         securityContext:
-          runAsUser: 0
-          runAsGroup: 0
+          # runAsUser: 0
+          # runAsGroup: 0
           allowPrivilegeEscalation: false
         resources:
           requests:
@@ -108,17 +111,12 @@ configMaps:
           port: 80
           baseURL:  "/"
           logging:
-            - levels: "info|warning|error"
+            - levels: "info|warning|error|debug"
           sources:
             - path: /app/ComfyUI/output
               name: ComfyUI Output
-              defaultEnabled: true
             - path: /app/ComfyUI/models
               name: ComfyUI Models
-              defaultEnabled: true
-            - path: /
-              name: ComfyUI Root
-              defaultEnabled: true
         userDefaults:
           preview:
             image: true
@@ -197,6 +195,7 @@ persistence:
   browser:
     type: configMap
     name: comfyui
+    defaultMode: 0644
     advancedMounts:
       main:
         browser:
