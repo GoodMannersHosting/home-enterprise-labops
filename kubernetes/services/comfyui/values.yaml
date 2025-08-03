@@ -49,6 +49,16 @@ controllers:
             cpu: "50m"
             memory: "64Mi"
     containers:
+      browser:
+        image:
+          repository: harbor.cloud.danmanners.com/library/gtsteffaniak/filebrowser
+          tag: 0.7.18-beta-slim
+        ports:
+        - name: browser
+          containerPort: 80
+          protocol: TCP
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
       core:
         ports:
         - name: http
@@ -90,6 +100,11 @@ service:
         port: *port
         targetPort: http
         protocol: TCP
+      browser:
+        enabled: true
+        port: 8080
+        targetPort: browser
+        protocol: TCP
 
 persistence:
   models:
@@ -97,7 +112,7 @@ persistence:
     type: persistentVolumeClaim
     storageClass: ceph-rbd-retain
     accessMode: ReadWriteOnce
-    size: 200Gi
+    size: 300Gi
     retain: true
     globalMounts:
     - path: /app/ComfyUI/models/
