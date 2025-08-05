@@ -5,7 +5,7 @@ metadata:
   name: ollama
   namespace: argocd
   labels:
-    chartVersion: &chartVersion 6.26.0
+    chartVersion: &chartVersion 7.0.1
 spec:
   destination:
     namespace: aiml
