@@ -19,18 +19,18 @@ ollama:
       pull: []
       run: []
   image:
-    tag: "0.9.6"
+    tag: "0.11.0"
   extraEnv:
   - name: "OLLAMA_NUM_PARALLEL"
     value: "2"
   - name: "OLLAMA_FLASH_ATTENTION"
     value: "1"
   - name: "OLLAMA_MAX_LOADED_MODELS"
-    value: "2"
+    value: "1"
   runtimeClassName: nvidia
   persistentVolume:
     enabled: true
-    size: 160Gi
+    size: 200Gi
     storageClass: ceph-rbd-retain
     accessModes:
     - ReadWriteOnce
