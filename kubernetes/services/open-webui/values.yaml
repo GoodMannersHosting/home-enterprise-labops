@@ -20,6 +20,7 @@ ollama:
       run: []
   image:
     tag: "0.11.0"
+    pullPolicy: "Always"
   extraEnv:
   - name: "OLLAMA_NUM_PARALLEL"
     value: "3"
@@ -27,6 +28,8 @@ ollama:
     value: "1"
   - name: "OLLAMA_MAX_LOADED_MODELS"
     value: "1"
+  - name: "OLLAMA_KV_CACHE_TYPE"
+    value: "q8_0"
   runtimeClassName: nvidia
   persistentVolume:
     enabled: true
