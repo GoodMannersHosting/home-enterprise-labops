@@ -18,7 +18,7 @@ controllers:
       prep-models-dir:
         image:
           repository: &repo harbor.cloud.danmanners.com/library/danmanners/comfyui
-          tag: &tag v0.3.48
+          tag: &tag v0.3.49
         command:
         - /bin/sh
         - -c
@@ -47,7 +47,7 @@ controllers:
             memory: "16Mi"
           limits:
             cpu: "50m"
-            memory: "64Mi"
+            memory: "256Mi"
     containers:
       browser:
         image:
@@ -63,8 +63,6 @@ controllers:
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
         securityContext:
-          # runAsUser: 0
-          # runAsGroup: 0
           allowPrivilegeEscalation: false
         resources:
           requests:
