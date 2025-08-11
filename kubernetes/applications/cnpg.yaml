@@ -9,7 +9,7 @@ metadata:
     chartVersion: &chartVersion 0.24.0
 spec:
   destination:
-    namespace: cnpg-system
+    namespace: database
     server: https://kubernetes.default.svc
   project: default
   sources:

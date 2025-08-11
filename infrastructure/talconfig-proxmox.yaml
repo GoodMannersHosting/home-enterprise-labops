@@ -1,0 +1,473 @@
+# THIS ENTIRE FILE HAS BEEN DEPRECATED AND IS NO LONGER USED.
+clusterName: capi-core
+talosVersion: v1.10.5
+kubernetesVersion: 1.33.1
+endpoint: "https://k8s-capi-core.homelab.danmanners.com:6443"
+cniConfig:
+  name: none
+
+clusterPodNets:
+- 10.244.0.0/16
+clusterSvcNets:
+- 10.96.0.0/12
+
+additionalApiServerCertSans: &certs
+  - 172.21.0.10
+  - k8s-capi-core.homelab.danmanners.com
+  - capi-core.homelab.danmanners.com
+
+additionalMachineCertSans: *certs
+
+nodes:
+# Control Plane Nodes
+- hostname: capi-core-cn1.homelab.danmanners.com
+  controlPlane: true
+  installDisk: /dev/sda
+  machineSpec:
+    useUKI: true
+    mode: nocloud
+    secureboot: true
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions: &extensions
+          - siderolabs/binfmt-misc
+          - siderolabs/util-linux-tools
+          - siderolabs/qemu-guest-agent
+  ipAddress: 172.21.0.11
+  disableSearchDomain: true
+  nameservers: &nameservers
+    - 10.3.0.1
+    - 172.21.0.1
+  networkInterfaces:
+  - interface: ens18
+    dhcp: false
+    mtu: 1460
+    addresses:
+    - 172.21.0.11/20
+    routes:
+    - network: 0.0.0.0/0
+      gateway: &mgmt_gateway 172.21.0.1
+    vip:
+      ip: 172.21.0.10
+  - interface: ens19
+    dhcp: false
+    mtu: 8000
+    addresses:
+    - 172.20.32.11/20
+- hostname: capi-core-cn2.homelab.danmanners.com
+  controlPlane: true
+  installDisk: /dev/sda
+  machineSpec:
+    useUKI: true
+    mode: nocloud
+    secureboot: true
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions: *extensions
+  ipAddress: 172.21.0.12
+  disableSearchDomain: true
+  nameservers: &nameservers
+    - 10.3.0.1
+    - 172.21.0.1
+  networkInterfaces:
+  - interface: ens18
+    dhcp: false
+    mtu: 1460
+    addresses:
+    - 172.21.0.12/20
+    routes:
+    - network: 0.0.0.0/0
+      gateway: &mgmt_gateway 172.21.0.1
+    vip:
+      ip: 172.21.0.10
+  - interface: ens19
+    dhcp: false
+    mtu: 8000
+    addresses:
+    - 172.20.32.12/20
+- hostname: capi-core-cn3.homelab.danmanners.com
+  controlPlane: true
+  installDisk: /dev/sda
+  machineSpec:
+    useUKI: true
+    mode: nocloud
+    secureboot: true
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions: *extensions
+  ipAddress: 172.21.0.13
+  disableSearchDomain: true
+  nameservers: &nameservers
+    - 10.3.0.1
+    - 172.21.0.1
+  networkInterfaces:
+  - interface: ens18
+    dhcp: false
+    mtu: 1460
+    addresses:
+    - 172.21.0.13/20
+    routes:
+    - network: 0.0.0.0/0
+      gateway: &mgmt_gateway 172.21.0.1
+    vip:
+      ip: 172.21.0.10
+  - interface: ens19
+    dhcp: false
+    mtu: 8000
+    addresses:
+    - 172.20.32.13/20
+# Worker Nodes
+- hostname: capi-core-wn1.homelab.danmanners.com
+  controlPlane: false
+  installDisk: /dev/sda
+  machineSpec:
+    useUKI: true
+    mode: nocloud
+    secureboot: true
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions: *extensions
+  ipAddress: 172.21.0.14
+  certSANs:
+  - capi-core-wn1.homelab.danmanners.com
+  - 172.21.0.14
+  nameservers: *nameservers
+  networkInterfaces:
+  - interface: ens18
+    dhcp: false
+    mtu: 1460
+    addresses:
+    - 172.21.0.14/20
+    routes:
+    - network: 0.0.0.0/0
+      gateway: *mgmt_gateway
+  - interface: ens19
+    dhcp: false
+    mtu: 8000
+    addresses:
+    - 172.20.32.14/20
+- hostname: capi-core-wn2.homelab.danmanners.com
+  controlPlane: false
+  installDisk: /dev/sda
+  machineSpec:
+    useUKI: true
+    mode: nocloud
+    secureboot: true
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions: *extensions
+  ipAddress: 172.21.0.15
+  certSANs:
+  - capi-core-wn2.homelab.danmanners.com
+  - 172.21.0.15
+  nameservers: *nameservers
+  networkInterfaces:
+  - interface: ens18
+    dhcp: false
+    mtu: 1460
+    addresses:
+    - 172.21.0.15/20
+    routes:
+    - network: 0.0.0.0/0
+      gateway: *mgmt_gateway
+  - interface: ens19
+    dhcp: false
+    mtu: 8000
+    addresses:
+    - 172.20.32.15/20
+- hostname: capi-core-wn3.homelab.danmanners.com
+  controlPlane: false
+  installDisk: /dev/sda
+  machineSpec:
+    useUKI: true
+    mode: nocloud
+    secureboot: true
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions: *extensions
+  ipAddress: 172.21.0.16
+  certSANs:
+  - capi-core-wn3.homelab.danmanners.com
+  - 172.21.0.16
+  nameservers: *nameservers
+  networkInterfaces:
+  - interface: ens18
+    dhcp: false
+    mtu: 1460
+    addresses:
+    - 172.21.0.16/20
+    routes:
+    - network: 0.0.0.0/0
+      gateway: *mgmt_gateway
+  - interface: ens19
+    dhcp: false
+    mtu: 8000
+    addresses:
+    - 172.20.32.16/20
+- hostname: capi-core-wn4.homelab.danmanners.com
+  controlPlane: false
+  installDisk: /dev/sda
+  machineSpec:
+    useUKI: true
+    mode: nocloud
+    secureboot: true
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions: *extensions
+  ipAddress: 172.21.0.17
+  certSANs:
+  - capi-core-wn4.homelab.danmanners.com
+  - 172.21.0.17
+  nameservers: *nameservers
+  networkInterfaces:
+  - interface: ens18
+    dhcp: false
+    mtu: 1460
+    addresses:
+    - 172.21.0.17/20
+    routes:
+    - network: 0.0.0.0/0
+      gateway: *mgmt_gateway
+  - interface: ens19
+    dhcp: false
+    mtu: 8000
+    addresses:
+    - 172.20.32.17/20
+- hostname: capi-core-wn5.homelab.danmanners.com
+  controlPlane: false
+  installDisk: /dev/sda
+  machineSpec:
+    useUKI: true
+    mode: nocloud
+    secureboot: true
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions: *extensions
+  ipAddress: 172.21.0.18
+  certSANs:
+  - capi-core-wn5.homelab.danmanners.com
+  - 172.21.0.18
+  nameservers: *nameservers
+  networkInterfaces:
+  - interface: ens18
+    dhcp: false
+    mtu: 1460
+    addresses:
+    - 172.21.0.18/20
+    routes:
+    - network: 0.0.0.0/0
+      gateway: *mgmt_gateway
+  - interface: ens19
+    dhcp: false
+    mtu: 8000
+    addresses:
+    - 172.20.32.18/20
+- hostname: capi-core-wn6.homelab.danmanners.com
+  controlPlane: false
+  installDisk: /dev/sda
+  machineSpec:
+    useUKI: true
+    mode: nocloud
+    secureboot: true
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions: *extensions
+  ipAddress: 172.21.0.19
+  certSANs:
+  - capi-core-wn6.homelab.danmanners.com
+  - 172.21.0.19
+  nameservers: *nameservers
+  networkInterfaces:
+  - interface: ens18
+    dhcp: false
+    mtu: 1460
+    addresses:
+    - 172.21.0.19/20
+    routes:
+    - network: 0.0.0.0/0
+      gateway: *mgmt_gateway
+  - interface: ens19
+    dhcp: false
+    mtu: 8000
+    addresses:
+    - 172.20.32.19/20
+- hostname: capi-core-wn98.homelab.danmanners.com
+  controlPlane: false
+  installDisk: /dev/sda
+  machineSpec:
+    useUKI: true
+    mode: nocloud
+    secureboot: true
+  # During Installation the kernel modules MUST NOT be loaded and
+  # the below SHOULD BE COMMENTED OUT. Once the system is installed,
+  # the kernel modules should be uncommented, the config re-generated,
+  # and the system rebooted. This is to avoid issues where the NVIDIA
+  # kernel modules cannot be loaded during the installation process,
+  # which makes sure the Talos installer fail.
+  kernelModules:
+  - name: nvidia
+  - name: nvidia_uvm
+  - name: nvidia_drm
+  - name: nvidia_modeset
+  patches:
+  - |-
+    - op: add
+      path: /machine/files
+      value:
+        - op: create
+          path: /etc/cri/conf.d/20-customization.part
+          content: |
+            [plugins."io.containerd.grpc.v1.cri"]
+              enable_unprivileged_ports = true
+              enable_unprivileged_icmp = true
+            [plugins."io.containerd.grpc.v1.cri".containerd]
+              discard_unpacked_layers = false
+            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+              discard_unpacked_layers = false
+            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia]
+              privileged_without_host_devices = false
+              runtime_engine = ""
+              runtime_root = ""
+              runtime_type = "io.containerd.runc.v2"
+            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.options]
+              BinaryName = "/usr/bin/nvidia-container-runtime"
+  schematic:
+    customization:
+      systemExtensions:
+        officialExtensions:
+        - siderolabs/binfmt-misc
+        - siderolabs/i915
+        - siderolabs/intel-ucode
+        # - siderolabs/nonfree-kmod-nvidia-production # Do not use this with the 50XX series of NVIDIA GPUs.
+        #   You can read more about it here:
+        #   https://developer.nvidia.com/blog/nvidia-transitions-fully-towards-open-source-gpu-kernel-modules/
+        - siderolabs/nvidia-open-gpu-kernel-modules-production
+        - siderolabs/nvidia-container-toolkit-production
+        - siderolabs/qemu-guest-agent
+        - siderolabs/util-linux-tools
+  ipAddress: 172.21.0.98
+  certSANs:
+  - capi-core-wn98.homelab.danmanners.com
+  - 172.21.0.98
+  nameservers: *nameservers
+  networkInterfaces:
+  - interface: ens18
+    dhcp: false
+    mtu: 1460
+    addresses:
+    - 172.21.0.98/20
+    routes:
+    - network: 0.0.0.0/0
+      gateway: *mgmt_gateway
+  - interface: ens19
+    dhcp: false
+    mtu: 8000
+    addresses:
+    - 172.20.32.98/20
+
+patches:
+- |-
+  - op: add
+    path: /machine/network/extraHostEntries
+    value:
+      - ip: 172.31.0.10
+        aliases:
+          - harbor.cloud.danmanners.com
+          - ollama.cloud.danmanners.com
+          - n8n.cloud.danmanners.com
+- |-
+  - op: add
+    path: /machine/sysctls
+    value:
+      net.core.bpf_jit_harden: 1
+      vm.max_map_count: 524288
+      fs.file-max: 131072
+      fs.inotify.max_user_watches: 1048576
+      fs.inotify.max_user_instances: 8192
+- |-
+  - op: add
+    path: /machine/time
+    value:
+      servers: [time.cloudflare.com]
+- |-
+  - op: add
+    path: /machine/features
+    value:
+      stableHostname: true
+      diskQuotaSupport: true
+      rbac: true
+      kubePrism:
+        enabled: true
+        port: 7445
+- |-
+  - op: add
+    path: /machine/features/hostDNS
+    value:
+      enabled: true
+      resolveMemberNames: false
+      forwardKubeDNSToHost: false
+- |-
+  - op: add
+    path: /cluster/proxy
+    value:
+      disabled: true
+
+controlPlane:
+  schematic: {}
+  patches:
+  - |-
+    - op: add
+      path: /machine/kubelet/extraArgs
+      value:
+        rotate-server-certificates: true
+        rotate-certificates: true
+
+  - |-
+    - op: add
+      path: /cluster/coreDNS
+      value:
+        disabled: true
+  - |-
+    - op: remove
+      path: /cluster/apiServer/admissionControl
+  - |-
+    - op: add
+      path: /machine/features/kubernetesTalosAPIAccess
+      value:
+        enabled: true
+        allowedRoles:
+          - os:admin
+        allowedKubernetesNamespaces:
+          - actions-runner-system
+          - system-upgrade
+  - |-
+    - op: add
+      path: /cluster/etcd/advertisedSubnets
+      value:
+        - 172.21.0.0/20
+
+worker:
+  schematic:
+    customization:
+      extraKernelArgs:
+      - apparmor=0 # Less security, faster puter
+      - init_on_alloc=0 # Less security, faster puter
+      - init_on_free=0 # Less security, faster puter
+      - mitigations=off # Less security, faster puter
+      - security=none # Less security, faster puter
+      - talos.auditd.disabled=1 # Less security, faster puter
+  patches:
+  - |-
+    - op: add
+      path: /machine/kubelet/nodeIP
+      value:
+        validSubnets: [172.21.0.0/20]

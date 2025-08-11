@@ -1,0 +1,45 @@
+operatorNamespace: rook-ceph
+clusterName: helo
+toolbox:
+  enabled: true
+  containerSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 2016
+    runAsGroup: 2016
+    capabilities:
+      drop: [ "ALL" ]
+  # -- Toolbox resources
+  resources:
+    limits:
+      memory: "1Gi"
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+
+csi:
+  cephFSKernelMountOptions: ms_mode=prefer-crc
+  enableCephfsDriver: false
+  enableCephfsSnapshotter: false
+  enableLiveness: true
+  serviceMonitor:
+    enabled: true
+
+enableDiscoveryDaemon: true
+
+image:
+  repository: ghcr.io/rook/ceph
+
+monitoring:
+  enabled: false
+
+ingress:
+  dashboard: {}
+
+cephFileSystems: {}
+cephObjectStores: {}
+
+cephFileSystemVolumeSnapshotClass:
+  enabled: false
+
+cephBlockPoolsVolumeSnapshotClass:
+  enabled: false

@@ -5,11 +5,11 @@ metadata:
   namespace: database
 spec:
   instances: 3
-  imageName: ghcr.io/cloudnative-pg/postgresql:17.5-minimal-bookworm
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.5-bookworm
   primaryUpdateStrategy: unsupervised
   storage:
     size: 40Gi
-    storageClass: ceph-rbd-retain
+    storageClass: ceph-block-retain
   superuserSecret:
     name: database-superuser
   enableSuperuserAccess: true
