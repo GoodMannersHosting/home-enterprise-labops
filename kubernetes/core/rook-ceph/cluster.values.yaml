@@ -1,24 +1,85 @@
-# All values below are taken from the CephCluster CRD
-# -- Cluster configuration.
-# @default -- See [below](#ceph-cluster-spec)
+monitoring:
+  enabled: false
+toolbox:
+  enabled: true
+# route:
+#   dashboard:
+#     host:
+#       name: rook.turbo.ac
+#       path: /
+#       pathType: PathPrefix
+#     parentRefs:
+#     - name: internal
+#       namespace: kube-system
+#       sectionName: https
 cephClusterSpec:
-  external:
-    enable: true
+  cephConfig:
+    global:
+      bdev_enable_discard: "true" # quote
+      bdev_async_discard_threads: "1" # quote
+      osd_class_update_on_start: "false" # quote
+      device_failure_prediction_mode: local # requires mgr module
+  cleanupPolicy:
+    wipeDevicesFromOtherClusters: true
   crashCollector:
-    disable: true
-  healthCheck:
-    daemonHealth:
-      mon:
-        disabled: false
-        interval: 45s
-# -- A list of CephBlockPool configurations to deploy
-# @default -- See [below](#ceph-block-pools)
-cephBlockPools: {}
-
-# -- A list of CephFileSystem configurations to deploy
-# @default -- See [below](#ceph-file-systems)
-cephFileSystems: {}
-
-# -- A list of CephObjectStore configurations to deploy
-# @default -- See [below](#ceph-object-stores)
-cephObjectStores: {}
+    disable: false
+  csi:
+    readAffinity:
+      enabled: true
+  dashboard:
+    enabled: true
+    urlPrefix: /
+    ssl: false
+    # prometheusEndpoint: http://prometheus-operated.observability.svc.cluster.local:9090
+  mgr:
+    modules:
+    - name: diskprediction_local
+      enabled: true
+    - name: insights
+      enabled: true
+    - name: pg_autoscaler
+      enabled: true
+    - name: rook
+      enabled: true
+  network:
+    provider: host
+    connections:
+      requireMsgr2: true
+  storage:
+    useAllNodes: true
+    useAllDevices: true
+    deviceFilter: "^nvme" # regex
+    config:
+      osdsPerDevice: "1"
+cephBlockPools:
+- name: ceph-blockpool
+  spec:
+    failureDomain: host
+    replicated:
+      size: 3
+  storageClass:
+    enabled: true
+    name: ceph-block
+    isDefault: true
+    reclaimPolicy: Delete
+    allowVolumeExpansion: true
+    volumeBindingMode: Immediate
+    mountOptions: [ "discard" ]
+    parameters:
+      compression_mode: aggressive
+      compression_algorithm: zstd
+      imageFormat: "2"
+      imageFeatures: layering,fast-diff,object-map,deep-flatten,exclusive-lock
+      csi.storage.k8s.io/provisioner-secret-name: rook-csi-rbd-provisioner
+      csi.storage.k8s.io/provisioner-secret-namespace: "rook-ceph"
+      csi.storage.k8s.io/controller-expand-secret-name: rook-csi-rbd-provisioner
+      csi.storage.k8s.io/controller-expand-secret-namespace: "rook-ceph"
+      csi.storage.k8s.io/node-stage-secret-name: rook-csi-rbd-node
+      csi.storage.k8s.io/node-stage-secret-namespace: "rook-ceph"
+      csi.storage.k8s.io/fstype: ext4
+cephBlockPoolsVolumeSnapshotClass:
+  enabled: false
+# NOTE: After disabling the filesystem, the filesystem can be removed with the following commands:
+# ceph fs fail ceph-filesystem && ceph fs rm ceph-filesystem --yes-i-really-mean-it
+cephFileSystems: []
+cephObjectStores: []
