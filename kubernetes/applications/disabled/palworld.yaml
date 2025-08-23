@@ -2,25 +2,28 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: coredns
+  name: palworld
   namespace: argocd
   labels:
-    chartVersion: &chartVersion 1.43.0
+    chartVersion: &chartVersion 4.1.2
 spec:
   destination:
-    namespace: kube-system
+    namespace: palworld
     server: https://kubernetes.default.svc
   project: default
   sources:
-    - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+    - repoURL: &repo https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: main
+      path: kubernetes/services/palworld
+    - repoURL: *repo
       targetRevision: main
       ref: values
-    - repoURL: https://coredns.github.io/helm
-      chart: coredns
+    - repoURL: https://bjw-s-labs.github.io/helm-charts
+      chart: app-template
       targetRevision: *chartVersion
       helm:
         valueFiles:
-          - $values/kubernetes/core/kube-system/coredns/values.yaml
+          - $values/kubernetes/services/palworld/values.yaml
   syncPolicy:
     automated:
       prune: true

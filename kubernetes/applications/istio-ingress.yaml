@@ -5,7 +5,6 @@ metadata:
   name: istio-ingress
   namespace: argocd
   labels:
-    # renovate: datasource=helm chartLocation=https://istio-release.storage.googleapis.com/charts chart=gateway
     chartVersion: &chartVersion 1.26.0
 spec:
   destination:
@@ -13,14 +12,14 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   sources:
-  - repoURL: https://istio-release.storage.googleapis.com/charts
-    name: &gw gateway
-    chart: *gw
-    targetRevision: *chartVersion
+    - repoURL: https://istio-release.storage.googleapis.com/charts
+      name: &gw gateway
+      chart: *gw
+      targetRevision: *chartVersion
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-    - ServerSideApply=true
-    - CreateNamespace=true
+      - ServerSideApply=true
+      - CreateNamespace=true

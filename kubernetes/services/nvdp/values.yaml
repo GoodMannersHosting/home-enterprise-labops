@@ -2,12 +2,12 @@ affinity:
   nodeAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:
       nodeSelectorTerms:
-      - matchExpressions:
-        # On discrete-GPU based systems NFD adds the following label where 10de is the NVIDIA PCI vendor ID
-        - key: feature.node.kubernetes.io/pci-10de.present
-          operator: In
-          values:
-          - "true"
+        - matchExpressions:
+            # On discrete-GPU based systems NFD adds the following label where 10de is the NVIDIA PCI vendor ID
+            - key: feature.node.kubernetes.io/pci-10de.present
+              operator: In
+              values:
+                - "true"
 config:
   map:
     default: |-
@@ -46,7 +46,7 @@ config:
   # Default config name within the ConfigMap
   default: "default"
   # List of fallback strategies to attempt if no config is selected and no default is provided
-  fallbackStrategies: [ "named", "single" ]
+  fallbackStrategies: ["named", "single"]
 gfd:
   enabled: true
 nfd:

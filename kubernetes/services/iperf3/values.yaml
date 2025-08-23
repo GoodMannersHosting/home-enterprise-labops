@@ -13,12 +13,12 @@ controllers:
     containers:
       iperf:
         ports:
-        - name: iperf-tcp
-          containerPort: 5201
-          protocol: TCP
-        - name: iperf-udp
-          containerPort: 5201
-          protocol: UDP
+          - name: iperf-tcp
+            containerPort: 5201
+            protocol: TCP
+          - name: iperf-udp
+            containerPort: 5201
+            protocol: UDP
         image:
           repository: docker.io/networkstatic/iperf3@sha256
           tag: "993080f3167738f4155d6b2749b8b95ba6da5d44fe1c02e36b6e03a6d544c922"
@@ -26,7 +26,7 @@ controllers:
         securityContext:
           allowPrivilegeEscalation: false
         args:
-        - "--server"
+          - "--server"
         resources:
           limits:
             cpu: 4

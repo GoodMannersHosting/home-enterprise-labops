@@ -5,7 +5,6 @@ metadata:
   name: external-dns
   namespace: argocd
   labels:
-    # renovate: datasource=helm chartLocation=https://kubernetes-sigs.github.io/external-dns/ chart=external-dns
     chartVersion: &chartVersion 1.18.0
 spec:
   destination:
@@ -13,18 +12,18 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   sources:
-  - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
-    targetRevision: main
-    ref: values
-  - repoURL: https://kubernetes-sigs.github.io/external-dns/
-    chart: external-dns
-    targetRevision: *chartVersion
-    helm:
-      valueFiles:
-      - $values/kubernetes/core/kube-system/external-dns/values.yaml
+    - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://kubernetes-sigs.github.io/external-dns/
+      chart: external-dns
+      targetRevision: *chartVersion
+      helm:
+        valueFiles:
+          - $values/kubernetes/core/kube-system/external-dns/values.yaml
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-    - ServerSideApply=true
+      - ServerSideApply=true

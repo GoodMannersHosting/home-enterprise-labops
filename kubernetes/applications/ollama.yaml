@@ -5,28 +5,28 @@ metadata:
   name: ollama
   namespace: argocd
   labels:
-    chartVersion: &chartVersion 7.0.1
+    chartVersion: &chartVersion 7.5.0
 spec:
   destination:
     namespace: aiml
     server: https://kubernetes.default.svc
   project: default
   sources:
-  - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
-    targetRevision: main
-    ref: values
-  - repoURL: https://helm.openwebui.com/
-    chart: open-webui
-    targetRevision: *chartVersion
-    helm:
-      valueFiles:
-      - $values/kubernetes/services/open-webui/values.yaml
-  - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
-    targetRevision: main
-    path: kubernetes/services/open-webui
+    - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://helm.openwebui.com/
+      chart: open-webui
+      targetRevision: *chartVersion
+      helm:
+        valueFiles:
+          - $values/kubernetes/services/open-webui/values.yaml
+    - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: main
+      path: kubernetes/services/open-webui
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-    - ServerSideApply=true
+      - ServerSideApply=true

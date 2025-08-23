@@ -20,7 +20,7 @@ controllers:
       init-db:
         image:
           repository: ghcr.io/home-operations/postgres-init
-          tag: "17.5"
+          tag: "17.6"
         env: &postgres-env
           - name: INIT_POSTGRES_DBNAME
             value: keycloak
@@ -60,20 +60,20 @@ controllers:
           repository: docker.io/library/busybox
           tag: "1.37"
         command:
-        - /bin/sh
-        - -c
-        - |
-          until nc -z $(POSTGRES_HOST) 5432; do
-          echo "Waiting for database to be ready..."
-          sleep 5
-          done
-          echo "Database is ready!"
+          - /bin/sh
+          - -c
+          - |
+            until nc -z $(POSTGRES_HOST) 5432; do
+            echo "Waiting for database to be ready..."
+            sleep 5
+            done
+            echo "Database is ready!"
         env:
-        - name: POSTGRES_HOST
-          valueFrom:
-            secretKeyRef:
-              name: keycloak-db-creds
-              key: POSTGRES_HOST
+          - name: POSTGRES_HOST
+            valueFrom:
+              secretKeyRef:
+                name: keycloak-db-creds
+                key: POSTGRES_HOST
         resources:
           requests:
             cpu: "10m"
@@ -84,25 +84,25 @@ controllers:
     containers:
       keycloak:
         ports:
-        - name: http
-          containerPort: 8080
-          protocol: TCP
-        - name: https
-          containerPort: 8443
-          protocol: TCP
+          - name: http
+            containerPort: 8080
+            protocol: TCP
+          - name: https
+            containerPort: 8443
+            protocol: TCP
         image:
           repository: quay.io/keycloak/keycloak
           tag: "26.2.4"
           pullPolicy: "IfNotPresent"
         args:
-        - start
-        - --http-port=8080
-        - --http-enabled=true
-        - --https-port=8443
-        - --https-certificate-file=/etc/x509/https/tls.crt
-        - --https-certificate-key-file=/etc/x509/https/tls.key
-        - --db-url-host=$(DB_HOST)
-        - --hostname-strict=false
+          - start
+          - --http-port=8080
+          - --http-enabled=true
+          - --https-port=8443
+          - --https-certificate-file=/etc/x509/https/tls.crt
+          - --https-certificate-key-file=/etc/x509/https/tls.key
+          - --db-url-host=$(DB_HOST)
+          - --hostname-strict=false
         securityContext:
           allowPrivilegeEscalation: false
           # capabilities:
@@ -112,38 +112,38 @@ controllers:
           #   - CAP_NET_RAW
           #   - CAP_NET_BIND_SERVICE
         env:
-        - name: DB_HOST
-          valueFrom:
-            secretKeyRef:
-              name: keycloak-db-creds
-              key: POSTGRES_HOST
-        - name: KC_BOOTSTRAP_ADMIN_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: keycloak-superuser-secret
-              key: password
-        - name: KC_DB
-          value: postgres # Tell Keycloak to use PostgreSQL
-        - name: KC_DB_URL_PORT
-          value: "5432"
-        - name: KC_DB_URL_DATABASE
-          value: keycloak
-        - name: KC_DB_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: keycloak-db-creds
-              key: POSTGRES_USER
-        - name: KC_DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: keycloak-db-creds
-              key: POSTGRES_PASS
-        - name: KC_PROXY_HEADERS
-          value: "xforwarded"
-        - name: KC_HTTP_ENABLED
-          value: "true"
-        - name: KC_BOOTSTRAP_ADMIN_USERNAME
-          value: admin
+          - name: DB_HOST
+            valueFrom:
+              secretKeyRef:
+                name: keycloak-db-creds
+                key: POSTGRES_HOST
+          - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: keycloak-superuser-secret
+                key: password
+          - name: KC_DB
+            value: postgres # Tell Keycloak to use PostgreSQL
+          - name: KC_DB_URL_PORT
+            value: "5432"
+          - name: KC_DB_URL_DATABASE
+            value: keycloak
+          - name: KC_DB_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: keycloak-db-creds
+                key: POSTGRES_USER
+          - name: KC_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: keycloak-db-creds
+                key: POSTGRES_PASS
+          - name: KC_PROXY_HEADERS
+            value: "xforwarded"
+          - name: KC_HTTP_ENABLED
+            value: "true"
+          - name: KC_BOOTSTRAP_ADMIN_USERNAME
+            value: admin
         resources:
           limits:
             cpu: 2000m
@@ -193,102 +193,33 @@ service:
       external-dns.alpha.kubernetes.io/ttl: "300"
 
 route:
-  internal:
-    enabled: true
-    kind: HTTPRoute
-    parentRefs:
-    - group: gateway.networking.k8s.io
-      kind: Gateway
-      name: gwapi
-      namespace: default
-      sectionName: https
-    hostnames:
-    - keycloak.capi-core.homelab.danmanners.com
-    rules:
-    - backendRefs:
-      - name: keycloak-core
-        port: 80
-        weight: 1
-      matches:
-      - path:
-          type: PathPrefix
-          value: /
   cloud:
     enabled: true
     kind: HTTPRoute
     annotations:
       external-dns.alpha.kubernetes.io/controller: "false"
     parentRefs:
-    - group: gateway.networking.k8s.io
-      kind: Gateway
-      name: gwapi
-      namespace: default
-      sectionName: https-cloud
+      - group: gateway.networking.k8s.io
+        kind: Gateway
+        name: gwapi
+        namespace: default
+        sectionName: https-cloud
     hostnames:
-    - keycloak.cloud.danmanners.com
+      - keycloak.cloud.danmanners.com
     rules:
-    - backendRefs:
-      - name: keycloak-core
-        port: 80
-        weight: 1
-      matches:
-      - path:
-          type: PathPrefix
-          value: /
-      timeouts:
-        backendRequest: 0s
-        request: 0s
+      - backendRefs:
+          - name: keycloak-core
+            port: 80
+            weight: 1
+        matches:
+          - path:
+              type: PathPrefix
+              value: /
+        timeouts:
+          backendRequest: 0s
+          request: 0s
 
 rawResources:
-  internal-ca-issuer:
-    enabled: true
-    apiVersion: cert-manager.io/v1
-    kind: Issuer
-    spec:
-      spec:
-        ca:
-          secretName: keycloak-internal-ca-secret
-  internal-ca:
-    enabled: true
-    apiVersion: cert-manager.io/v1
-    kind: Certificate
-    spec:
-      spec:
-        isCA: true
-        commonName: keycloak-internal-ca
-        secretName: keycloak-internal-ca-secret
-        privateKey:
-          algorithm: RSA
-          size: 2048
-        usages:
-        - digital signature
-        - key encipherment
-        - server auth
-        - client auth
-        issuerRef:
-          name: selfsigned-issuer
-          kind: ClusterIssuer
-          group: cert-manager.io
-  internal-tls:
-    enabled: true
-    apiVersion: cert-manager.io/v1
-    kind: Certificate
-    spec:
-      spec:
-        secretName: keycloak-core-internal-tls
-        usages:
-        - digital signature
-        - key encipherment
-        - server auth
-        - client auth
-        dnsNames:
-        - keycloak-core
-        - keycloak-core.keycloak.svc
-        - keycloak-core.keycloak.svc.cluster.local
-        - 127.0.0.1
-        issuerRef:
-          kind: Issuer
-          name: keycloak-internal-ca-issuer
   tls:
     enabled: true
     apiVersion: cert-manager.io/v1
@@ -298,26 +229,25 @@ rawResources:
         secretName: keycloak-tls-cert
         duration: 1128h # 47 days
         renewBefore: 168h # 7 days
-        commonName: keycloak.capi-core.homelab.danmanners.com
+        commonName: keycloak.cloud.danmanners.com
         dnsNames:
-        - keycloak.capi-core.homelab.danmanners.com
-        - keycloak.cloud.danmanners.com
+          - keycloak.cloud.danmanners.com
         issuerRef:
           name: letsencrypt-dns01
           kind: ClusterIssuer
           group: cert-manager.io
         usages:
-        - server auth
-        - client auth
+          - server auth
+          - client auth
 
 persistence:
   certs:
     enabled: true
     type: secret
-    name: keycloak-core-internal-tls
+    name: keycloak
     advancedMounts:
       main:
         keycloak:
-        - path: /etc/x509/https
-          mountPropagation: None
-          readOnly: true
+          - path: /etc/x509/https
+            mountPropagation: None
+            readOnly: true

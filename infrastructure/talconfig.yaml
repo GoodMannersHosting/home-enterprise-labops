@@ -217,8 +217,24 @@ patches:
       net.core.bpf_jit_harden: 1
       vm.max_map_count: 524288
       fs.file-max: 131072
-      fs.inotify.max_user_watches: 1048576
-      fs.inotify.max_user_instances: 8192
+      fs.inotify.max_user_instances: "8192"
+      fs.inotify.max_user_watches: "1048576"
+      net.core.default_qdisc: fq
+      net.core.rmem_max: "67108864"
+      net.core.wmem_max: "67108864"
+      net.ipv4.neigh.default.gc_thresh1: "4096"
+      net.ipv4.neigh.default.gc_thresh2: "8192"
+      net.ipv4.neigh.default.gc_thresh3: "16384"
+      net.ipv4.tcp_congestion_control: bbr
+      net.ipv4.tcp_fastopen: "3"
+      net.ipv4.tcp_mtu_probing: "1"
+      net.ipv4.tcp_rmem: 4096 87380 33554432
+      net.ipv4.tcp_window_scaling: "1"
+      net.ipv4.tcp_wmem: 4096 65536 33554432
+      sunrpc.tcp_max_slot_table_entries: "128"
+      sunrpc.tcp_slot_table_entries: "128"
+      user.max_user_namespaces: "11255"
+      vm.nr_hugepages: "1024"
 - |-
   - op: add
     path: /machine/time
@@ -258,7 +274,6 @@ controlPlane:
         - security=none # Less security, faster puter
         - selinux=0 # Less security, faster puter
         - talos.auditd.disabled=1 # Less security, faster puter
-
   patches:
   - |-
     - op: add
@@ -266,7 +281,6 @@ controlPlane:
       value:
         rotate-server-certificates: true
         rotate-certificates: true
-
   - |-
     - op: add
       path: /cluster/coreDNS
@@ -321,7 +335,6 @@ worker:
   schematic:
     customization:
       extraKernelArgs: *extraKernelArgs
-
   patches:
   - |-
     - op: add

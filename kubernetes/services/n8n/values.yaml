@@ -114,7 +114,7 @@ persistence:
   home:
     enabled: true
     type: persistentVolumeClaim
-    storageClass: ceph-rbd-retain
+    storageClass: ceph-block-retain
     accessMode: ReadWriteOnce
     size: 60Gi
     retain: true
@@ -124,7 +124,7 @@ persistence:
   files:
     enabled: true
     type: persistentVolumeClaim
-    storageClass: ceph-rbd-retain
+    storageClass: ceph-block-retain
     accessMode: ReadWriteOnce
     size: 60Gi
     retain: true

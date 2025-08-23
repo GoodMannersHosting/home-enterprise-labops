@@ -6,10 +6,10 @@ metadata:
 spec:
   description: App of Apps
   clusterResourceWhitelist:
-  - group: "argoproj.io"
-    kind: "appprojects"
+    - group: "argoproj.io"
+      kind: "appprojects"
   destinations:
-  - namespace: argocd
-    server: https://kubernetes.default.svc
+    - namespace: argocd
+      server: https://kubernetes.default.svc
   sourceRepos:
-  - "https://github.com/GoodMannersHosting/home-enterprise-labops.git"
+    - "https://github.com/GoodMannersHosting/home-enterprise-labops.git"

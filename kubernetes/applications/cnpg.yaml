@@ -5,7 +5,6 @@ metadata:
   name: cnpg
   namespace: argocd
   labels:
-    # renovate: datasource=helm chartLocation=https://cloudnative-pg.github.io/charts chart=cloudnative-pg
     chartVersion: &chartVersion 0.24.0
 spec:
   destination:
@@ -13,13 +12,13 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   sources:
-  - repoURL: https://cloudnative-pg.github.io/charts
-    chart: cloudnative-pg
-    targetRevision: *chartVersion
+    - repoURL: https://cloudnative-pg.github.io/charts
+      chart: cloudnative-pg
+      targetRevision: *chartVersion
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-    - ServerSideApply=true
-    - CreateNamespace=true
+      - ServerSideApply=true
+      - CreateNamespace=true

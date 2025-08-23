@@ -2,25 +2,25 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: coredns
+  name: k8s-mcp
   namespace: argocd
   labels:
-    chartVersion: &chartVersion 1.43.0
+    chartVersion: &chartVersion 4.1.2
 spec:
   destination:
-    namespace: kube-system
+    namespace: aiml
     server: https://kubernetes.default.svc
   project: default
   sources:
     - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
       targetRevision: main
       ref: values
-    - repoURL: https://coredns.github.io/helm
-      chart: coredns
+    - repoURL: https://bjw-s-labs.github.io/helm-charts
+      chart: app-template
       targetRevision: *chartVersion
       helm:
         valueFiles:
-          - $values/kubernetes/core/kube-system/coredns/values.yaml
+          - $values/kubernetes/services/k8s-mcp/values.yaml
   syncPolicy:
     automated:
       prune: true

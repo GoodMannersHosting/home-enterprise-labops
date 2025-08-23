@@ -5,9 +5,7 @@ metadata:
   name: cert-manager
   namespace: argocd
   labels:
-    # renovate: datasource=helm chartLocation=https://charts.jetstack.io chart=cert-manager
     mainChartVersion: &mainChartVersion v1.17.2
-    # renovate: datasource=helm chartLocation=https://zachomedia.github.io/cert-manager-webhook-pdns cert-manager-webhook-pdns
     webhookChartVersion: &webhookChartVersion 3.2.3
 spec:
   destination:
@@ -15,28 +13,28 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   sources:
-  - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
-    targetRevision: main
-    ref: values
-  - repoURL: https://charts.jetstack.io
-    chart: cert-manager
-    name: cert-manager
-    targetRevision: *mainChartVersion
-    helm:
-      skipCrds: true
-      valueFiles:
-      - $values/kubernetes/core/cert-manager/values.cert-manager.yaml
-  - repoURL: https://zachomedia.github.io/cert-manager-webhook-pdns
-    chart: cert-manager-webhook-pdns
-    name: cert-manager-webhook-pdns
-    targetRevision: *webhookChartVersion
-    helm:
-      valueFiles:
-      - $values/kubernetes/core/cert-manager/values.cert-manager-webhook-pdns.yaml
+    - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://charts.jetstack.io
+      chart: cert-manager
+      name: cert-manager
+      targetRevision: *mainChartVersion
+      helm:
+        skipCrds: true
+        valueFiles:
+          - $values/kubernetes/core/cert-manager/values.cert-manager.yaml
+    - repoURL: https://zachomedia.github.io/cert-manager-webhook-pdns
+      chart: cert-manager-webhook-pdns
+      name: cert-manager-webhook-pdns
+      targetRevision: *webhookChartVersion
+      helm:
+        valueFiles:
+          - $values/kubernetes/core/cert-manager/values.cert-manager-webhook-pdns.yaml
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-    - ServerSideApply=true
-    - CreateNamespace=true
+      - ServerSideApply=true
+      - CreateNamespace=true

@@ -5,38 +5,37 @@ metadata:
   name: rook-ceph
   namespace: argocd
   labels:
-    # renovate: datasource=helm chartLocation=https://charts.rook.io/release chart=rook-ceph
-    chartVersion: &chartVersion v1.16.6
+    chartVersion: &chartVersion v1.17.7
 spec:
   destination:
     namespace: rook-ceph
     server: https://kubernetes.default.svc
   project: default
   sources:
-  - repoURL: &repoUrl https://github.com/GoodMannersHosting/home-enterprise-labops.git
-    targetRevision: &tg main
-    path: kubernetes/core/rook-ceph
-  - repoURL: *repoUrl
-    targetRevision: *tg
-    ref: values
-  - repoURL: &chartURL https://charts.rook.io/release
-    chart: &rcc rook-ceph-cluster
-    name: *rcc
-    targetRevision: *chartVersion
-    helm:
-      valueFiles:
-      - $values/kubernetes/core/rook-ceph/cluster.values.yaml
-  - repoURL: *chartURL
-    chart: &rc rook-ceph
-    name: *rc
-    targetRevision: *chartVersion
-    helm:
-      valueFiles:
-      - $values/kubernetes/core/rook-ceph/values.yaml
+    - repoURL: &repoUrl https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: &tg main
+      path: kubernetes/core/rook-ceph
+    - repoURL: *repoUrl
+      targetRevision: *tg
+      ref: values
+    - repoURL: &chartURL https://charts.rook.io/release
+      chart: &rcc rook-ceph-cluster
+      name: *rcc
+      targetRevision: *chartVersion
+      helm:
+        valueFiles:
+          - $values/kubernetes/core/rook-ceph/cluster.values.yaml
+    - repoURL: *chartURL
+      chart: &rc rook-ceph
+      name: *rc
+      targetRevision: *chartVersion
+      helm:
+        valueFiles:
+          - $values/kubernetes/core/rook-ceph/values.yaml
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-    - ServerSideApply=true
-    - CreateNamespace=true
+      - ServerSideApply=true
+      - CreateNamespace=true

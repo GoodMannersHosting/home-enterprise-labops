@@ -9,8 +9,7 @@ spec:
     server: https://kubernetes.default.svc
   project: argocd
   sources:
-  - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
-    targetRevision: main
-    path: kubernetes/applications
-    directory:
-      recurse: true
+    - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: main
+      path: kubernetes/applications
+      directory: {} # recurse: true # We don't want to dive into the disabled directory

@@ -8,14 +8,14 @@ for i in 1 2; do kubectl apply -k kubernetes/core/argocd --server-side; done
 helm template argocd oci://ghcr.io/argoproj/argo-helm/argo-cd \
 --namespace argocd \
 --create-namespace \
---version 8.1.3 \
+--version 8.3.0 \
 --skip-crds \
 --values kubernetes/core/argocd/values.yaml
 
 # Deploy
 helm upgrade --install argocd oci://ghcr.io/argoproj/argo-helm/argo-cd \
 --namespace argocd \
---version 8.1.3 \
+--version 8.3.0 \
 --skip-crds \
 --values kubernetes/core/argocd/values.yaml
 ```
