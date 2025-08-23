@@ -8,7 +8,7 @@ metadata:
     chartVersion: &chartVersion 4.1.2
 spec:
   destination:
-    namespace: kube-system
+    namespace: keycloak
     server: https://kubernetes.default.svc
   project: default
   sources:
