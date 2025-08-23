@@ -78,7 +78,7 @@ server:
     renewBefore: 168h # 7 days
     commonName: *url
     dnsNames:
-    - *url
+      - *url
     issuer:
       kind: ClusterIssuer
       name: letsencrypt-dns01

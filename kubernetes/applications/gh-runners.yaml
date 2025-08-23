@@ -7,45 +7,44 @@ metadata:
   labels:
     controllerChartVersion: &chartVersion 0.12.1
 spec:
-
   ignoreDifferences:
-  - &ignore
-    group: apiextensions.k8s.io
-    kind: CustomResourceDefinition
-    name: autoscalingrunnersets.actions.github.com
-    jsonPointers:
-    - /spec/preserveUnknownFields
-  - <<: *ignore
-    name: autoscalinglisteners.actions.github.com
-  - <<: *ignore
-    name: ephemeralrunners.actions.github.com
-  - <<: *ignore
-    name: ephemeralrunnersets.actions.github.com
+    - &ignore
+      group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      name: autoscalingrunnersets.actions.github.com
+      jsonPointers:
+        - /spec/preserveUnknownFields
+    - <<: *ignore
+      name: autoscalinglisteners.actions.github.com
+    - <<: *ignore
+      name: ephemeralrunners.actions.github.com
+    - <<: *ignore
+      name: ephemeralrunnersets.actions.github.com
   destination:
     namespace: github
     server: https://kubernetes.default.svc
   project: default
   sources:
-  - repoURL: &url https://github.com/GoodMannersHosting/home-enterprise-labops.git
-    targetRevision: &branch main
-    path: kubernetes/services/github-action-runners/runners
-    kustomize:
-      commonLabels:
-        app.kubernetes.io/version: *chartVersion
-  - repoURL: *url
-    targetRevision: *branch
-    ref: values
-  - name: controller
-    repoURL: ghcr.io/actions/actions-runner-controller-charts
-    chart: gha-runner-scale-set-controller
-    targetRevision: *chartVersion
-    helm:
-      valueFiles:
-      - $values/kubernetes/services/github-action-runners/controller/values.yaml
+    - repoURL: &url https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: &branch main
+      path: kubernetes/services/github-action-runners/runners
+      kustomize:
+        commonLabels:
+          app.kubernetes.io/version: *chartVersion
+    - repoURL: *url
+      targetRevision: *branch
+      ref: values
+    - name: controller
+      repoURL: ghcr.io/actions/actions-runner-controller-charts
+      chart: gha-runner-scale-set-controller
+      targetRevision: *chartVersion
+      helm:
+        valueFiles:
+          - $values/kubernetes/services/github-action-runners/controller/values.yaml
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-    - ServerSideApply=true
-    - CreateNamespace=true
+      - ServerSideApply=true
+      - CreateNamespace=true

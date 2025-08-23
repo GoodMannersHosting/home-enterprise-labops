@@ -22,18 +22,18 @@ controllers:
         securityContext:
           allowPrivilegeEscalation: false
         ports:
-        - name: sse
-          containerPort: 3001
-          protocol: TCP
+          - name: sse
+            containerPort: 3001
+            protocol: TCP
         env:
-        - name: ALLOW_ONLY_NON_DESTRUCTIVE_TOOLS
-          value: "true"
-        - name: ENABLE_UNSAFE_SSE_TRANSPORT
-          value: "1"
-        - name: PORT
-          value: "3001"
-        - name: HOST
-          value: "0.0.0.0"
+          - name: ALLOW_ONLY_NON_DESTRUCTIVE_TOOLS
+            value: "true"
+          - name: ENABLE_UNSAFE_SSE_TRANSPORT
+            value: "1"
+          - name: PORT
+            value: "3001"
+          - name: HOST
+            value: "0.0.0.0"
         resources:
           limits:
             cpu: 1
@@ -50,12 +50,12 @@ controllers:
           tag: "main"
           pullPolicy: "IfNotPresent"
         ports:
-        - name: api
-          containerPort: 8000
-          protocol: TCP
+          - name: api
+            containerPort: 8000
+            protocol: TCP
         env:
-        - name: MCPO_API_KEY
-          value: "top-secret"
+          - name: MCPO_API_KEY
+            value: "top-secret"
         securityContext:
           allowPrivilegeEscalation: false
         resources:
@@ -66,16 +66,16 @@ controllers:
             cpu: 250m
             memory: 1Gi
         command:
-        - mcpo
+          - mcpo
         args:
-        - --port
-        - "8000"
-        - --api-key
-        - "$(MCPO_API_KEY)"
-        - --server-type
-        - "sse"
-        - --
-        - http://0.0.0.0:3001/sse
+          - --port
+          - "8000"
+          - --api-key
+          - "$(MCPO_API_KEY)"
+          - --server-type
+          - "sse"
+          - --
+          - http://0.0.0.0:3001/sse
 
 service:
   core:
@@ -105,176 +105,317 @@ rbac:
       enabled: true
       type: ClusterRole
       rules:
-      - apiGroups: [ "" ]
-        resources:
-        - bindings
-        - componentstatuses
-        - configmaps
-        - endpoints
-        - events
-        - limitranges
-        - namespaces
-        - nodes
-        - persistentvolumeclaims
-        - persistentvolumes
-        - pods
-        - podtemplates
-        - replicationcontrollers
-        - resourcequotas
-        - serviceaccounts
-        - services
-        - challenges
-        - orders
-        - mutatingwebhookconfigurations
-        - validatingadmissionpolicies
-        - validatingadmissionpolicybindings
-        - validatingwebhookconfigurations
-        - compositeresourcedefinitions
-        - compositionrevisions
-        - compositions
-        - environmentconfigs
-        - usages
-        - customresourcedefinitions
-        - apiservices
-        - controllerrevisions
-        - daemonsets
-        - deployments
-        - replicasets
-        - statefulsets
-        - selfsubjectreviews
-        - tokenreviews
-        - horizontalpodautoscalers
-        - cronjobs
-        - jobs
-        - sealedsecrets
-        - cephblockpoolradosnamespaces
-        - cephblockpools
-        - cephbucketnotifications
-        - cephbuckettopics
-        - cephclients
-        - cephclusters
-        - cephcosidrivers
-        - cephfilesystemmirrors
-        - cephfilesystems
-        - cephfilesystemsubvolumegroups
-        - cephnfses
-        - cephobjectrealms
-        - cephobjectstores
-        - cephobjectstoreusers
-        - cephobjectzonegroups
-        - cephobjectzones
-        - cephrbdmirrors
-        - certificaterequests
-        - certificates
-        - clusterissuers
-        - issuers
-        - certificatesigningrequests
-        - ciliumbgpadvertisements
-        - ciliumbgpclusterconfigs
-        - ciliumbgpnodeconfigoverrides
-        - ciliumbgpnodeconfigs
-        - ciliumbgppeerconfigs
-        - ciliumbgppeeringpolicies
-        - ciliumcidrgroups
-        - ciliumclusterwideenvoyconfigs
-        - ciliumclusterwidenetworkpolicies
-        - ciliumendpoints
-        - ciliumenvoyconfigs
-        - ciliumexternalworkloads
-        - ciliumidentities
-        - ciliuml2announcementpolicies
-        - ciliumloadbalancerippools
-        - ciliumlocalredirectpolicies
-        - ciliumnetworkpolicies
-        - ciliumnodeconfigs
-        - ciliumnodes
-        - ciliumpodippools
-        - ingressclassparameterses
-        - tcpingresses
-        - udpingresses
-        - leases
-        - endpointslices
-        - events
-        - wasmplugins
-        - dnsendpoints
-        - flowschemas
-        - prioritylevelconfigurations
-        - backendtlspolicies
-        - gatewayclasses
-        - gateways
-        - grpcroutes
-        - httproutes
-        - referencegrants
-        - tcproutes
-        - tlsroutes
-        - udproutes
-        - xbackendtrafficpolicies
-        - xlistenersets
-        - volumegroupsnapshotclasses
-        - volumegroupsnapshotcontents
-        - volumegroupsnapshots
-        - nodes
-        - pods
-        - destinationrules
-        - envoyfilters
-        - gateways
-        - proxyconfigs
-        - serviceentries
-        - sidecars
-        - virtualservices
-        - workloadentries
-        - workloadgroups
-        - ingressclasses
-        - ingresses
-        - ipaddresses
-        - networkpolicies
-        - servicecidrs
-        - nodefeaturegroups
-        - nodefeaturerules
-        - nodefeatures
-        - runtimeclasses
-        - clusterpolicies
-        - nvidiadrivers
-        - objectbucketclaims
-        - objectbuckets
-        - configurationrevisions
-        - configurations
-        - controllerconfigs
-        - deploymentruntimeconfigs
-        - functionrevisions
-        - functions
-        - imageconfigs
-        - locks
-        - providerrevisions
-        - providers
-        - poddisruptionbudgets
-        - backups
-        - clusterimagecatalogs
-        - clusters
-        - databases
-        - imagecatalogs
-        - poolers
-        - publications
-        - scheduledbackups
-        - subscriptions
-        - priorityclasses
-        - storeconfigs
-        - authorizationpolicies
-        - peerauthentications
-        - requestauthentications
-        - volumesnapshotclasses
-        - volumesnapshotcontents
-        - volumesnapshots
-        - csidrivers
-        - csinodes
-        - csistoragecapacities
-        - storageclasses
-        - volumeattachments
-        - telemetries
-        verbs: [ "get", "list", "watch" ]
-      - apiGroups: [ "" ]
-        resources: [ "secrets" ]
-        verbs: [ "list" ]
+        # Core API resources (v1)
+        - apiGroups: [""]
+          resources:
+            - bindings
+            - componentstatuses
+            - configmaps
+            - endpoints
+            - events
+            - limitranges
+            - namespaces
+            - nodes
+            - persistentvolumeclaims
+            - persistentvolumes
+            - pods
+            - podtemplates
+            - replicationcontrollers
+            - resourcequotas
+            - serviceaccounts
+            - services
+          verbs: ["get", "list", "watch"]
+
+        # ACME Cert-Manager resources
+        - apiGroups: ["acme.cert-manager.io"]
+          resources:
+            - challenges
+            - orders
+          verbs: ["get", "list", "watch"]
+
+        # GitHub Actions Runner Controller
+        - apiGroups: ["actions.github.com"]
+          resources:
+            - autoscalinglisteners
+            - autoscalingrunnersets
+            - ephemeralrunners
+            - ephemeralrunnersets
+          verbs: ["get", "list", "watch"]
+
+        # Admission Registration
+        - apiGroups: ["admissionregistration.k8s.io"]
+          resources:
+            - mutatingadmissionpolicies
+            - mutatingadmissionpolicybindings
+            - mutatingwebhookconfigurations
+            - validatingadmissionpolicies
+            - validatingadmissionpolicybindings
+            - validatingwebhookconfigurations
+          verbs: ["get", "list", "watch"]
+
+        # API Extensions
+        - apiGroups: ["apiextensions.k8s.io"]
+          resources:
+            - customresourcedefinitions
+          verbs: ["get", "list", "watch"]
+
+        # API Registration
+        - apiGroups: ["apiregistration.k8s.io"]
+          resources:
+            - apiservices
+          verbs: ["get", "list", "watch"]
+
+        # Apps
+        - apiGroups: ["apps"]
+          resources:
+            - controllerrevisions
+            - daemonsets
+            - deployments
+            - replicasets
+            - statefulsets
+          verbs: ["get", "list", "watch"]
+
+        # Authentication
+        - apiGroups: ["authentication.k8s.io"]
+          resources:
+            - selfsubjectreviews
+            - tokenreviews
+          verbs: ["get", "list", "watch"]
+
+        # Authorization
+        - apiGroups: ["authorization.k8s.io"]
+          resources:
+            - localsubjectaccessreviews
+            - selfsubjectaccessreviews
+            - selfsubjectrulesreviews
+            - subjectaccessreviews
+          verbs: ["get", "list", "watch"]
+
+        # Autoscaling
+        - apiGroups: ["autoscaling"]
+          resources:
+            - horizontalpodautoscalers
+          verbs: ["get", "list", "watch"]
+
+        # Batch
+        - apiGroups: ["batch"]
+          resources:
+            - cronjobs
+            - jobs
+          verbs: ["get", "list", "watch"]
+
+        # Sealed Secrets
+        - apiGroups: ["bitnami.com"]
+          resources:
+            - sealedsecrets
+          verbs: ["get", "list", "watch"]
+
+        # Custom PowerDNS Challenge
+        - apiGroups: ["capi-core.homelab.danmanners.com"]
+          resources:
+            - pdns
+          verbs: ["get", "list", "watch"]
+
+        # Rook Ceph
+        - apiGroups: ["ceph.rook.io"]
+          resources:
+            - cephblockpoolradosnamespaces
+            - cephblockpools
+            - cephbucketnotifications
+            - cephbuckettopics
+            - cephclients
+            - cephclusters
+            - cephcosidrivers
+            - cephfilesystemmirrors
+            - cephfilesystems
+            - cephfilesystemsubvolumegroups
+            - cephnfses
+            - cephobjectrealms
+            - cephobjectstores
+            - cephobjectstoreusers
+            - cephobjectzonegroups
+            - cephobjectzones
+            - cephrbdmirrors
+          verbs: ["get", "list", "watch"]
+
+        # Cert-Manager
+        - apiGroups: ["cert-manager.io"]
+          resources:
+            - certificaterequests
+            - certificates
+            - clusterissuers
+            - issuers
+          verbs: ["get", "list", "watch"]
+
+        # Certificate Signing Requests
+        - apiGroups: ["certificates.k8s.io"]
+          resources:
+            - certificatesigningrequests
+          verbs: ["get", "list", "watch"]
+
+        # Cilium
+        - apiGroups: ["cilium.io"]
+          resources:
+            - ciliumbgpadvertisements
+            - ciliumbgpclusterconfigs
+            - ciliumbgpnodeconfigoverrides
+            - ciliumbgpnodeconfigs
+            - ciliumbgppeerconfigs
+            - ciliumbgppeeringpolicies
+            - ciliumcidrgroups
+            - ciliumclusterwideenvoyconfigs
+            - ciliumclusterwidenetworkpolicies
+            - ciliumendpoints
+            - ciliumenvoyconfigs
+            - ciliumexternalworkloads
+            - ciliumidentities
+            - ciliuml2announcementpolicies
+            - ciliumloadbalancerippools
+            - ciliumlocalredirectpolicies
+            - ciliumnetworkpolicies
+            - ciliumnodeconfigs
+            - ciliumnodes
+            - ciliumpodippools
+          verbs: ["get", "list", "watch"]
+
+        # Coordination
+        - apiGroups: ["coordination.k8s.io"]
+          resources:
+            - leases
+          verbs: ["get", "list", "watch"]
+
+        # Discovery
+        - apiGroups: ["discovery.k8s.io"]
+          resources:
+            - endpointslices
+          verbs: ["get", "list", "watch"]
+
+        # Events
+        - apiGroups: ["events.k8s.io"]
+          resources:
+            - events
+          verbs: ["get", "list", "watch"]
+
+        # External DNS
+        - apiGroups: ["externaldns.k8s.io"]
+          resources:
+            - dnsendpoints
+          verbs: ["get", "list", "watch"]
+
+        # Flow Control
+        - apiGroups: ["flowcontrol.apiserver.k8s.io"]
+          resources:
+            - flowschemas
+            - prioritylevelconfigurations
+          verbs: ["get", "list", "watch"]
+
+        # Gateway API
+        - apiGroups: ["gateway.networking.k8s.io"]
+          resources:
+            - backendtlspolicies
+            - gatewayclasses
+            - gateways
+            - grpcroutes
+            - httproutes
+            - referencegrants
+            - tcproutes
+            - tlsroutes
+            - udproutes
+          verbs: ["get", "list", "watch"]
+
+        # Gateway API Extensions
+        - apiGroups: ["gateway.networking.x-k8s.io"]
+          resources:
+            - xbackendtrafficpolicies
+            - xlistenersets
+          verbs: ["get", "list", "watch"]
+
+        # Metrics
+        - apiGroups: ["metrics.k8s.io"]
+          resources:
+            - nodes
+            - pods
+          verbs: ["get", "list", "watch"]
+
+        # Networking
+        - apiGroups: ["networking.k8s.io"]
+          resources:
+            - ingressclasses
+            - ingresses
+            - ipaddresses
+            - networkpolicies
+            - servicecidrs
+          verbs: ["get", "list", "watch"]
+
+        # Node Feature Discovery
+        - apiGroups: ["nfd.k8s-sigs.io"]
+          resources:
+            - nodefeaturerules
+            - nodefeatures
+          verbs: ["get", "list", "watch"]
+
+        # Node Runtime Classes
+        - apiGroups: ["node.k8s.io"]
+          resources:
+            - runtimeclasses
+          verbs: ["get", "list", "watch"]
+
+        # Object Bucket
+        - apiGroups: ["objectbucket.io"]
+          resources:
+            - objectbucketclaims
+            - objectbuckets
+          verbs: ["get", "list", "watch"]
+
+        # Policy
+        - apiGroups: ["policy"]
+          resources:
+            - poddisruptionbudgets
+          verbs: ["get", "list", "watch"]
+
+        # Cloud Native PostgreSQL
+        - apiGroups: ["postgresql.cnpg.io"]
+          resources:
+            - backups
+            - clusterimagecatalogs
+            - clusters
+            - databases
+            - imagecatalogs
+            - poolers
+            - publications
+            - scheduledbackups
+            - subscriptions
+          verbs: ["get", "list", "watch"]
+
+        # RBAC
+        - apiGroups: ["rbac.authorization.k8s.io"]
+          resources:
+            - clusterrolebindings
+            - clusterroles
+            - rolebindings
+            - roles
+          verbs: ["get", "list", "watch"]
+
+        # Scheduling
+        - apiGroups: ["scheduling.k8s.io"]
+          resources:
+            - priorityclasses
+          verbs: ["get", "list", "watch"]
+
+        # Storage
+        - apiGroups: ["storage.k8s.io"]
+          resources:
+            - csidrivers
+            - csinodes
+            - csistoragecapacities
+            - storageclasses
+            - volumeattachments
+          verbs: ["get", "list", "watch"]
+
+        # Secrets (separate rule for different verbs)
+        - apiGroups: [""]
+          resources: ["secrets"]
+          verbs: ["list"]
   bindings:
     cluster-readonly:
       enabled: true
@@ -284,6 +425,6 @@ rbac:
         name: k8s-mcp
         apiGroup: rbac.authorization.k8s.io
       subjects:
-      - kind: ServiceAccount
-        name: k8s-mcp
-        namespace: aiml
+        - kind: ServiceAccount
+          name: k8s-mcp
+          namespace: aiml

@@ -8,18 +8,18 @@ metadata:
     external-dns.alpha.kubernetes.io/hostname: argocd.cloud.danmanners.com
 spec:
   hostnames:
-  - argocd.cloud.danmanners.com
+    - argocd.cloud.danmanners.com
   parentRefs:
-  - name: gwapi
-    namespace: default
-    kind: Gateway
-    group: gateway.networking.k8s.io
-    sectionName: argocd
+    - name: gwapi
+      namespace: default
+      kind: Gateway
+      group: gateway.networking.k8s.io
+      sectionName: argocd
   rules:
-  - name: https
-    backendRefs:
-    - name: argocd-server
-      kind: Service
-      group: ""
-      port: 443
-      weight: 1
+    - name: https
+      backendRefs:
+        - name: argocd-server
+          kind: Service
+          group: ""
+          port: 443
+          weight: 1

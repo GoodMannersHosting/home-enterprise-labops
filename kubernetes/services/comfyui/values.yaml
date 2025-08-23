@@ -20,27 +20,27 @@ controllers:
           repository: &repo harbor.cloud.danmanners.com/library/danmanners/comfyui
           tag: &tag v0.3.49
         command:
-        - /bin/sh
-        - -c
-        - |
-          mkdir -p /app/ComfyUI/models/checkpoints \
-          /app/ComfyUI/models/clip \
-          /app/ComfyUI/models/clip_vision \
-          /app/ComfyUI/models/configs \
-          /app/ComfyUI/models/controlnet \
-          /app/ComfyUI/models/diffusers \
-          /app/ComfyUI/models/diffusion_models \
-          /app/ComfyUI/models/embeddings \
-          /app/ComfyUI/models/gligen \
-          /app/ComfyUI/models/hypernetworks \
-          /app/ComfyUI/models/loras \
-          /app/ComfyUI/models/photomaker \
-          /app/ComfyUI/models/style_models \
-          /app/ComfyUI/models/text_encoders \
-          /app/ComfyUI/models/unet \
-          /app/ComfyUI/models/upscale_models \
-          /app/ComfyUI/models/vae \
-          /app/ComfyUI/models/vae_approx
+          - /bin/sh
+          - -c
+          - |
+            mkdir -p /app/ComfyUI/models/checkpoints \
+            /app/ComfyUI/models/clip \
+            /app/ComfyUI/models/clip_vision \
+            /app/ComfyUI/models/configs \
+            /app/ComfyUI/models/controlnet \
+            /app/ComfyUI/models/diffusers \
+            /app/ComfyUI/models/diffusion_models \
+            /app/ComfyUI/models/embeddings \
+            /app/ComfyUI/models/gligen \
+            /app/ComfyUI/models/hypernetworks \
+            /app/ComfyUI/models/loras \
+            /app/ComfyUI/models/photomaker \
+            /app/ComfyUI/models/style_models \
+            /app/ComfyUI/models/text_encoders \
+            /app/ComfyUI/models/unet \
+            /app/ComfyUI/models/upscale_models \
+            /app/ComfyUI/models/vae \
+            /app/ComfyUI/models/vae_approx
         resources:
           requests:
             cpu: "10m"
@@ -54,12 +54,12 @@ controllers:
           repository: harbor.cloud.danmanners.com/library/gtsteffaniak/filebrowser
           tag: 0.7.18-beta-slim
         ports:
-        - name: browser
-          containerPort: 80
-          protocol: TCP
+          - name: browser
+            containerPort: 80
+            protocol: TCP
         env:
-        - name: FILEBROWSER_CONFIG
-          value: /home/filebrowser/data/config.yaml
+          - name: FILEBROWSER_CONFIG
+            value: /home/filebrowser/data/config.yaml
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
         securityContext:
@@ -73,20 +73,20 @@ controllers:
             memory: "800Mi"
       core:
         ports:
-        - name: http
-          containerPort: &port 8188
-          protocol: TCP
+          - name: http
+            containerPort: &port 8188
+            protocol: TCP
         image:
           repository: *repo
           tag: *tag
           pullPolicy: Always
         env:
-        - name: NVIDIA_VISIBLE_DEVICES
-          value: all
-        - name: NVIDIA_DRIVER_CAPABILITIES
-          value: all
-        - name: CLI_ARGS
-          value: "--verbose=DEBUG"
+          - name: NVIDIA_VISIBLE_DEVICES
+            value: all
+          - name: NVIDIA_DRIVER_CAPABILITIES
+            value: all
+          - name: CLI_ARGS
+            value: "--verbose=DEBUG"
         resources:
           limits:
             cpu: 6
@@ -132,7 +132,7 @@ configMaps:
             api: false
 
 service:
-  core:
+  main:
     enabled: true
     controller: main
     primary: true
@@ -148,48 +148,64 @@ service:
         port: 8080
         targetPort: browser
         protocol: TCP
+  lb:
+    enabled: true
+    controller: main
+    primary: false
+    type: LoadBalancer
+    ports:
+      http:
+        enabled: true
+        port: 80
+        targetPort: http
+        protocol: TCP
+      browser:
+        enabled: true
+        port: 8080
+        targetPort: browser
+        protocol: TCP
 
 persistence:
   models:
     enabled: true
     type: persistentVolumeClaim
-    storageClass: ceph-rbd-retain
+    storageClass: ceph-block-retain
     accessMode: ReadWriteOnce
     size: 300Gi
     retain: true
     globalMounts:
-    - path: /app/ComfyUI/models/
-      readOnly: false
+      - path: /app/ComfyUI/models/
+        readOnly: false
   output:
     enabled: true
     type: persistentVolumeClaim
-    storageClass: ceph-rbd-retain
+    storageClass: ceph-block-retain
     accessMode: ReadWriteOnce
     size: 40Gi
     retain: true
     globalMounts:
-    - path: /app/ComfyUI/output/
-      readOnly: false
+      - path: /app/ComfyUI/output/
+        readOnly: false
   workflows:
     enabled: true
     type: persistentVolumeClaim
-    storageClass: ceph-rbd-retain
+    storageClass: ceph-block-retain
     accessMode: ReadWriteOnce
     size: 4Gi
     retain: true
     globalMounts:
-    - path: /app/ComfyUI/user/default/workflows/
-      readOnly: false
+      - path: /app/ComfyUI/user/default/workflows/
+        readOnly: false
   custom-nodes:
     enabled: true
     type: persistentVolumeClaim
-    storageClass: ceph-rbd-retain
+    storageClass: ceph-block-retain
     accessMode: ReadWriteOnce
     size: 4Gi
     retain: true
     globalMounts:
-    - path: /app/ComfyUI/custom_nodes/
-      readOnly: false
+      - path: /app/ComfyUI/custom_nodes/
+        readOnly: false
   browser:
     type: configMap
     name: comfyui
@@ -197,7 +213,7 @@ persistence:
     advancedMounts:
       main:
         browser:
-        - path: /home/filebrowser/data/config.yaml
-          mountPropagation: None
-          readOnly: false
-          subPath: config.yaml
+          - path: /home/filebrowser/data/config.yaml
+            mountPropagation: None
+            readOnly: false
+            subPath: config.yaml

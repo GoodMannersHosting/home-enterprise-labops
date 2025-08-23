@@ -10,7 +10,7 @@ hub:
       accessModes:
       - ReadWriteOnce
       storage: 10Gi
-      storageClassName: ceph-rbd-retain
+      storageClassName: ceph-block-retain
 
 proxy:
   service:

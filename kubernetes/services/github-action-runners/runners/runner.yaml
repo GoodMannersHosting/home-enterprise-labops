@@ -99,7 +99,7 @@ spec:
           volumeClaimTemplate:
             spec:
               accessModes: [ "ReadWriteOnce" ]
-              storageClassName: "ceph-rbd"
+              storageClassName: "ceph-block"
               resources:
                 requests:
                   storage: 20Gi
@@ -108,7 +108,7 @@ spec:
           volumeClaimTemplate:
             spec:
               accessModes: [ "ReadWriteOnce" ]
-              storageClassName: "ceph-rbd"
+              storageClassName: "ceph-block"
               resources:
                 requests:
                   storage: 12Gi

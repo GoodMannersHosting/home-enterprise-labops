@@ -20,7 +20,7 @@ controllers:
       init-db:
         image:
           repository: ghcr.io/home-operations/postgres-init
-          tag: "17.5"
+          tag: "17.6"
         env: &postgres-env
           - name: INIT_POSTGRES_DBNAME
             value: pdns
@@ -59,15 +59,15 @@ controllers:
           tag: "3.22"
         env: *postgres-env
         command:
-        - /bin/ash
-        - -c
-        - |
-          apk add --no-cache postgresql17-client
-          until PGPASSWORD="$(INIT_POSTGRES_PASS)" psql -h "$(INIT_POSTGRES_HOST)" -U "$(INIT_POSTGRES_USER)" -d "$(INIT_POSTGRES_DBNAME)" -c '\q'; do
-            echo "Waiting for database to be ready..."
-            sleep 5
-          done
-          PGPASSWORD="$(INIT_POSTGRES_PASS)" psql -h $(INIT_POSTGRES_HOST) -U $(INIT_POSTGRES_USER) -d $(INIT_POSTGRES_DBNAME) -f /opt/db-schema/schema.sql
+          - /bin/ash
+          - -c
+          - |
+            apk add --no-cache postgresql17-client
+            until PGPASSWORD="$(INIT_POSTGRES_PASS)" psql -h "$(INIT_POSTGRES_HOST)" -U "$(INIT_POSTGRES_USER)" -d "$(INIT_POSTGRES_DBNAME)" -c '\q'; do
+              echo "Waiting for database to be ready..."
+              sleep 5
+            done
+            PGPASSWORD="$(INIT_POSTGRES_PASS)" psql -h $(INIT_POSTGRES_HOST) -U $(INIT_POSTGRES_USER) -d $(INIT_POSTGRES_DBNAME) -f /opt/db-schema/schema.sql
 
   main:
     enabled: true
@@ -81,82 +81,82 @@ controllers:
     containers:
       dns:
         ports:
-        - name: dns-tcp
-          containerPort: 5353
-          protocol: TCP
-        - name: dns-udp
-          containerPort: 5353
-          protocol: UDP
-        - name: webserver
-          containerPort: 8081
-          protocol: TCP
+          - name: dns-tcp
+            containerPort: 5353
+            protocol: TCP
+          - name: dns-udp
+            containerPort: 5353
+            protocol: UDP
+          - name: webserver
+            containerPort: 8081
+            protocol: TCP
         image:
           repository: docker.io/powerdns/pdns-auth-49
           tag: "4.9.5"
           pullPolicy: "IfNotPresent"
         args:
-        - --no-config
-        - --launch=gpgsql
-        - --autosecondary=yes
-        - --config-name=as-1
-        - --local-address=0.0.0.0
-        - --local-port=5353
-        - --loglevel=6
-        - --query-logging=yes
-        - --version-string=powerdns
-        - --webserver-loglevel=normal
-        - --webserver-allow-from=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.1/32
-        - --webserver-password=$(PDNS_AUTH_WEB_KEY)
-        - --webserver-address=0.0.0.0
-        - --webserver-port=8081
-        - --webserver=yes
-        - --api=yes
-        - --gpgsql-port=5432
-        - --gpgsql-dbname=pdns
-        - --api-key=$(PDNS_AUTH_API_KEY)
-        - --gpgsql-user=$(POSTGRES_USER)
-        - --gpgsql-password=$(POSTGRES_PASS)
-        - --gpgsql-host=$(POSTGRES_HOST)
+          - --no-config
+          - --launch=gpgsql
+          - --autosecondary=yes
+          - --config-name=as-1
+          - --local-address=0.0.0.0
+          - --local-port=5353
+          - --loglevel=6
+          - --query-logging=yes
+          - --version-string=powerdns
+          - --webserver-loglevel=normal
+          - --webserver-allow-from=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.1/32
+          - --webserver-password=$(PDNS_AUTH_WEB_KEY)
+          - --webserver-address=0.0.0.0
+          - --webserver-port=8081
+          - --webserver=yes
+          - --api=yes
+          - --gpgsql-port=5432
+          - --gpgsql-dbname=pdns
+          - --api-key=$(PDNS_AUTH_API_KEY)
+          - --gpgsql-user=$(POSTGRES_USER)
+          - --gpgsql-password=$(POSTGRES_PASS)
+          - --gpgsql-host=$(POSTGRES_HOST)
 
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
             drop:
-            - ALL
+              - ALL
             add:
-            - CAP_NET_RAW
-            - CAP_NET_BIND_SERVICE
+              - CAP_NET_RAW
+              - CAP_NET_BIND_SERVICE
         env:
-        - name: CI_JOB_ID # Useful for rolling the pod using a pipeline execution process
-          valueFrom:
-            secretKeyRef:
-              name: as-secrets
-              key: ci-job-id
-        - name: PDNS_AUTH_WEB_KEY
-          valueFrom:
-            secretKeyRef:
-              name: as-secrets
-              key: key
-        - name: PDNS_AUTH_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: as-secrets
-              key: api-key
-        - name: POSTGRES_USER
-          valueFrom:
-            secretKeyRef:
-              name: pdns-db-creds
-              key: POSTGRES_USER
-        - name: POSTGRES_PASS
-          valueFrom:
-            secretKeyRef:
-              name: pdns-db-creds
-              key: POSTGRES_PASS
-        - name: POSTGRES_HOST
-          valueFrom:
-            secretKeyRef:
-              name: pdns-db-creds
-              key: POSTGRES_HOST
+          - name: CI_JOB_ID # Useful for rolling the pod using a pipeline execution process
+            valueFrom:
+              secretKeyRef:
+                name: as-secrets
+                key: ci-job-id
+          - name: PDNS_AUTH_WEB_KEY
+            valueFrom:
+              secretKeyRef:
+                name: as-secrets
+                key: key
+          - name: PDNS_AUTH_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: as-secrets
+                key: api-key
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: pdns-db-creds
+                key: POSTGRES_USER
+          - name: POSTGRES_PASS
+            valueFrom:
+              secretKeyRef:
+                name: pdns-db-creds
+                key: POSTGRES_PASS
+          - name: POSTGRES_HOST
+            valueFrom:
+              secretKeyRef:
+                name: pdns-db-creds
+                key: POSTGRES_HOST
         resources:
           limits:
             cpu: 2000m
@@ -204,21 +204,21 @@ route:
     enabled: true
     kind: HTTPRoute
     parentRefs:
-    - group: gateway.networking.k8s.io
-      kind: Gateway
-      name: gwapi
-      namespace: default
-      sectionName: https
+      - group: gateway.networking.k8s.io
+        kind: Gateway
+        name: gwapi
+        namespace: default
+        sectionName: https
     hostnames:
-    - pdns.capi-core.homelab.danmanners.com
+      - pdns.capi-core.homelab.danmanners.com
     rules:
-    - backendRefs:
-      - name: powerdns-api
-        port: 80
-      matches:
-      - path:
-          type: PathPrefix
-          value: /
+      - backendRefs:
+          - name: powerdns-api
+            port: 80
+        matches:
+          - path:
+              type: PathPrefix
+              value: /
 
 configMaps:
   db-schema:
@@ -338,12 +338,12 @@ rawResources:
           algorithm: RSA
           size: 2048
         usages:
-        - digital signature
-        - key encipherment
-        - server auth
-        - client auth
+          - digital signature
+          - key encipherment
+          - server auth
+          - client auth
         dnsNames:
-        - pdns.capi-core.homelab.danmanners.com
+          - pdns.capi-core.homelab.danmanners.com
         issuerRef:
           name: letsencrypt-dns01
           kind: ClusterIssuer
@@ -361,7 +361,7 @@ persistence:
     advancedMounts:
       postgres-schema:
         init:
-        - path: /opt/db-schema/schema.sql
-          readOnly: true
-          mountPropagation: None
-          subPath: schema.sql
+          - path: /opt/db-schema/schema.sql
+            readOnly: true
+            mountPropagation: None
+            subPath: schema.sql

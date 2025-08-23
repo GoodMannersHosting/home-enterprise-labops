@@ -16,15 +16,15 @@ controllers:
     containers:
       core:
         ports:
-        - name: server
-          containerPort: 8211
-          protocol: UDP
-        - name: api
-          containerPort: 8212
-          protocol: TCP
-        - name: steam
-          containerPort: 27015
-          protocol: UDP
+          - name: server
+            containerPort: 8211
+            protocol: UDP
+          - name: api
+            containerPort: 8212
+            protocol: TCP
+          - name: steam
+            containerPort: 27015
+            protocol: UDP
         image:
           repository: thijsvanloef/palworld-server-docker
           tag: "dev"
@@ -32,42 +32,42 @@ controllers:
         securityContext:
           allowPrivilegeEscalation: false
         env:
-        - name: PUID
-          value: "1000"
-        - name: PGID
-          value: "1000"
-        - name: PORT
-          value: "8211"
-        - name: PLAYERS
-          value: "16"
-        - name: SERVER_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: palworld-secrets
-              key: SERVER_PASSWORD
-        - name: MULTITHREADING
-          value: "true"
-        - name: REST_API_ENABLED
-          value: "true"
-        - name: RCON_ENABLED
-          value: "true"
-        - name: RCON_PORT
-          value: "25575"
-        - name: TZ
-          value: "UTC"
-        - name: ADMIN_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: palworld-secrets
-              key: ADMIN_PASSWORD
-        - name: COMMUNITY
-          value: "false"
-        - name: SERVER_NAME
-          value: "Femboy Island"
-        - name: SERVER_DESCRIPTION
-          value: "This one will probably stay online!"
-        - name: CROSSPLAY_PLATFORMS
-          value: "(Steam,Xbox,PS5,Mac)"
+          - name: PUID
+            value: "1000"
+          - name: PGID
+            value: "1000"
+          - name: PORT
+            value: "8211"
+          - name: PLAYERS
+            value: "16"
+          - name: SERVER_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: palworld-secrets
+                key: SERVER_PASSWORD
+          - name: MULTITHREADING
+            value: "true"
+          - name: REST_API_ENABLED
+            value: "true"
+          - name: RCON_ENABLED
+            value: "true"
+          - name: RCON_PORT
+            value: "25575"
+          - name: TZ
+            value: "UTC"
+          - name: ADMIN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: palworld-secrets
+                key: ADMIN_PASSWORD
+          - name: COMMUNITY
+            value: "false"
+          - name: SERVER_NAME
+            value: "Femboy Island"
+          - name: SERVER_DESCRIPTION
+            value: "This one will probably stay online!"
+          - name: CROSSPLAY_PLATFORMS
+            value: "(Steam,Xbox,PS5,Mac)"
         resources:
           limits:
             cpu: 15000m
@@ -85,40 +85,40 @@ controllers:
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: false
-        command: [ "/bin/ash" ]
-        args: [ "-c", "/opt/backup/backup.sh" ]
+        command: ["/bin/ash"]
+        args: ["-c", "/opt/backup/backup.sh"]
         env:
-        - name: BIN_VERSION
-          value: "1.7.0"
-        - name: BACKUP_DIR
-          value: /palworld/backups/
-        - name: AWS_REGION
-          valueFrom:
-            secretKeyRef:
-              name: aws-backup-secrets
-              key: AWS_REGION
-        - name: AWS_TRUST_ANCHOR_ARN
-          valueFrom:
-            secretKeyRef:
-              name: aws-backup-secrets
-              key: AWS_TRUST_ANCHOR_ARN
-        - name: AWS_PROFILE_ARN
-          valueFrom:
-            secretKeyRef:
-              name: aws-backup-secrets
-              key: AWS_PROFILE_ARN
-        - name: AWS_ROLE_ARN
-          valueFrom:
-            secretKeyRef:
-              name: aws-backup-secrets
-              key: AWS_ROLE_ARN
-        - name: S3_BUCKET
-          valueFrom:
-            secretKeyRef:
-              name: aws-backup-secrets
-              key: AWS_S3_BUCKET
-        - name: S3_BUCKET_PATH
-          value: palworld-dedicated/
+          - name: BIN_VERSION
+            value: "1.7.0"
+          - name: BACKUP_DIR
+            value: /palworld/backups/
+          - name: AWS_REGION
+            valueFrom:
+              secretKeyRef:
+                name: aws-backup-secrets
+                key: AWS_REGION
+          - name: AWS_TRUST_ANCHOR_ARN
+            valueFrom:
+              secretKeyRef:
+                name: aws-backup-secrets
+                key: AWS_TRUST_ANCHOR_ARN
+          - name: AWS_PROFILE_ARN
+            valueFrom:
+              secretKeyRef:
+                name: aws-backup-secrets
+                key: AWS_PROFILE_ARN
+          - name: AWS_ROLE_ARN
+            valueFrom:
+              secretKeyRef:
+                name: aws-backup-secrets
+                key: AWS_ROLE_ARN
+          - name: S3_BUCKET
+            valueFrom:
+              secretKeyRef:
+                name: aws-backup-secrets
+                key: AWS_S3_BUCKET
+          - name: S3_BUCKET_PATH
+            value: palworld-dedicated/
         resources:
           requests:
             cpu: 200m
@@ -240,53 +240,53 @@ route:
     annotations:
       external-dns.alpha.kubernetes.io/controller: "false"
     parentRefs:
-    - group: gateway.networking.k8s.io
-      kind: Gateway
-      name: gwapi
-      namespace: default
-      sectionName: https-cloud
+      - group: gateway.networking.k8s.io
+        kind: Gateway
+        name: gwapi
+        namespace: default
+        sectionName: https-cloud
     hostnames:
-    - palworld.cloud.danmanners.com
+      - palworld.cloud.danmanners.com
     rules:
-    - backendRefs:
-      - name: palworld-core
-        port: 8212
-        weight: 1
-      matches:
-      - path:
-          type: PathPrefix
-          value: /
-      timeouts:
-        backendRequest: 0s
-        request: 0s
+      - backendRefs:
+          - name: palworld-core
+            port: 8212
+            weight: 1
+        matches:
+          - path:
+              type: PathPrefix
+              value: /
+        timeouts:
+          backendRequest: 0s
+          request: 0s
   server:
     enabled: true
     kind: UDPRoute
     parentRefs:
-    - group: gateway.networking.k8s.io
-      kind: Gateway
-      name: gwapi
-      namespace: default
-      sectionName: palworld-server
+      - group: gateway.networking.k8s.io
+        kind: Gateway
+        name: gwapi
+        namespace: default
+        sectionName: palworld-server
     rules:
-    - backendRefs:
-      - name: palworld-core
-        port: 8211
-        weight: 1
+      - backendRefs:
+          - name: palworld-core
+            port: 8211
+            weight: 1
   steam:
     enabled: true
     kind: UDPRoute
     parentRefs:
-    - group: gateway.networking.k8s.io
-      kind: Gateway
-      name: gwapi
-      namespace: default
-      sectionName: palworld-steam
+      - group: gateway.networking.k8s.io
+        kind: Gateway
+        name: gwapi
+        namespace: default
+        sectionName: palworld-steam
     rules:
-    - backendRefs:
-      - name: palworld-core
-        port: 27015
-        weight: 1
+      - backendRefs:
+          - name: palworld-core
+            port: 27015
+            weight: 1
 
 rawResources:
   palworld:
@@ -299,26 +299,26 @@ rawResources:
         duration: 1128h # 47 days
         renewBefore: 168h # 7 days
         dnsNames:
-        - palworld.cloud.danmanners.com
+          - palworld.cloud.danmanners.com
         issuerRef:
           name: letsencrypt-dns01
           kind: ClusterIssuer
           group: cert-manager.io
         usages:
-        - server auth
-        - client auth
+          - server auth
+          - client auth
 
 persistence:
   data:
     enabled: true
     type: persistentVolumeClaim
-    storageClass: ceph-rbd-retain
+    storageClass: ceph-block-retain
     accessMode: ReadWriteOnce
     size: 40Gi
     retain: true
     globalMounts:
-    - path: /palworld
-      readOnly: false
+      - path: /palworld
+        readOnly: false
   backup:
     enabled: true
     type: configMap
@@ -327,9 +327,9 @@ persistence:
     advancedMounts:
       main:
         backup:
-        - path: /opt/backup/
-          mountPropagation: None
-          readOnly: false
+          - path: /opt/backup/
+            mountPropagation: None
+            readOnly: false
   certs:
     enabled: true
     type: secret
@@ -337,6 +337,6 @@ persistence:
     advancedMounts:
       main:
         keycloak:
-        - path: /opt/certs/
-          mountPropagation: None
-          readOnly: true
+          - path: /opt/certs/
+            mountPropagation: None
+            readOnly: true

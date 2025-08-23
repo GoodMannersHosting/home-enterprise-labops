@@ -5,29 +5,28 @@ metadata:
   name: cilium
   namespace: argocd
   labels:
-    # renovate: datasource=helm chartLocation=https://helm.cilium.io/ chart=cilium
-    chartVersion: &chartVersion 1.17.4
+    chartVersion: &chartVersion 1.17.5
 spec:
   destination:
     namespace: kube-system
     server: https://kubernetes.default.svc
   project: default
   sources:
-  - repoURL: &url https://github.com/GoodMannersHosting/home-enterprise-labops.git
-    targetRevision: main
-    path: kubernetes/core/kube-system/cilium/bgp
-  - repoURL: *url
-    targetRevision: main
-    ref: values
-  - repoURL: https://helm.cilium.io/
-    chart: cilium
-    targetRevision: *chartVersion
-    helm:
-      valueFiles:
-      - $values/kubernetes/core/kube-system/cilium/values.yaml
+    - repoURL: &url https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: main
+      path: kubernetes/core/kube-system/cilium/bgp
+    - repoURL: *url
+      targetRevision: main
+      ref: values
+    - repoURL: https://helm.cilium.io/
+      chart: cilium
+      targetRevision: *chartVersion
+      helm:
+        valueFiles:
+          - $values/kubernetes/core/kube-system/cilium/values.yaml
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-    - ServerSideApply=true
+      - ServerSideApply=true

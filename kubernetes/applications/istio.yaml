@@ -5,67 +5,66 @@ metadata:
   name: istio
   namespace: argocd
   labels:
-    # renovate: datasource=helm chartLocation=https://istio-release.storage.googleapis.com/charts chart=base
     chartVersion: &chartVersion 1.26.0
 spec:
   # Need the ignore differences to prevent ArgoCD from trying to update
   # the failurePolicy to Ignore. This is a known issue with Istio and
   # ArgoCD. See https://github.com/istio/istio/issues/52785.
   ignoreDifferences:
-  - &istioIgnoreAdmissionWebhooks
-    group: admissionregistration.k8s.io
-    kind: ValidatingWebhookConfiguration
-    name: istiod-default-validator
-    jsonPointers:
-    - /webhooks/0/failurePolicy
-  - <<: *istioIgnoreAdmissionWebhooks
-    name: istio-validator-istio-system
-  # Need to ignore the 'divisor' field in the resourceFieldRef for the
-  # istio-cni-node DaemonSet. This is a known issue with Istio and
-  # ArgoCD. See https://github.com/istio/istio/issues/53001.
-  - group: apps
-    kind: DaemonSet
-    name: istio-cni-node
-    jqPathExpressions:
-    - .spec.template.spec.containers[].env[].valueFrom.resourceFieldRef.divisor
+    - &istioIgnoreAdmissionWebhooks
+      group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      name: istiod-default-validator
+      jsonPointers:
+        - /webhooks/0/failurePolicy
+    - <<: *istioIgnoreAdmissionWebhooks
+      name: istio-validator-istio-system
+    # Need to ignore the 'divisor' field in the resourceFieldRef for the
+    # istio-cni-node DaemonSet. This is a known issue with Istio and
+    # ArgoCD. See https://github.com/istio/istio/issues/53001.
+    - group: apps
+      kind: DaemonSet
+      name: istio-cni-node
+      jqPathExpressions:
+        - .spec.template.spec.containers[].env[].valueFrom.resourceFieldRef.divisor
   destination:
     namespace: istio-system
     server: https://kubernetes.default.svc
   project: default
   sources:
-  - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
-    targetRevision: main
-    ref: values
-  - &istioHelm
-    repoURL: https://istio-release.storage.googleapis.com/charts
-    name: &ib base
-    chart: *ib
-    targetRevision: *chartVersion
-    helm:
-      valueFiles:
-      - $values/kubernetes/core/istio-system/istio-base.values.yaml
-  - <<: *istioHelm
-    name: &id istiod
-    chart: *id
-    helm:
-      valueFiles:
-      - $values/kubernetes/core/istio-system/istiod.values.yaml
-  - <<: *istioHelm
-    name: &cni cni
-    chart: *cni
-    helm:
-      valueFiles:
-      - $values/kubernetes/core/istio-system/cni.values.yaml
-  - <<: *istioHelm
-    name: &izt ztunnel
-    chart: *izt
-    helm:
-      valueFiles:
-      - $values/kubernetes/core/istio-system/ztunnel.values.yaml
+    - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: main
+      ref: values
+    - &istioHelm
+      repoURL: https://istio-release.storage.googleapis.com/charts
+      name: &ib base
+      chart: *ib
+      targetRevision: *chartVersion
+      helm:
+        valueFiles:
+          - $values/kubernetes/core/istio-system/istio-base.values.yaml
+    - <<: *istioHelm
+      name: &id istiod
+      chart: *id
+      helm:
+        valueFiles:
+          - $values/kubernetes/core/istio-system/istiod.values.yaml
+    - <<: *istioHelm
+      name: &cni cni
+      chart: *cni
+      helm:
+        valueFiles:
+          - $values/kubernetes/core/istio-system/cni.values.yaml
+    - <<: *istioHelm
+      name: &izt ztunnel
+      chart: *izt
+      helm:
+        valueFiles:
+          - $values/kubernetes/core/istio-system/ztunnel.values.yaml
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-    - ServerSideApply=true
-    - CreateNamespace=true
+      - ServerSideApply=true
+      - CreateNamespace=true

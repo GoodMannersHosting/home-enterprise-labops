@@ -1,6 +1,6 @@
 x-anchors:
   imageTag: &tagVersion v2.13.0
-  storageClass: &storageClass ceph-rbd
+  storageClass: &storageClass ceph-block-retain
   storageAccessMode: &storageAccessMode ReadWriteOnce
 
 externalURL: https://harbor.cloud.danmanners.com
@@ -27,8 +27,8 @@ persistence:
   resourcePolicy: "keep"
   persistentVolumeClaim:
     registry:
-      storageClass: cephfs-retain
-      accessMode: ReadWriteMany
+      storageClass: *storageClass
+      accessMode: *storageAccessMode
       size: 80Gi
     jobservice:
       jobLog:
@@ -149,7 +149,7 @@ registry:
     image:
       repository: goharbor/harbor-registryctl
       tag: *tagVersion
-  replicas: 2
+  replicas: 1
   revisionHistoryLimit: 3
   existingSecret: "harbor-service-secrets"
   existingSecretKey: REGISTRY_HTPASSWD

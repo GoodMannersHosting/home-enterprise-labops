@@ -19,24 +19,24 @@ ollama:
       pull: []
       run: []
   image:
-    tag: "0.11.2"
+    tag: "0.11.6"
     pullPolicy: "Always"
   extraEnv:
-  - name: "OLLAMA_NUM_PARALLEL"
-    value: "3"
-  - name: "OLLAMA_FLASH_ATTENTION"
-    value: "1"
-  - name: "OLLAMA_MAX_LOADED_MODELS"
-    value: "1"
-  - name: "OLLAMA_KV_CACHE_TYPE"
-    value: "q8_0"
+    - name: "OLLAMA_NUM_PARALLEL"
+      value: "2"
+    - name: "OLLAMA_FLASH_ATTENTION"
+      value: "1"
+    - name: "OLLAMA_MAX_LOADED_MODELS"
+      value: "1"
+    - name: "OLLAMA_KV_CACHE_TYPE"
+      value: "q8_0"
   runtimeClassName: nvidia
   persistentVolume:
     enabled: true
     size: 200Gi
-    storageClass: ceph-rbd-retain
+    storageClass: ceph-block-retain
     accessModes:
-    - ReadWriteOnce
+      - ReadWriteOnce
 
 pipelines:
   enabled: false
@@ -47,7 +47,7 @@ clusterDomain: cluster.local
 
 image:
   repository: ghcr.io/open-webui/open-webui
-  tag: ""
+  tag: "0.6.25"
   pullPolicy: "IfNotPresent"
 
 serviceAccount:
@@ -59,12 +59,33 @@ managedCertificate:
 ingress:
   enabled: false
 
+extraInitContainers:
+  - name: init-db
+    image: ghcr.io/home-operations/postgres-init:17.5
+    env:
+      - name: INIT_POSTGRES_DBNAME
+        value: open-webui
+      - name: INIT_POSTGRES_HOST
+        value: "db-rw.database.svc"
+      - name: INIT_POSTGRES_USER
+        value: ollama
+      - name: INIT_POSTGRES_SUPER_PASS
+        valueFrom:
+          secretKeyRef:
+            name: db-superuser
+            key: password
+      - name: INIT_POSTGRES_PASS
+        valueFrom:
+          secretKeyRef:
+            name: ollama-db-creds
+            key: POSTGRES_USER_PASSWORD
+
 persistence:
   enabled: true
   size: 20Gi
   accessModes:
-  - ReadWriteOnce
-  storageClass: ceph-rbd-retain
+    - ReadWriteOnce
+  storageClass: ceph-block-retain
   provider: local
 
 # -- Service values to expose Open WebUI pods to cluster
@@ -74,7 +95,7 @@ service:
   containerPort: 8080
 
 # -- Enables the use of OpenAI APIs
-enableOpenaiApi: false
+enableOpenaiApi: true
 
 # hostAliases:
 # - ip: "172.31.0.11"
@@ -83,132 +104,75 @@ enableOpenaiApi: false
 
 sso:
   enabled: false
-  enableSignup: true
-  mergeAccountsByEmail: true
-  enableRoleManagement: false
-  enableGroupManagement: true
 
-  oidc:
-    enabled: false
-    clientId: aiml-open-webui
-    clientExistingSecret: open-webui-oidc-secret
-    clientExistingSecretKey: clientSecret
-    providerUrl: https://keycloak.cloud.danmanners.com/realms/master/.well-known/openid-configuration
-    providerName: "SSO"
-    scopes: "openid email profile"
-
-  roleManagement:
-    rolesClaim: "roles"
-    allowedRoles: ""
-    adminRoles: ""
-
-  groupManagement:
-    groupsClaim: "groups"
-
-  trustedHeader:
-    enabled: false
-    emailHeader: ""
-    nameHeader: ""
-
-# -- Extra resources to deploy with Open WebUI
 extraResources:
-# Create the public Ollama Web UI service
-- apiVersion: v1
-  kind: Service
-  metadata:
-    name: ollama-extname
-    annotations:
-      external-dns.alpha.kubernetes.io/hostname: ollama.cloud.danmanners.com
-      external-dns.alpha.kubernetes.io/ttl: "300"
-  spec:
-    type: ExternalName
-    externalName: unifi-home.homelab.danmanners.com
-# Create the Gateway API HTTPRoute for the public Ollama Web UI service
-- apiVersion: gateway.networking.k8s.io/v1
-  kind: HTTPRoute
-  metadata:
-    name: aiml
-    namespace: aiml
-    annotations:
-      external-dns.alpha.kubernetes.io/hostname: chat.capi-core.homelab.danmanners.com
-      external-dns.alpha.kubernetes.io/ingress-hostname-source: annotation-only
-  spec:
-    hostnames:
-    - chat.capi-core.homelab.danmanners.com
-    parentRefs:
-    - kind: Gateway
-      group: gateway.networking.k8s.io
-      name: gwapi
-      namespace: default
-      sectionName: https
-    rules: &openwebui-rules
-      - backendRefs:
-        - group: ""
-          kind: Service
-          name: open-webui
-          port: 80
-          weight: 1
-        matches:
-        - path:
-            type: PathPrefix
-            value: /
-- apiVersion: gateway.networking.k8s.io/v1
-  kind: HTTPRoute
-  metadata:
-    name: aiml-cloud
-    namespace: aiml
-    annotations:
-      external-dns.alpha.kubernetes.io/controller: "false"
-      external-dns.alpha.kubernetes.io/hostname: ollama.cloud.danmanners.com
-      external-dns.alpha.kubernetes.io/target: unifi-home.homelab.danmanners.com
-      external-dns.alpha.kubernetes.io/ingress-hostname-source: annotation-only
-      external-dns.alpha.kubernetes.io/ttl: "300"
-  spec:
-    hostnames:
-    - ollama.cloud.danmanners.com
-    parentRefs:
-    - kind: Gateway
-      group: gateway.networking.k8s.io
-      name: gwapi
-      namespace: default
-      sectionName: https-cloud
-    rules: *openwebui-rules
-
-databaseUrl: "postgresql://ollama:657429c7&1d97&4bdc&b2c6&3809a3bd68a0@open-webui-postgres:5432/open-webui" # trufflehog:ignore
-# -- Postgresql configuration (see. https://artifacthub.io/packages/helm/bitnami/postgresql)
-postgresql:
-  global:
-    defaultStorageClass: ceph-rbd-retain
-  enabled: true
-  fullnameOverride: open-webui-postgres
-  architecture: standalone
-  auth:
-    database: open-webui
-    existingSecret: ollama-db-creds
-    password: "657429c7&1d97&4bdc&b2c6&3809a3bd68a0" # trufflehog:ignore
-    username: ollama
-    secretKeys:
-      adminPasswordKey: POSTGRES_ADMIN_PASSWORD
-      userPasswordKey: POSTGRES_USER_PASSWORD
-  primary:
-    persistence:
-      size: 4Gi
-    resources:
-      requests:
-        memory: 256Mi
-        cpu: 250m
-      limits:
-        memory: 1Gi
-        cpu: 1000m
+  # Create the public Ollama Web UI service
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: ollama-extname
+      annotations:
+        external-dns.alpha.kubernetes.io/hostname: ollama.cloud.danmanners.com
+        external-dns.alpha.kubernetes.io/ttl: "300"
+    spec:
+      type: ExternalName
+      externalName: unifi-home.homelab.danmanners.com
+  # Create the Gateway API HTTPRoute for the public Ollama Web UI service
+  - apiVersion: gateway.networking.k8s.io/v1
+    kind: HTTPRoute
+    metadata:
+      name: aiml
+      namespace: aiml
+      annotations:
+        external-dns.alpha.kubernetes.io/hostname: chat.capi-core.homelab.danmanners.com
+        external-dns.alpha.kubernetes.io/ingress-hostname-source: annotation-only
+    spec:
+      hostnames:
+        - chat.capi-core.homelab.danmanners.com
+      parentRefs:
+        - kind: Gateway
+          group: gateway.networking.k8s.io
+          name: gwapi
+          namespace: default
+          sectionName: https
+      rules: &openwebui-rules
+        - backendRefs:
+            - group: ""
+              kind: Service
+              name: open-webui
+              port: 80
+              weight: 1
+          matches:
+            - path:
+                type: PathPrefix
+                value: /
+  - apiVersion: gateway.networking.k8s.io/v1
+    kind: HTTPRoute
+    metadata:
+      name: aiml-cloud
+      namespace: aiml
+      annotations:
+        external-dns.alpha.kubernetes.io/controller: "false"
+        external-dns.alpha.kubernetes.io/hostname: ollama.cloud.danmanners.com
+        external-dns.alpha.kubernetes.io/target: unifi-home.homelab.danmanners.com
+        external-dns.alpha.kubernetes.io/ingress-hostname-source: annotation-only
+        external-dns.alpha.kubernetes.io/ttl: "300"
+    spec:
+      hostnames:
+        - ollama.cloud.danmanners.com
+      parentRefs:
+        - kind: Gateway
+          group: gateway.networking.k8s.io
+          name: gwapi
+          namespace: default
+          sectionName: https-cloud
+      rules: *openwebui-rules
 
 extraEnvVars:
-- name: "POSTGRES_ADMIN_PASSWORD"
-  valueFrom:
-    secretKeyRef:
-      name: ollama-db-creds
-      key: POSTGRES_ADMIN_PASSWORD
-- name: "POSTGRES_USER_PASSWORD"
-  valueFrom:
-    secretKeyRef:
-      name: ollama-db-creds
-      key: POSTGRES_USER_PASSWORD
+  - name: "POSTGRES_USER_PASSWORD"
+    valueFrom:
+      secretKeyRef:
+        name: ollama-db-creds
+        key: POSTGRES_USER_PASSWORD
+  - name: "POSTGRES_DB"
+    value: "postgresql://ollama:$(POSTGRES_USER_PASSWORD)@db-rw.database.svc:5432/open-webui" #trufflehog:ignore

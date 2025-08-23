@@ -59,7 +59,7 @@ persistence:
   data:
     enabled: true
     type: persistentVolumeClaim
-    storageClass: ceph-rbd-retain
+    storageClass: ceph-block-retain
     accessMode: ReadWriteOnce
     size: 10Gi
     retain: true

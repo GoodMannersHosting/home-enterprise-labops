@@ -12,24 +12,24 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   sources:
-  - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
-    targetRevision: main
-    path: kubernetes/core/runtimes
-    directory:
-      recurse: true
-  - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
-    targetRevision: main
-    ref: values
-  - repoURL: https://nvidia.github.io/k8s-device-plugin
-    targetRevision: *chartVersion
-    chart: nvidia-device-plugin
-    helm:
-      valueFiles:
-      - $values/kubernetes/services/nvdp/values.yaml
+    - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: main
+      path: kubernetes/core/runtimes
+      directory:
+        recurse: true
+    - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://nvidia.github.io/k8s-device-plugin
+      targetRevision: *chartVersion
+      chart: nvidia-device-plugin
+      helm:
+        valueFiles:
+          - $values/kubernetes/services/nvdp/values.yaml
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-    - ServerSideApply=true
-    - CreateNamespace=true
+      - ServerSideApply=true
+      - CreateNamespace=true

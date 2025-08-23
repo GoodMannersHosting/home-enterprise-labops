@@ -5,7 +5,6 @@ metadata:
   name: reflector
   namespace: argocd
   labels:
-    # renovate: datasource=helm chartLocation=https://emberstack.github.io/helm-charts chart=reflector
     chartVersion: &chartVersion 9.1.7
 spec:
   destination:
@@ -13,13 +12,13 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   sources:
-  - repoURL: https://emberstack.github.io/helm-charts
-    name: &name reflector
-    chart: *name
-    targetRevision: *chartVersion
+    - repoURL: https://emberstack.github.io/helm-charts
+      name: &name reflector
+      chart: *name
+      targetRevision: *chartVersion
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-    - ServerSideApply=true
+      - ServerSideApply=true

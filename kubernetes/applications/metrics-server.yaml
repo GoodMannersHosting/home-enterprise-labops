@@ -5,7 +5,6 @@ metadata:
   name: metrics-server
   namespace: argocd
   labels:
-    # renovate: datasource=helm chartLocation=https://kubernetes-sigs.github.io/metrics-server chart=metrics-server
     chartVersion: &chartVersion 3.12.2
 spec:
   destination:
@@ -13,18 +12,18 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   sources:
-  - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
-    targetRevision: main
-    ref: values
-  - repoURL: https://kubernetes-sigs.github.io/metrics-server
-    chart: metrics-server
-    targetRevision: *chartVersion
-    helm:
-      valueFiles:
-      - $values/kubernetes/core/kube-system/metrics-server/values.yaml
+    - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://kubernetes-sigs.github.io/metrics-server
+      chart: metrics-server
+      targetRevision: *chartVersion
+      helm:
+        valueFiles:
+          - $values/kubernetes/core/kube-system/metrics-server/values.yaml
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-    - ServerSideApply=true
+      - ServerSideApply=true

@@ -3,39 +3,39 @@ version: "3"
 tasks:
   install_tools:
     desc: Install the required tools
-    dir: '{{.USER_WORKING_DIR}}'
+    dir: "{{.USER_WORKING_DIR}}"
     internal: true
     silent: true
     preconditions:
-    - command -v brew
+      - command -v brew
     cmds:
-    - echo "Checking for required tools..."
-    - |
-      for tool in trufflehog kubeseal uv yq; do
-        if ! command -v $tool &> /dev/null; then
-          brew install $tool
+      - echo "Checking for required tools..."
+      - |
+        for tool in trufflehog kubeseal uv yq; do
+          if ! command -v $tool &> /dev/null; then
+            brew install $tool
+          fi
+        done
+      - echo "Checking the installed version of Python..."
+      - |
+        if [ "$(printf '%s\n' "$(python3 --version | cut -d ' ' -f2)" "$(cat .python-version)" | sort -V | head -n1)" != "$(cat .python-version)" ]; then
+          echo "Python version is less than $(cat .python-version). Updating Python...";
+          brew install python@$(cat .python-version);
+        else
+          echo "Python version is up to date.";
         fi
-      done
-    - echo "Checking the installed version of Python..."
-    - |
-      if [ "$(printf '%s\n' "$(python3 --version | cut -d ' ' -f2)" "$(cat .python-version)" | sort -V | head -n1)" != "$(cat .python-version)" ]; then
-        echo "Python version is less than $(cat .python-version). Updating Python...";
-        brew install python@$(cat .python-version);
-      else
-        echo "Python version is up to date.";
-      fi
-    - echo "Checking the installed version of pip..."
+      - echo "Checking the installed version of pip..."
   default:
     desc: Initialize the local environment
-    dir: '{{.USER_WORKING_DIR}}'
+    dir: "{{.USER_WORKING_DIR}}"
     preconditions:
-    - task: install_tools
+      - task: install_tools
     cmds:
-    - task: install_tools
-    - echo "Prepping the uv environment..."
-    - uv sync
-    - echo "Configuring the pre-commit hooks..."
-    - .venv/bin/pre-commit install
+      - task: install_tools
+      - echo "Prepping the uv environment..."
+      - uv sync
+      - echo "Configuring the pre-commit hooks..."
+      - .venv/bin/pre-commit install
   kubeseal:
     desc: Seal the secrets
     summary: |
@@ -44,14 +44,14 @@ tasks:
 
       Example:
         task kubeseal -- kubernetes/core/argocd/helo-repo.yaml
-    dir: '{{.USER_WORKING_DIR}}'
+    dir: "{{.USER_WORKING_DIR}}"
     preconditions:
-    - command -v kubeseal
-    - if [ -z "./{{.CLI_ARGS}}" ]; then echo "File not specified"; exit 1; fi
+      - command -v kubeseal
+      - if [ -z "./{{.CLI_ARGS}}" ]; then echo "File not specified"; exit 1; fi
     cmds:
-    - echo "Checking if the file exists..."
-    - if [ ! -f "./{{.CLI_ARGS}}" ]; then echo "File not found"; exit 1; fi
-    - echo "Checking if the file is already sealed..."
-    - if grep -q "sealed-secrets.bitnami.com" "./{{.CLI_ARGS}}"; then echo "File is already sealed"; exit 0; fi
-    - echo "Sealing the secrets..."
-    - kubeseal --cert keys/sealed-secret.crt -oyaml -{f,w}={{.CLI_ARGS}}
+      - echo "Checking if the file exists..."
+      - if [ ! -f "./{{.CLI_ARGS}}" ]; then echo "File not found"; exit 1; fi
+      - echo "Checking if the file is already sealed..."
+      - if grep -q "sealed-secrets.bitnami.com" "./{{.CLI_ARGS}}"; then echo "File is already sealed"; exit 0; fi
+      - echo "Sealing the secrets..."
+      - kubeseal --cert keys/sealed-secret.crt -oyaml -{f,w}={{.CLI_ARGS}}

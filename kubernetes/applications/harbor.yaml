@@ -12,21 +12,21 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   sources:
-  - repoURL: &repo https://github.com/GoodMannersHosting/home-enterprise-labops.git
-    targetRevision: main
-    path: kubernetes/core/harbor
-  - repoURL: *repo
-    targetRevision: main
-    ref: values
-  - repoURL: https://helm.goharbor.io
-    chart: harbor
-    targetRevision: *chartVersion
-    helm:
-      valueFiles:
-      - $values/kubernetes/core/harbor/values.yaml
+    - repoURL: &repo https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: main
+      path: kubernetes/core/harbor
+    - repoURL: *repo
+      targetRevision: main
+      ref: values
+    - repoURL: https://helm.goharbor.io
+      chart: harbor
+      targetRevision: *chartVersion
+      helm:
+        valueFiles:
+          - $values/kubernetes/core/harbor/values.yaml
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-    - ServerSideApply=true
+      - ServerSideApply=true
