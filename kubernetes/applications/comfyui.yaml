@@ -16,7 +16,7 @@ spec:
       targetRevision: main
       ref: values
     - repoURL: https://bjw-s-labs.github.io/helm-charts
-      chart: main
+      chart: app-template
       targetRevision: *chartVersion
       helm:
         valueFiles:
