@@ -17,7 +17,10 @@ controllers:
       k8s:
         image:
           # https://github.com/containers/kubernetes-mcp-server
-          repository: quay.io/manusa/kubernetes_mcp_server
+          # repository: quay.io/manusa/kubernetes_mcp_server
+          # tag: "latest"
+          # https://github.com/containers/kubernetes-mcp-server
+          repository: docker.io/ginnux/k8s-mcp-server
           tag: "latest"
           pullPolicy: "IfNotPresent"
         securityContext:
@@ -27,7 +30,11 @@ controllers:
             containerPort: 8080
             protocol: TCP
         args:
-          - --disable-destructive
+          # - --disable-destructive
+          - -mode
+          - streamable-http
+          - -port
+          - "8080"
         resources:
           limits:
             cpu: 2
