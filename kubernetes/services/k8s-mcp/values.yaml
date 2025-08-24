@@ -13,8 +13,47 @@ controllers:
     type: deployment
     replicas: 1
     revisionHistoryLimit: 2
+    initContainers:
+      kubectl-setup:
+        image:
+          repository: docker.io/library/alpine
+          tag: "3.22"
+        command:
+          - /bin/ash
+          - -c
+          - |
+            apk add --no-cache kubectl
+            token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token | base64 -w0)
+            ca=$(cat /var/run/secrets/kubernetes.io/serviceaccount/ca.crt | base64 -w0)
+            echo "
+            apiVersion: v1
+            kind: Config
+            clusters:
+            - name: default-cluster
+              cluster:
+                certificate-authority-data: ${ca}
+                server: https://kubernetes.default.svc
+            contexts:
+            - name: default-context
+              context:
+                cluster: default-cluster
+                namespace: default
+                user: default-user
+            current-context: default-context
+            users:
+            - name: default-user
+              user:
+                token: ${token}
+            " > /tmp/config
+        resources:
+          requests:
+            cpu: "10m"
+            memory: "16Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
     containers:
-      k8s:
+      mcp:
         image:
           # https://github.com/containers/kubernetes-mcp-server
           # repository: quay.io/manusa/kubernetes_mcp_server
@@ -30,11 +69,11 @@ controllers:
             containerPort: 8080
             protocol: TCP
         args:
-          # - --disable-destructive
           - -mode
           - streamable-http
           - -port
           - "8080"
+          - -read-only
         resources:
           limits:
             cpu: 2
@@ -62,6 +101,21 @@ service:
 serviceAccount:
   k8s-mcp:
     enabled: true
+
+persistence:
+  kubeconfig:
+    enabled: true
+    type: emptyDir
+    advancedMounts:
+      main:
+        mcp:
+          - path: /home/appuser/.kube/
+            mountPropagation: None
+            readOnly: true
+        kubectl-setup:
+          - path: /tmp
+            mountPropagation: None
+            readOnly: false
 
 rbac:
   roles:
