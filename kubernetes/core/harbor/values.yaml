@@ -80,7 +80,7 @@ ipFamily:
 logLevel: info
 imagePullPolicy: IfNotPresent
 updateStrategy:
-  type: RollingUpdate
+  type: Recreate
 
 enableMigrateHelmHook: false
 metrics:
