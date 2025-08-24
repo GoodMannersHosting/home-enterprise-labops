@@ -16,40 +16,40 @@ controllers:
     containers:
       core:
         ports:
-        - name: http
-          containerPort: &port 5678
-          protocol: TCP
+          - name: http
+            containerPort: &port 5678
+            protocol: TCP
         image:
-          repository: docker.n8n.io/n8nio/n8n
-          tag: "latest-amd64"
+          repository: ghcr.io/n8n-io/n8n
+          tag: "stable"
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: true
         env:
-        - name: N8N_HOST
-          value: n8n.cloud.danmanners.com
-        - name: N8N_PORT
-          value: *port
-        - name: N8N_PROTOCOL
-          value: http
-        - name: NODE_ENV
-          value: production
-        - name: N8N_TRUST_PROXY
-          value: true
-        - name: N8N_SECURE_COOKIE
-          value: false
-        - name: WEBHOOK_URL
-          value: https://n8n.cloud.danmanners.com
-        - name: GENERIC_TIMEZONE
-          value: America/New_York
-        - name: N8N_RUNNERS_ENABLED
-          value: true
-        - name: N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS
-          value: false
-        - name: NODE_FUNCTION_ALLOW_BUILTIN
-          value: "*"
-        - name: NODE_FUNCTION_ALLOW_EXTERNAL
-          value: dgram
+          - name: N8N_HOST
+            value: n8n.cloud.danmanners.com
+          - name: N8N_PORT
+            value: *port
+          - name: N8N_PROTOCOL
+            value: http
+          - name: NODE_ENV
+            value: production
+          - name: N8N_TRUST_PROXY
+            value: true
+          - name: N8N_SECURE_COOKIE
+            value: false
+          - name: WEBHOOK_URL
+            value: https://n8n.cloud.danmanners.com
+          - name: GENERIC_TIMEZONE
+            value: America/New_York
+          - name: N8N_RUNNERS_ENABLED
+            value: true
+          - name: N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS
+            value: false
+          - name: NODE_FUNCTION_ALLOW_BUILTIN
+            value: "*"
+          - name: NODE_FUNCTION_ALLOW_EXTERNAL
+            value: dgram
         resources:
           limits:
             cpu: 2
@@ -90,25 +90,25 @@ route:
     annotations:
       external-dns.alpha.kubernetes.io/controller: "false"
     parentRefs:
-    - group: gateway.networking.k8s.io
-      kind: Gateway
-      name: gwapi
-      namespace: default
-      sectionName: https-cloud
+      - group: gateway.networking.k8s.io
+        kind: Gateway
+        name: gwapi
+        namespace: default
+        sectionName: https-cloud
     hostnames:
-    - n8n.cloud.danmanners.com
+      - n8n.cloud.danmanners.com
     rules:
-    - backendRefs:
-      - name: n8n-core
-        port: *port
-        weight: 1
-      matches:
-      - path:
-          type: PathPrefix
-          value: /
-      timeouts:
-        backendRequest: 0s
-        request: 0s
+      - backendRefs:
+          - name: n8n-core
+            port: *port
+            weight: 1
+        matches:
+          - path:
+              type: PathPrefix
+              value: /
+        timeouts:
+          backendRequest: 0s
+          request: 0s
 
 persistence:
   home:
@@ -119,8 +119,8 @@ persistence:
     size: 60Gi
     retain: true
     globalMounts:
-    - path: /home/node/.n8n
-      readOnly: false
+      - path: /home/node/.n8n
+        readOnly: false
   files:
     enabled: true
     type: persistentVolumeClaim
@@ -129,5 +129,5 @@ persistence:
     size: 60Gi
     retain: true
     globalMounts:
-    - path: /files
-      readOnly: false
+      - path: /files
+        readOnly: false
