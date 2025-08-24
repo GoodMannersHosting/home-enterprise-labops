@@ -31,7 +31,7 @@ spec:
       targetRevision: *chartVersion
       helm:
         valueFiles:
-          - $values/kubernetes/core/rook-ceph/values.yaml
+          - $values/kubernetes/core/rook-ceph/operator.values.yaml
   syncPolicy:
     automated:
       prune: true
