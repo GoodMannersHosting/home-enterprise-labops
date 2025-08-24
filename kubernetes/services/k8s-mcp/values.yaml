@@ -132,6 +132,14 @@ rbac:
             - statefulsets
           verbs: ["get", "list", "watch"]
 
+        # ArgoCD
+        - apiGroups: ["argoproj.io"]
+          resources:
+            - applications
+            - applicationsets
+            - appprojects
+          verbs: ["get", "list", "watch"]
+
         # Authentication
         - apiGroups: ["authentication.k8s.io"]
           resources:
@@ -253,6 +261,12 @@ rbac:
             - events
           verbs: ["get", "list", "watch"]
 
+        # Istio Extensions
+        - apiGroups: ["extensions.istio.io"]
+          resources:
+            - wasmplugins
+          verbs: ["get", "list", "watch"]
+
         # External DNS
         - apiGroups: ["externaldns.k8s.io"]
           resources:
@@ -292,6 +306,20 @@ rbac:
           resources:
             - nodes
             - pods
+          verbs: ["get", "list", "watch"]
+
+        # Istio Networking
+        - apiGroups: ["networking.istio.io"]
+          resources:
+            - destinationrules
+            - envoyfilters
+            - gateways
+            - proxyconfigs
+            - serviceentries
+            - sidecars
+            - virtualservices
+            - workloadentries
+            - workloadgroups
           verbs: ["get", "list", "watch"]
 
         # Networking
@@ -359,6 +387,14 @@ rbac:
             - priorityclasses
           verbs: ["get", "list", "watch"]
 
+        # Istio Security
+        - apiGroups: ["security.istio.io"]
+          resources:
+            - authorizationpolicies
+            - peerauthentications
+            - requestauthentications
+          verbs: ["get", "list", "watch"]
+
         # Storage
         - apiGroups: ["storage.k8s.io"]
           resources:
@@ -367,6 +403,12 @@ rbac:
             - csistoragecapacities
             - storageclasses
             - volumeattachments
+          verbs: ["get", "list", "watch"]
+
+        # Istio Telemetry
+        - apiGroups: ["telemetry.istio.io"]
+          resources:
+            - telemetries
           verbs: ["get", "list", "watch"]
 
         # Secrets (separate rule for different verbs)
