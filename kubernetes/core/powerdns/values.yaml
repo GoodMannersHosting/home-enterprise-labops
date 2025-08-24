@@ -198,11 +198,22 @@ service:
         port: 80
         protocol: TCP
         targetPort: webserver
+  extname:
+    enabled: true
+    primary: false
+    controller: main
+    type: ExternalName
+    externalName: unifi-home.homelab.danmanners.com
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: pdns.cloud.danmanners.com
+      external-dns.alpha.kubernetes.io/ttl: "300"
 
 route:
   api:
     enabled: true
     kind: HTTPRoute
+    annotations:
+      external-dns.alpha.kubernetes.io/controller: "false"
     parentRefs:
       - group: gateway.networking.k8s.io
         kind: Gateway
