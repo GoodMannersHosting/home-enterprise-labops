@@ -63,11 +63,6 @@ curl -X POST \
 
 ```bash
 for RECORD in \
-    k8s.capi-core.cname-ollama \
-    k8s.capi-core.ollama \
-    ollama \
-    k8s.capi-core.a-keycloak \
-    k8s.capi-core.keycloak \
     keycloak; do
     curl -X PATCH --data '{
     "rrsets": [
@@ -78,7 +73,7 @@ for RECORD in \
         }
     ]
 }' -H "X-API-Key: $(kubectl get secrets -n powerdns as-secrets -ojson | jq -r '.data."api-key"|@base64d')" \
-        "http://172.31.0.16:8081/api/v1/servers/localhost/zones/cloud.danmanners.com"
+        "http://172.31.0.11:8081/api/v1/servers/localhost/zones/cloud.danmanners.com"
         echo "Deleted ${RECORD}.cloud.danmanners.com"
 done
 ```
