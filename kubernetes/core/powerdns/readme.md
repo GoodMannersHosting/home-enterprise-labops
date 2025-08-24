@@ -41,6 +41,14 @@ helm upgrade --install powerdns bjw-s/app-template \
 -f kubernetes/core/powerdns/values.yaml
 ```
 
+## Port Forwarding
+
+To securely access the PowerDNS API, you can use port forwarding:
+
+```bash
+kubectl port-forward -n powerdns svc/powerdns-api 8080:80
+```
+
 ## Creating a new zone
 
 ```bash
@@ -56,7 +64,7 @@ curl -X POST \
     ]
 }' \
     -vH "X-API-Key: $(kubectl get secrets -n powerdns as-secrets -ojson | jq -r '.data."api-key"|@base64d')" \
-    http://172.31.0.16:8081/api/v1/servers/localhost/zones
+    http://localhost:8000/api/v1/servers/localhost/zones
 ```
 
 ## Deleting TXT Records
@@ -73,7 +81,7 @@ for RECORD in \
         }
     ]
 }' -H "X-API-Key: $(kubectl get secrets -n powerdns as-secrets -ojson | jq -r '.data."api-key"|@base64d')" \
-        "http://172.31.0.11:8081/api/v1/servers/localhost/zones/cloud.danmanners.com"
+        "http://localhost:8000/api/v1/servers/localhost/zones/cloud.danmanners.com"
         echo "Deleted ${RECORD}.cloud.danmanners.com"
 done
 ```
@@ -93,7 +101,7 @@ for RECORD in \
         }
     ]
 }' -H "X-API-Key: $(kubectl get secrets -n powerdns as-secrets -ojson | jq -r '.data."api-key"|@base64d')" \
-        "http://172.31.0.16:8081/api/v1/servers/localhost/zones/cloud.danmanners.com"
+        "http://localhost:8000/api/v1/servers/localhost/zones/cloud.danmanners.com"
         echo "Deleted ${RECORD}.cloud.danmanners.com"
 done
 ```
