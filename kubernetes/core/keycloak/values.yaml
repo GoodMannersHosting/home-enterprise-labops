@@ -182,16 +182,22 @@ service:
         port: 443
         targetPort: https
         protocol: TCP
+  extname:
+    enabled: true
+    primary: false
+    controller: main
+    type: ExternalName
+    externalName: unifi-home.homelab.danmanners.com
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: keycloak.cloud.danmanners.com
+      external-dns.alpha.kubernetes.io/ttl: "300"
 
 route:
   cloud:
     enabled: true
     kind: HTTPRoute
     annotations:
-      external-dns.alpha.kubernetes.io/hostname: keycloak.cloud.danmanners.com
-      external-dns.alpha.kubernetes.io/target: unifi-home.homelab.danmanners.com
-      external-dns.alpha.kubernetes.io/ingress-hostname-source: annotation-only
-      external-dns.alpha.kubernetes.io/ttl: "300"
+      external-dns.alpha.kubernetes.io/controller: "false"
     parentRefs:
       - group: gateway.networking.k8s.io
         kind: Gateway
@@ -202,7 +208,7 @@ route:
       - keycloak.cloud.danmanners.com
     rules:
       - backendRefs:
-          - name: keycloak
+          - name: keycloak-core
             port: 80
             weight: 1
         matches:
