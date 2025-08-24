@@ -90,7 +90,7 @@ controllers:
         resources:
           limits:
             cpu: 6
-            memory: 28Gi
+            memory: 40Gi
             nvidia.com/gpu: "1"
           requests:
             cpu: 250m
