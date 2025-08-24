@@ -1,5 +1,12 @@
 global:
   domain: &url argocd.cloud.danmanners.com
+  hostAliases:
+    - ip: "172.31.0.10"
+      hostnames:
+        - "harbor.cloud.danmanners.com"
+        - "ollama.cloud.danmanners.com"
+        - "n8n.cloud.danmanners.com"
+        - "keycloak.cloud.danmanners.com"
 
 crds:
   install: false
