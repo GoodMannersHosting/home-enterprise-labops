@@ -23,28 +23,21 @@ controllers:
           - -c
           - |
             apk add --no-cache kubectl
-            token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token | base64 -w0)
+            token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
             ca=$(cat /var/run/secrets/kubernetes.io/serviceaccount/ca.crt | base64 -w0)
-            echo "
-            apiVersion: v1
-            kind: Config
-            clusters:
-            - name: default-cluster
-              cluster:
-                certificate-authority-data: ${ca}
-                server: https://kubernetes.default.svc
-            contexts:
-            - name: default-context
-              context:
-                cluster: default-cluster
-                namespace: default
-                user: default-user
-            current-context: default-context
-            users:
-            - name: default-user
-              user:
-                token: ${token}
-            " > /tmp/config
+            export KUBECONFIG=/tmp/config
+            kubectl config set-cluster default \
+              --server=https://kubernetes.default.svc \
+              --certificate-authority /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+              --embed-certs=true
+            kubectl config set-credentials default --token=${token}
+            kubectl config set-context default --cluster default --user default
+            kubectl config use-context default
+            chown 1001:1001 /tmp/config
+            cp /usr/bin/kubectl /tmp/kubectl
+        env:
+          - name: service_account
+            value: k8s-mcp
         resources:
           requests:
             cpu: "10m"
