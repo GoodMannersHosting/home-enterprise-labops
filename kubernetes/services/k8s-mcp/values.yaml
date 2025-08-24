@@ -16,27 +16,21 @@ controllers:
     containers:
       k8s:
         image:
-          repository: docker.io/mcp/kubernetes
+          # https://github.com/containers/kubernetes-mcp-server
+          repository: quay.io/manusa/kubernetes_mcp_server
           tag: "latest"
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: false
         ports:
-          - name: sse
-            containerPort: 3001
+          - name: mcp
+            containerPort: 8080
             protocol: TCP
-        env:
-          - name: ALLOW_ONLY_NON_DESTRUCTIVE_TOOLS
-            value: "true"
-          - name: ENABLE_UNSAFE_SSE_TRANSPORT
-            value: "1"
-          - name: PORT
-            value: "3001"
-          - name: HOST
-            value: "0.0.0.0"
+        args:
+          - --disable-destructive
         resources:
           limits:
-            cpu: 1
+            cpu: 2
             memory: 2Gi
           requests:
             cpu: 250m
@@ -44,38 +38,6 @@ controllers:
         lifecycle: {}
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
-      mcpo:
-        image:
-          repository: ghcr.io/open-webui/mcpo
-          tag: "main"
-          pullPolicy: "IfNotPresent"
-        ports:
-          - name: api
-            containerPort: 8000
-            protocol: TCP
-        env:
-          - name: MCPO_API_KEY
-            value: "top-secret"
-        securityContext:
-          allowPrivilegeEscalation: false
-        resources:
-          limits:
-            cpu: 1
-            memory: 2Gi
-          requests:
-            cpu: 250m
-            memory: 1Gi
-        command:
-          - mcpo
-        args:
-          - --port
-          - "8000"
-          - --api-key
-          - "$(MCPO_API_KEY)"
-          - --server-type
-          - "sse"
-          - --
-          - http://0.0.0.0:3001/sse
 
 service:
   core:
@@ -84,15 +46,10 @@ service:
     primary: true
     type: ClusterIP
     ports:
-      api:
+      mcp:
         enabled: true
-        port: 8000
-        targetPort: api
-        protocol: TCP
-      sse:
-        enabled: true
-        port: 3001
-        targetPort: sse
+        port: 8080
+        targetPort: mcp
         protocol: TCP
 
 serviceAccount:
