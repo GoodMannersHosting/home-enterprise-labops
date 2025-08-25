@@ -20,8 +20,8 @@ controllers:
             containerPort: 5201
             protocol: UDP
         image:
-          repository: docker.io/networkstatic/iperf3@sha256
-          tag: "993080f3167738f4155d6b2749b8b95ba6da5d44fe1c02e36b6e03a6d544c922"
+          repository: harbor.cloud.danmanners.com/library/networkstatic/iperf3
+          tag: "latest"
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: false
