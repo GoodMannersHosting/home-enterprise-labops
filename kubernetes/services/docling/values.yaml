@@ -17,22 +17,22 @@ controllers:
     containers:
       core:
         ports:
-        - name: http
-          containerPort: 5001
-          protocol: TCP
+          - name: http
+            containerPort: 5001
+            protocol: TCP
         image:
-          repository: ghcr.io/docling-project/docling-serve-cu124
-          tag: "v0.16.0"
+          repository: ghcr.io/docling-project/docling-serve-cu128
+          tag: "v1.3.1"
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: false
         env:
-        - name: DOCLING_SERVE_ENABLE_UI
-          value: "true"
+          - name: DOCLING_SERVE_ENABLE_UI
+            value: "true"
         resources:
           limits:
-            cpu: 1
-            memory: 4Gi
+            cpu: 4
+            memory: 8Gi
             nvidia.com/gpu: "1"
           requests:
             cpu: 250m
@@ -64,5 +64,5 @@ persistence:
     size: 10Gi
     retain: true
     globalMounts:
-    - path: /modelcache
-      readOnly: false
+      - path: /modelcache
+        readOnly: false

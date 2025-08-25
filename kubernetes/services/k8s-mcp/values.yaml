@@ -51,7 +51,7 @@ controllers:
           # https://github.com/containers/kubernetes-mcp-server
           # repository: quay.io/manusa/kubernetes_mcp_server
           # tag: "latest"
-          # https://github.com/containers/kubernetes-mcp-server
+          # https://github.com/reza-gholizade/k8s-mcp-server
           repository: docker.io/ginnux/k8s-mcp-server
           tag: "latest"
           pullPolicy: "IfNotPresent"
