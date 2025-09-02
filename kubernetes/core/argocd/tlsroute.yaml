@@ -5,7 +5,12 @@ metadata:
   name: argocd
   namespace: argocd
   annotations:
-    external-dns.alpha.kubernetes.io/hostname: argocd.cloud.danmanners.com
+    external-dns.alpha.kubernetes.io/controller: "false"
+    # external-dns.alpha.kubernetes.io/alias: "true"
+    # external-dns.alpha.kubernetes.io/hostname: argocd.cloud.danmanners.com
+    # external-dns.alpha.kubernetes.io/ingress-hostname-source: annotation-only
+    # external-dns.alpha.kubernetes.io/target: unifi-home.homelab.danmanners.com
+    # external-dns.alpha.kubernetes.io/ttl: "300"
 spec:
   hostnames:
     - argocd.cloud.danmanners.com

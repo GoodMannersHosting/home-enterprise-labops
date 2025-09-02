@@ -8,3 +8,4 @@ age.txt
 *.tgz
 
 *.venv/
+history/
