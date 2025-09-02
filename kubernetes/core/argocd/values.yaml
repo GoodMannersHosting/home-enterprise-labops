@@ -26,7 +26,7 @@ configs:
     url: &fullUrl https://argocd.cloud.danmanners.com
     oidc.config: |
       name: Keycloak
-      issuer: https://keycloak.cloud.danmanners.com/realms/master
+      issuer: https://keycloak.cloud.danmanners.com/realms/gmh
       clientID: argocd
       clientSecret: $argocd-oidc-secret:oidc.keycloak.clientSecret
       requestedScopes: ["openid", "profile", "email", "groups"]
