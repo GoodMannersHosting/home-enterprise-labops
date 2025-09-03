@@ -71,12 +71,12 @@ curl -X POST \
 
 ```bash
 for RECORD in \
-    keycloak; do
+    argocd; do
     curl -X PATCH --data '{
     "rrsets": [
         {
             "changetype": "DELETE",
-            "type": "A",
+            "type": "CNAME",
             "name": "'${RECORD}'.cloud.danmanners.com."
         }
     ]
