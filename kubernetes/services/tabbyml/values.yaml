@@ -1,0 +1,70 @@
+---
+defaultPodOptions:
+  automountServiceAccountToken: false
+  enableServiceLinks: false
+  runtimeClassName: nvidia
+  restartPolicy: Always
+  securityContext:
+    fsGroup: 1000
+    fsGroupChangePolicy: OnRootMismatch
+
+controllers:
+  tabby:
+    enabled: true
+    type: deployment
+    replicas: 1
+    revisionHistoryLimit: 2
+    containers:
+      core:
+        ports:
+          - name: http
+            containerPort: 8080
+            protocol: TCP
+        image:
+          repository: registry.tabbyml.com/tabbyml/tabby
+          tag: "0.31.1"
+          pullPolicy: "IfNotPresent"
+        securityContext:
+          allowPrivilegeEscalation: false
+        args:
+          - "serve"
+          - "--model=Qwen2.5-Coder-14B"
+          - "--chat-model=Qwen2.5-Coder-1.5B-Instruct"
+          - "--device=cuda"
+        resources:
+          limits:
+            cpu: 6
+            memory: 16Gi
+            nvidia.com/gpu: "1"
+          requests:
+            cpu: 250m
+            memory: 8Gi
+            nvidia.com/gpu: "1"
+        lifecycle: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+
+service:
+  core:
+    enabled: true
+    controller: tabby
+    primary: true
+    type: LoadBalancer
+    ports:
+      http:
+        enabled: true
+        port: 80
+        targetPort: http
+        protocol: TCP
+
+persistence:
+  data:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-block-retain
+    accessMode: ReadWriteOnce
+    size: 60Gi
+    retain: true
+    globalMounts:
+      - path: /data
+        readOnly: false
