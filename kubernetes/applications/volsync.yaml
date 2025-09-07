@@ -5,8 +5,8 @@ metadata:
   name: volsync
   namespace: argocd
   labels:
-    volsyncChartVersion: &volsyncChartVersion 0.16.9
     snapshotControllerChartVersion: &snapshotControllerChartVersion 4.1.0
+    volsyncChartVersion: &volsyncChartVersion 0.16.9
 spec:
   destination:
     namespace: aiml
@@ -16,12 +16,12 @@ spec:
     - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
       targetRevision: main
       ref: values
-    - repoURL: oci://ghcr.io/piraeusdatastore/helm-charts/snapshot-controller
+    - chart: oci://ghcr.io/piraeusdatastore/helm-charts/snapshot-controller
       targetRevision: *snapshotControllerChartVersion
       helm:
         valueFiles:
           - $values/kubernetes/core/volsync/snapshot-controller.values.yaml
-    - repoURL: oci://ghcr.io/home-operations/charts-mirror/volsync-perfectra1n
+    - chart: oci://ghcr.io/home-operations/charts-mirror/volsync-perfectra1n
       targetRevision: *volsyncChartVersion
       helm:
         valueFiles:
