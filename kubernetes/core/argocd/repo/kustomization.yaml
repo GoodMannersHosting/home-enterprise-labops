@@ -1,2 +1,4 @@
 resources:
   - envoy-gateway.yaml
+  - home-operations-charts.yaml
+  - snapshot-controller.yaml
