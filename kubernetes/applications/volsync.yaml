@@ -16,12 +16,14 @@ spec:
     - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
       targetRevision: main
       ref: values
-    - chart: oci://ghcr.io/piraeusdatastore/helm-charts/snapshot-controller
+    - repoURL: oci://ghcr.io/piraeusdatastore/helm-charts
+      chart: snapshot-controller
       targetRevision: *snapshotControllerChartVersion
       helm:
         valueFiles:
           - $values/kubernetes/core/volsync/snapshot-controller.values.yaml
-    - chart: oci://ghcr.io/home-operations/charts-mirror/volsync-perfectra1n
+    - repoURL: oci://ghcr.io/home-operations/charts-mirror
+      chart: volsync-perfectra1n
       targetRevision: *volsyncChartVersion
       helm:
         valueFiles:

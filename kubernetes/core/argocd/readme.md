@@ -15,7 +15,7 @@ helm template argocd oci://ghcr.io/argoproj/argo-helm/argo-cd \
 # Deploy
 helm upgrade --install argocd oci://ghcr.io/argoproj/argo-helm/argo-cd \
 --namespace argocd \
---version 8.3.0 \
+--version 8.3.5 \
 --skip-crds \
 --values kubernetes/core/argocd/values.yaml
 ```
