@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: home-operations-charts-oci
+  labels:
+    argocd.argoproj.io/secret-type: repository
+stringData:
+  url: ghcr.io/home-operations/charts-mirror
+  name: charts-mirror
+  type: helm
+  enableOCI: "true"

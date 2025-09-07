@@ -1,0 +1,36 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: volsync
+  namespace: argocd
+  labels:
+    volsyncChartVersion: &volsyncChartVersion 0.16.9
+    snapshotControllerChartVersion: &snapshotControllerChartVersion 4.1.0
+spec:
+  destination:
+    namespace: aiml
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+    - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: main
+      ref: values
+    - repoURL: ghcr.io/home-operations/charts-mirror
+      chart: volsync-perfectra1n
+      targetRevision: *volsyncChartVersion
+      helm:
+        valueFiles:
+          - $values/kubernetes/core/volsync/volsync.values.yaml
+    - repoURL: ghcr.io/piraeusdatastore/helm-charts
+      chart: piraeusdatastore-helm-charts
+      targetRevision: *snapshotControllerChartVersion
+      helm:
+        valueFiles:
+          - $values/kubernetes/core/volsync/snapshot-controller.values.yaml
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

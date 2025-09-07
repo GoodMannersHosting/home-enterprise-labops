@@ -1,6 +1,6 @@
 clusterName: helo
-talosVersion: v1.10.6
-kubernetesVersion: 1.33.3
+talosVersion: v1.11.0
+kubernetesVersion: 1.34.0
 endpoint: "https://k8s.homelab.danmanners.com:6443"
 allowSchedulingOnControlPlanes: true
 cniConfig:
@@ -289,12 +289,12 @@ controlPlane:
   - |-
     - op: remove
       path: /cluster/apiServer/admissionControl
-  - |-
-    - op: add
-      path: /cluster/apiServer/extraArgs
-      value:
-        feature-gates: ImageVolume=true,MutatingAdmissionPolicy=true
-        runtime-config: admissionregistration.k8s.io/v1alpha1=true
+  # - |-
+  #   - op: add
+  #     path: /cluster/apiServer/extraArgs
+  #     value:
+  #       feature-gates: ImageVolume=true
+  #       runtime-config: admissionregistration.k8s.io/v1alpha1=true
   - |-
     - op: add
       path: /machine/features/kubernetesTalosAPIAccess
