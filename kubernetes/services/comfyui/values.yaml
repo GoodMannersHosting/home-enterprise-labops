@@ -206,16 +206,6 @@ persistence:
     globalMounts:
       - path: /app/ComfyUI/custom_nodes/
         readOnly: false
-  venv:
-    enabled: true
-    type: persistentVolumeClaim
-    storageClass: ceph-block-retain
-    accessMode: ReadWriteOnce
-    size: 10Gi
-    retain: true
-    globalMounts:
-      - path: /app/venv/
-        readOnly: false
   browser:
     type: configMap
     name: comfyui
