@@ -4,4 +4,4 @@ metadata:
   name: storm-paragraph
   labels:
     security: restricted
-    educational: "True"
+    educational: "true"
