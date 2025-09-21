@@ -1,0 +1,13 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/refs/heads/master/v1.34.1/limitrange.json
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: educational-storagelimits
+spec:
+  limits:
+    - type: PersistentVolumeClaim
+      max:
+        storage: 8Gi
+      min:
+        storage: 1Gi

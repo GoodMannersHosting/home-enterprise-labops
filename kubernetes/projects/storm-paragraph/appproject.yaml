@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: &ns storm-paragraph
+  namespace: argocd
+spec:
+  description: Educational environment for the Storm Paragraph Namespace
+  roles:
+    - name: admin
+      description: "Admins can do anything for their project"
+      groups:
+        - *ns
+      policies:
+        - p, proj:storm-paragraph:admin, applications, *, *, allow
+  clusterResourceBlacklist:
+    - group: "*"
+      kind: "*"
+  clusterResourceWhitelist:
+    - group: ""
+      kind: "persistentvolumes"
+  destinations:
+    # Allow deployments to storm-paragraph and storm-paragraph-* namespaces
+    - namespace: *ns
+      server: https://kubernetes.default.svc
+    # Disallow deployments to non-storm-paragraph namespaces
+    - namespace: "!*"
+      server: https://kubernetes.default.svc
+  sourceNamespaces:
+    - *ns
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  namespaceResourceBlacklist:
+    - group: ""
+      kind: "ResourceQuota"
+    - group: "ceph.rook.io"
+      kind: "*"
+    - group: "argoproj.io"
+      kind: "appprojects"
+  sourceRepos:
+    - "*"

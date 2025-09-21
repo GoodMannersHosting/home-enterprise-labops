@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: storm-paragraph
+  labels:
+    security: restricted
+    educational: "True"
