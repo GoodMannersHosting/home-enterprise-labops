@@ -1,0 +1,32 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/yamllint.json
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: protect-quota-and-limit-resources
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["DELETE"]
+        resources: ["resourcequotas", "limitranges"]
+  validations:
+    - message: "ResourceQuota and LimitRange resources cannot be deleted to maintain resource governance."
+      reason: "Forbidden"
+      expression: "false"
+---
+# yaml-language-server: $schema=https://json.schemastore.org/yamllint.json
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: protect-quota-and-limit-resources-educational
+spec:
+  policyName: protect-quota-and-limit-resources
+  validationActions:
+    - Deny
+  matchResources:
+    objectSelector:
+      matchLabels:
+        educational: "True"

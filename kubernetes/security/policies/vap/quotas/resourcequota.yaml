@@ -1,0 +1,135 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/refs/heads/master/v1.34.1/validatingadmissionpolicy.json
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: enforce-resource-limits
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ["", "apps", "batch"]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources:
+          [
+            "pods",
+            "deployments",
+            "replicasets",
+            "statefulsets",
+            "daemonsets",
+            "jobs",
+            "cronjobs",
+          ]
+  validations:
+    # Validate CPU limits are set on Pods
+    - message: "All containers must have CPU limits set."
+      reason: "Forbidden"
+      expression: |-
+        object.kind == 'Pod' ? (
+          object.spec.containers.all(container, 
+            has(container.resources) && 
+            has(container.resources.limits) && 
+            has(container.resources.limits.cpu)
+          )
+        ) : (
+          has(object.spec.template.spec.containers) && 
+          object.spec.template.spec.containers.all(container, 
+            has(container.resources) && 
+            has(container.resources.limits) && 
+            has(container.resources.limits.cpu)
+          )
+        )
+
+    # Validate memory limits are set on Pods
+    - message: "All containers must have memory limits set."
+      reason: "Forbidden"
+      expression: |-
+        object.kind == 'Pod' ? (
+          object.spec.containers.all(container, 
+            has(container.resources) && 
+            has(container.resources.limits) && 
+            has(container.resources.limits.memory)
+          )
+        ) : (
+          has(object.spec.template.spec.containers) && 
+          object.spec.template.spec.containers.all(container, 
+            has(container.resources) && 
+            has(container.resources.limits) && 
+            has(container.resources.limits.memory)
+          )
+        )
+
+    # Validate CPU requests are set on Pods
+    - message: "All containers must have CPU requests set."
+      reason: "Forbidden"
+      expression: |-
+        object.kind == 'Pod' ? (
+          object.spec.containers.all(container, 
+            has(container.resources) && 
+            has(container.resources.requests) && 
+            has(container.resources.requests.cpu)
+          )
+        ) : (
+          has(object.spec.template.spec.containers) && 
+          object.spec.template.spec.containers.all(container, 
+            has(container.resources) && 
+            has(container.resources.requests) && 
+            has(container.resources.requests.cpu)
+          )
+        )
+
+    # Validate memory requests are set on Pods
+    - message: "All containers must have memory requests set."
+      reason: "Forbidden"
+      expression: |-
+        object.kind == 'Pod' ? (
+          object.spec.containers.all(container, 
+            has(container.resources) && 
+            has(container.resources.requests) && 
+            has(container.resources.requests.memory)
+          )
+        ) : (
+          has(object.spec.template.spec.containers) && 
+          object.spec.template.spec.containers.all(container, 
+            has(container.resources) && 
+            has(container.resources.requests) && 
+            has(container.resources.requests.memory)
+          )
+        )
+
+    # Validate init containers have resource limits if present
+    - message: "All init containers must have CPU and memory limits set."
+      reason: "Forbidden"
+      expression: |-
+        object.kind == 'Pod' ? (
+          !has(object.spec.initContainers) || 
+          object.spec.initContainers.all(container, 
+            has(container.resources) && 
+            has(container.resources.limits) && 
+            has(container.resources.limits.cpu) &&
+            has(container.resources.limits.memory)
+          )
+        ) : (
+          !has(object.spec.template.spec.initContainers) || 
+          object.spec.template.spec.initContainers.all(container, 
+            has(container.resources) && 
+            has(container.resources.limits) && 
+            has(container.resources.limits.cpu) &&
+            has(container.resources.limits.memory)
+          )
+        )
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/refs/heads/master/v1.34.1/validatingadmissionpolicybinding.json
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: enforce-resource-limits-educational
+spec:
+  policyName: enforce-resource-limits
+  validationActions:
+    - Deny
+  matchResources:
+    namespaceSelector:
+      matchLabels:
+        educational: "True"
