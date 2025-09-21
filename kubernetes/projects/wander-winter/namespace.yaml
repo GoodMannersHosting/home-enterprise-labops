@@ -6,4 +6,4 @@ metadata:
   name: wander-winter
   labels:
     security: restricted
-    educational: "True"
+    educational: "true"

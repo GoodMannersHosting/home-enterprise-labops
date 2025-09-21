@@ -132,4 +132,4 @@ spec:
   matchResources:
     namespaceSelector:
       matchLabels:
-        educational: "True"
+        educational: "true"
