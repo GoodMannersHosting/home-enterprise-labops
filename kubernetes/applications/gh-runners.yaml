@@ -29,8 +29,10 @@ spec:
       targetRevision: &branch main
       path: kubernetes/services/github-action-runners/runners
       kustomize:
-        commonLabels:
-          app.kubernetes.io/version: *chartVersion
+        labels:
+          - includeSelectors: true
+            pairs:
+              app.kubernetes.io/version: *chartVersion
     - repoURL: *url
       targetRevision: *branch
       ref: values
