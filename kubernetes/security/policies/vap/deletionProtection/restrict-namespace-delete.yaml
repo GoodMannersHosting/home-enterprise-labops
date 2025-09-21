@@ -8,12 +8,12 @@ spec:
   failurePolicy: Fail
   matchConstraints:
     resourceRules:
-    - apiGroups: [ "" ]
-      apiVersions: [ "v1" ]
-      operations: [ "DELETE" ]
-      resources: [ "namespaces" ]
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["DELETE"]
+        resources: ["namespaces"]
   validations:
-  - message: "Namespace deletion is restricted."
-    reason: "Forbidden"
-    expression: |-
-      request.operation != "DELETE" ? true : false
+    - message: "Namespace deletion is restricted."
+      reason: "Forbidden"
+      expression: |-
+        request.operation != "DELETE" ? true : false

@@ -1,0 +1,13 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/refs/heads/master/v1.34.1/resourcequota.json
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: educational-quota
+spec:
+  hard:
+    limits.cpu: "10"
+    limits.memory: "20Gi"
+    limits.ephemeral-storage: "20Gi"
+    limits.nvidia.com/gpu: 0
+    persistentvolumeclaims: "10"
