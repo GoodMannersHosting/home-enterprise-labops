@@ -19,11 +19,8 @@ spec:
     - group: ""
       kind: "persistentvolumes"
   destinations:
-    # Allow deployments to storm-paragraph and storm-paragraph-* namespaces
+    # Allow deployments to storm-paragraph namespace
     - namespace: *ns
-      server: https://kubernetes.default.svc
-    # Disallow deployments to non-storm-paragraph namespaces
-    - namespace: "!*"
       server: https://kubernetes.default.svc
   sourceNamespaces:
     - *ns
