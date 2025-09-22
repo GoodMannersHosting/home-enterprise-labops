@@ -1,4 +1,6 @@
 resources:
   - envoy-gateway.yaml
+  - helo-education-repo.yaml
+  - helo-repo.yaml
   - home-operations-charts.yaml
   - snapshot-controller.yaml

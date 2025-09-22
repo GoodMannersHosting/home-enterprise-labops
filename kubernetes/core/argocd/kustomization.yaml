@@ -6,8 +6,7 @@ resources:
   - namespace.yaml
   - external-dns.yaml
   - oidc-secret.yaml
-  - helo-repo.yaml
   - tlsroute.yaml
   - app-of-apps.yaml
   - argo-appproject.yaml
-  - https://github.com/argoproj/argo-cd/manifests/crds?ref=v3.1.0
+  - https://github.com/argoproj/argo-cd/manifests/crds?ref=v3.1.4
