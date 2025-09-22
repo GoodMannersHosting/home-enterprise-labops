@@ -1,0 +1,126 @@
+name: KWOK Validation
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "kubernetes/**"
+      - ".github/workflows/kwok-validation.yaml"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "kubernetes/**"
+      - ".github/workflows/kwok-validation.yaml"
+  workflow_dispatch:
+
+env:
+  KWOK_KUBE_VERSION: v1.33.0
+  KUBECTL_VERSION: v1.33.0
+  HELM_VERSION: v3.19.0
+  KUSTOMIZE_VERSION: v5.7.1
+  YQ_VERSION: v4.47.2
+  BIN_PATH: /usr/local/bin
+
+jobs:
+  kwok-validation:
+    runs-on:
+      group: nvidia
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install Golang
+        uses: actions/setup-go@v6.0.0
+        with:
+          go-version: "1.25"
+
+      - name: Install required tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget curl jq
+
+      - name: Set up kwok
+        uses: kubernetes-sigs/kwok@v0.7.0
+        with:
+          command: kwok
+
+      - name: Set up kwokctl
+        uses: kubernetes-sigs/kwok@v0.7.0
+        with:
+          command: kwokctl
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/${{ env.KUBECTL_VERSION }}/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl ${{ env.BIN_PATH }}/kubectl
+          kubectl version --client
+
+      - name: Create KWOK cluster
+        run: |
+          kwokctl create cluster \
+            --quiet-pull --runtime binary
+          kwokctl scale node --replicas 3
+        env:
+          KWOK_KUBE_VERSION: ${{ env.KWOK_KUBE_VERSION }}
+
+      - name: Install YQ
+        run: |
+          wget https://github.com/mikefarah/yq/releases/download/${{ env.YQ_VERSION }}/yq_linux_amd64.tar.gz -O - | tar xz
+          sudo mv yq_linux_amd64 ${{ env.BIN_PATH }}/yq
+
+      - name: Install Helm
+        run: |
+          curl -fsSL https://get.helm.sh/helm-${{ env.HELM_VERSION }}-linux-amd64.tar.gz -o helm.tar.gz
+          tar -zxvf helm.tar.gz
+          sudo mv linux-amd64/helm ${{ env.BIN_PATH }}/helm
+          rm -rf linux-amd64 helm.tar.gz
+          helm version
+
+      - name: Install Kustomize
+        run: |
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/kustomize/${{ env.KUSTOMIZE_VERSION }}/hack/install_kustomize.sh" | bash
+          sudo mv kustomize ${{ env.BIN_PATH }}/kustomize
+          kustomize version
+
+      - name: Verify cluster connectivity
+        run: |
+          kubectl cluster-info kwok
+          kubectl get nodes
+
+      - name: Add Helm repositories
+        run: |
+          bash .github/scripts/helm-argo-add.sh
+
+      - name: Create test namespaces
+        run: |
+          source .github/scripts/functions.sh
+          for ns in $(get_namespaces); do
+            kubectl create namespace ${ns}
+          done
+
+      # Placeholder for iterative helm operations
+      # TODO: Define specific helm install and template operations
+      - name: Run Helm Operations (Placeholder)
+        run: |
+          echo "=== Helm Operations Placeholder ==="
+          echo "This step will be expanded with specific helm install and template operations"
+          echo ""
+          echo "Examples of operations to be implemented:"
+          echo "- helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --set installCRDs=true"
+          echo "- helm template sealed-secrets sealed-secrets/sealed-secrets --namespace sealed-secrets | kubectl apply -f -"
+          echo ""
+          echo "Available helm repos:"
+          helm repo list
+          echo ""
+          echo "Cluster is ready for helm operations!"
+
+      - name: Validate cluster state
+        run: |
+          kubectl get all --all-namespaces
+          kubectl get crd 2>/dev/null || echo "No CRDs installed yet"
+
+      - name: Cleanup
+        if: always()
+        run: |
+          kwokctl delete cluster || echo "Cluster already deleted"
