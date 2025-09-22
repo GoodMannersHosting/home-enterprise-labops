@@ -27,6 +27,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
+      - name: Install Golang
+        uses: actions/setup-go@v6.0.0
+        with:
+          go-version: '1.25'
+
+      - name: Install required tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget yq curl jq
+
       - name: Set up kwokctl
         uses: kubernetes-sigs/kwok@v0.7.0
         with:
