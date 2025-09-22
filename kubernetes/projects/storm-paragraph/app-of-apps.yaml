@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: storm-paragraph
+  namespace: argocd
+spec:
+  destination:
+    namespace: storm-paragraph
+    server: https://kubernetes.default.svc
+  project: storm-paragraph
+  sources:
+    - repoURL: https://github.com/GoodMannersHosting/home-enterprise-education.git
+      targetRevision: main
+      path: storm-paragraph/applications
+      directory: {} # We don't want to dive into the disabled directory, so recurse will not be set.
