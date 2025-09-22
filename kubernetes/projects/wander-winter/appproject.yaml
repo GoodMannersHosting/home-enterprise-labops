@@ -19,11 +19,8 @@ spec:
     - group: ""
       kind: "persistentvolumes"
   destinations:
-    # Allow deployments to wander-winter and wander-winter-* namespaces
+    # Allow deployments to wander-winter namespace
     - namespace: *ns
-      server: https://kubernetes.default.svc
-    # Disallow deployments to non-wander-winter namespaces
-    - namespace: "!*"
       server: https://kubernetes.default.svc
   sourceNamespaces:
     - *ns
