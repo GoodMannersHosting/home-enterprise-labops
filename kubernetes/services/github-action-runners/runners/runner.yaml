@@ -6,6 +6,7 @@ metadata:
   name: shr
   namespace: github
   labels:
+    app.kubernetes.io/version: "0.12.1"
     actions.github.com/scale-set-name: shr
     actions.github.com/scale-set-namespace: github
     app.kubernetes.io/component: "autoscaling-runner-set"
@@ -25,90 +26,90 @@ spec:
     spec:
       dnsPolicy: ClusterFirstWithHostNet
       hostAliases:
-      - ip: "172.31.0.10"
-        hostnames:
-        - "harbor.cloud.danmanners.com"
-        - "ollama.cloud.danmanners.com"
-        - "n8n.cloud.danmanners.com"
+        - ip: "172.31.0.10"
+          hostnames:
+            - "harbor.cloud.danmanners.com"
+            - "ollama.cloud.danmanners.com"
+            - "n8n.cloud.danmanners.com"
       restartPolicy: Never
       serviceAccountName: shr-gha-rs-no-permission
       securityContext:
         fsGroup: 123
       initContainers:
-      - name: init-dind-externals
-        image: ghcr.io/actions/actions-runner:latest
-        command: [ "cp" ]
-        args: [ "-r", "-v", "/home/runner/externals/.", "/home/runner/tmpDir/" ]
-        volumeMounts:
-        - name: dind-externals
-          mountPath: /home/runner/tmpDir
-        securityContext:
-          allowPrivilegeEscalation: false
-          runAsUser: 1001
-          runAsGroup: 123
-          capabilities:
-            drop:
-            - ALL
-      - name: dind
-        image: docker:dind
-        args:
-        - dockerd
-        - --host=unix:///var/run/docker.sock
-        - --group=$(DOCKER_GROUP_GID)
-        env:
-        - name: DOCKER_GROUP_GID
-          value: "123"
-        securityContext:
-          privileged: true
-        restartPolicy: Always
-        startupProbe:
-          exec:
-            command:
-            - docker
-            - info
-          initialDelaySeconds: 0
-          failureThreshold: 24
-          periodSeconds: 5
-        volumeMounts:
-        - name: work
-          mountPath: /home/runner/_work
-        - name: dind-sock
-          mountPath: /var/run
-        - name: dind-externals
-          mountPath: /home/runner/externals
+        - name: init-dind-externals
+          image: ghcr.io/actions/actions-runner:latest
+          command: ["cp"]
+          args: ["-r", "-v", "/home/runner/externals/.", "/home/runner/tmpDir/"]
+          volumeMounts:
+            - name: dind-externals
+              mountPath: /home/runner/tmpDir
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsUser: 1001
+            runAsGroup: 123
+            capabilities:
+              drop:
+                - ALL
+        - name: dind
+          image: docker:dind
+          args:
+            - dockerd
+            - --host=unix:///var/run/docker.sock
+            - --group=$(DOCKER_GROUP_GID)
+          env:
+            - name: DOCKER_GROUP_GID
+              value: "123"
+          securityContext:
+            privileged: true
+          restartPolicy: Always
+          startupProbe:
+            exec:
+              command:
+                - docker
+                - info
+            initialDelaySeconds: 0
+            failureThreshold: 24
+            periodSeconds: 5
+          volumeMounts:
+            - name: work
+              mountPath: /home/runner/_work
+            - name: dind-sock
+              mountPath: /var/run
+            - name: dind-externals
+              mountPath: /home/runner/externals
       containers:
-      - name: runner
-        command:
-        - /home/runner/run.sh
-        image: ghcr.io/actions/actions-runner:latest
-        env:
-        - name: DOCKER_HOST
-          value: unix:///var/run/docker.sock
-        - name: RUNNER_WAIT_FOR_DOCKER_IN_SECONDS
-          value: "120"
-        volumeMounts:
-        - name: work
-          mountPath: /home/runner/_work
-        - name: dind-sock
-          mountPath: /var/run
+        - name: runner
+          command:
+            - /home/runner/run.sh
+          image: ghcr.io/actions/actions-runner:latest
+          env:
+            - name: DOCKER_HOST
+              value: unix:///var/run/docker.sock
+            - name: RUNNER_WAIT_FOR_DOCKER_IN_SECONDS
+              value: "120"
+          volumeMounts:
+            - name: work
+              mountPath: /home/runner/_work
+            - name: dind-sock
+              mountPath: /var/run
       volumes:
-      - name: dind-sock
-        emptyDir: {}
-      - name: dind-externals
-        ephemeral:
-          volumeClaimTemplate:
-            spec:
-              accessModes: [ "ReadWriteOnce" ]
-              storageClassName: "ceph-block"
-              resources:
-                requests:
-                  storage: 20Gi
-      - name: work
-        ephemeral:
-          volumeClaimTemplate:
-            spec:
-              accessModes: [ "ReadWriteOnce" ]
-              storageClassName: "ceph-block"
-              resources:
-                requests:
-                  storage: 12Gi
+        - name: dind-sock
+          emptyDir: {}
+        - name: dind-externals
+          ephemeral:
+            volumeClaimTemplate:
+              spec:
+                accessModes: ["ReadWriteOnce"]
+                storageClassName: "ceph-block"
+                resources:
+                  requests:
+                    storage: 20Gi
+        - name: work
+          ephemeral:
+            volumeClaimTemplate:
+              spec:
+                accessModes: ["ReadWriteOnce"]
+                storageClassName: "ceph-block"
+                resources:
+                  requests:
+                    storage: 12Gi
