@@ -1,5 +1,5 @@
 clusterName: helo
-talosVersion: v1.11.0
+talosVersion: v1.11.1
 kubernetesVersion: 1.34.0
 endpoint: "https://k8s.homelab.danmanners.com:6443"
 allowSchedulingOnControlPlanes: true
@@ -7,9 +7,9 @@ cniConfig:
   name: none
 
 clusterPodNets:
-- 10.244.0.0/16
+  - 10.244.0.0/16
 clusterSvcNets:
-- 10.96.0.0/12
+  - 10.96.0.0/12
 
 additionalApiServerCertSans: &certs
   - 172.21.0.10
@@ -17,251 +17,357 @@ additionalApiServerCertSans: &certs
 additionalMachineCertSans: *certs
 
 nodes:
-# R22 Control Plane Node
-- hostname: segfault.homelab.danmanners.com
-  controlPlane: true
-  installDiskSelector:
-    wwid: nvme.10ec-5450424632333034323130303730373030323532-5445414d20544d3846503632353647-00000001
-  machineSpec:
-    useUKI: true
-    secureboot: true
-  schematic:
-    customization:
-      systemExtensions:
-        officialExtensions: &amd
-          - siderolabs/amd-ucode
-          - siderolabs/binfmt-misc
-          - siderolabs/nvme-cli
-          - siderolabs/util-linux-tools
-          - siderolabs/wasmedge
-          # - siderolabs/intel-ucode
-          # - siderolabs/i915
-  ipAddress: 172.21.0.15
-  disableSearchDomain: true
-  nameservers: &nameservers
-    - 10.3.0.1
-    - 172.21.0.1
-  networkInterfaces:
-  - deviceSelector:
-      hardwareAddr: "9c:6b:00:84:ce:2e"
-    dhcp: false
-    mtu: 9000
-    addresses:
-    - 172.21.0.15/20
-    routes: &mgmt_routes
-      - network: 0.0.0.0/0
-        gateway: 172.21.0.1
-    vip:
-      ip: 172.21.0.10
-  - deviceSelector:
-      hardwareAddr: "9c:6b:00:84:cd:47"
-    dhcp: false
-# R18 Worker Node
-- hostname: quantumleap.homelab.danmanners.com
-  controlPlane: false
-  installDiskSelector:
-    wwid: nvme.10ec-5450424632333034323130303730373030333533-5445414d20544d3846503632353647-00000001
-  machineSpec:
-    useUKI: true
-    secureboot: true
-  kernelModules:
-  # During Installation the kernel modules MUST NOT be loaded and
-  # the below SHOULD BE COMMENTED OUT. Once the system is installed,
-  # the kernel modules should be uncommented, the config re-generated,
-  # and the system rebooted. This is to avoid issues where the NVIDIA
-  # kernel modules cannot be loaded during the installation process,
-  # which makes sure the Talos installer fail.
-  - name: nvidia
-  - name: nvidia_uvm
-  - name: nvidia_drm
-  - name: nvidia_modeset
-  patches:
-  - |-
-    - op: add
-      path: /machine/files
-      value:
-        - op: create
-          path: /etc/cri/conf.d/20-customization.part
-          content: |
-            [plugins."io.containerd.grpc.v1.cri"]
-              enable_unprivileged_ports = true
-              enable_unprivileged_icmp = true
-            [plugins."io.containerd.grpc.v1.cri".containerd]
-              discard_unpacked_layers = false
-            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
-              discard_unpacked_layers = false
-            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia]
-              privileged_without_host_devices = false
-              runtime_engine = ""
-              runtime_root = ""
-              runtime_type = "io.containerd.runc.v2"
-            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.options]
-              BinaryName = "/usr/bin/nvidia-container-runtime"
-  schematic:
-    customization:
-      systemExtensions:
-        officialExtensions:
-        - siderolabs/binfmt-misc
-        - siderolabs/nvme-cli
-        - siderolabs/util-linux-tools
-        - siderolabs/wasmedge
-        - siderolabs/intel-ucode
-        - siderolabs/i915
-        # - siderolabs/nonfree-kmod-nvidia-production # Do not use this with the 50XX series of NVIDIA GPUs.
-        #   You can read more about it here:
-        #   https://developer.nvidia.com/blog/nvidia-transitions-fully-towards-open-source-gpu-kernel-modules/
-        - siderolabs/nvidia-open-gpu-kernel-modules-production
-        - siderolabs/nvidia-container-toolkit-production
-  ipAddress: 172.21.0.16
-  disableSearchDomain: true
-  nameservers: &nameservers
-    - 10.3.0.1
-    - 172.21.0.1
-  networkInterfaces:
-  - deviceSelector:
-      hardwareAddr: "a8:a1:59:f9:13:57"
-    dhcp: false
-    mtu: 9000
-    addresses:
-    - 172.21.0.16/20
-    routes: *mgmt_routes
-  - deviceSelector:
-      hardwareAddr: "a8:a1:59:f9:13:55"
-    dhcp: false
-# R14 Worker Node
-- hostname: cachecow.homelab.danmanners.com
-  controlPlane: true
-  installDiskSelector:
-    wwid: nvme.10ec-5450424632333034323130303730373031343032-5445414d20544d3846503632353647-00000001
-  machineSpec:
-    useUKI: true
-    secureboot: true
-  schematic:
-    customization:
-      systemExtensions:
-        officialExtensions: &intel
-          - siderolabs/binfmt-misc
-          - siderolabs/nvme-cli
-          - siderolabs/util-linux-tools
-          - siderolabs/wasmedge
-          - siderolabs/intel-ucode
-          - siderolabs/i915
-  ipAddress: 172.21.0.17
-  disableSearchDomain: true
-  nameservers: &nameservers
-    - 10.3.0.1
-    - 172.21.0.1
-  networkInterfaces:
-  - deviceSelector:
-      hardwareAddr: "a8:a1:59:f9:12:cb"
-    dhcp: false
-    mtu: 9000
-    addresses:
-    - 172.21.0.17/20
-    routes: *mgmt_routes
-    vip:
-      ip: 172.21.0.10
-  - deviceSelector:
-      hardwareAddr: "a8:a1:59:f9:12:c9"
-    dhcp: false
-# R12 Worker Node
-- hostname: rampage.homelab.danmanners.com
-  controlPlane: true
-  installDiskSelector:
-    wwid: eui.e8238fa6bf530001001b448b4e96d8e1
-  machineSpec:
-    useUKI: true
-    secureboot: true
-  schematic:
-    customization:
-      systemExtensions:
-        officialExtensions: *amd
-  ipAddress: 172.21.0.18
-  disableSearchDomain: true
-  nameservers: *nameservers
-  networkInterfaces:
-  - deviceSelector:
-      hardwareAddr: "9c:6b:00:84:ce:47"
-    dhcp: false
-    mtu: 9000
-    addresses:
-    - 172.21.0.18/20
-    routes: *mgmt_routes
-    vip:
-      ip: 172.21.0.10
-  - deviceSelector:
-      hardwareAddr: "9c:6b:00:84:cd:21"
-    dhcp: false
-  - deviceSelector:
-      hardwareAddr: "9c:6b:00:84:cb:4d"
-    dhcp: false
+  # R22 Control Plane Node
+  - hostname: segfault.homelab.danmanners.com
+    controlPlane: true
+    installDiskSelector:
+      wwid: nvme.10ec-5450424632333034323130303730373030323532-5445414d20544d3846503632353647-00000001
+    machineSpec:
+      useUKI: true
+      secureboot: true
+    schematic:
+      customization:
+        systemExtensions:
+          officialExtensions: &amd
+            - siderolabs/amd-ucode
+            - siderolabs/binfmt-misc
+            - siderolabs/nvme-cli
+            - siderolabs/util-linux-tools
+            - siderolabs/wasmedge
+            # - siderolabs/intel-ucode
+            # - siderolabs/i915
+    ipAddress: 172.21.0.15
+    disableSearchDomain: true
+    nameservers: &nameservers
+      - 10.3.0.1
+      - 172.21.0.1
+    networkInterfaces:
+      - deviceSelector:
+          hardwareAddr: "9c:6b:00:84:ce:2e"
+        dhcp: false
+        mtu: 9000
+        addresses:
+          - 172.21.0.15/20
+        routes: &mgmt_routes
+          - network: 0.0.0.0/0
+            gateway: 172.21.0.1
+        vip:
+          ip: 172.21.0.10
+      - deviceSelector:
+          hardwareAddr: "9c:6b:00:84:cd:47"
+        dhcp: false
+  # R18 Worker Node
+  - hostname: quantumleap.homelab.danmanners.com
+    controlPlane: false
+    installDiskSelector:
+      wwid: nvme.10ec-5450424632333034323130303730373030333533-5445414d20544d3846503632353647-00000001
+    machineSpec:
+      useUKI: true
+      secureboot: true
+    kernelModules:
+      # During Installation the kernel modules MUST NOT be loaded and
+      # the below SHOULD BE COMMENTED OUT. Once the system is installed,
+      # the kernel modules should be uncommented, the config re-generated,
+      # and the system rebooted. This is to avoid issues where the NVIDIA
+      # kernel modules cannot be loaded during the installation process,
+      # which makes sure the Talos installer fail.
+      - name: nvidia
+      - name: nvidia_uvm
+      - name: nvidia_drm
+      - name: nvidia_modeset
+    patches:
+      - |-
+        - op: add
+          path: /machine/files
+          value:
+            - op: create
+              path: /etc/cri/conf.d/20-customization.part
+              content: |
+                [plugins."io.containerd.grpc.v1.cri"]
+                  enable_unprivileged_ports = true
+                  enable_unprivileged_icmp = true
+                [plugins."io.containerd.grpc.v1.cri".containerd]
+                  discard_unpacked_layers = false
+                [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+                  discard_unpacked_layers = false
+                [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia]
+                  privileged_without_host_devices = false
+                  runtime_engine = ""
+                  runtime_root = ""
+                  runtime_type = "io.containerd.runc.v2"
+                [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.options]
+                  BinaryName = "/usr/bin/nvidia-container-runtime"
+    schematic:
+      customization:
+        systemExtensions:
+          officialExtensions:
+            - siderolabs/binfmt-misc
+            - siderolabs/nvme-cli
+            - siderolabs/util-linux-tools
+            - siderolabs/wasmedge
+            - siderolabs/intel-ucode
+            - siderolabs/i915
+            # - siderolabs/nonfree-kmod-nvidia-production # Do not use this with the 50XX series of NVIDIA GPUs.
+            #   You can read more about it here:
+            #   https://developer.nvidia.com/blog/nvidia-transitions-fully-towards-open-source-gpu-kernel-modules/
+            - siderolabs/nvidia-open-gpu-kernel-modules-production
+            - siderolabs/nvidia-container-toolkit-production
+    ipAddress: 172.21.0.16
+    disableSearchDomain: true
+    nameservers: &nameservers
+      - 10.3.0.1
+      - 172.21.0.1
+    networkInterfaces:
+      - deviceSelector:
+          hardwareAddr: "a8:a1:59:f9:13:57"
+        dhcp: false
+        mtu: 9000
+        addresses:
+          - 172.21.0.16/20
+        routes: *mgmt_routes
+      - deviceSelector:
+          hardwareAddr: "a8:a1:59:f9:13:55"
+        dhcp: false
+  # R14 Worker Node
+  - hostname: cachecow.homelab.danmanners.com
+    controlPlane: true
+    installDiskSelector:
+      wwid: nvme.10ec-5450424632333034323130303730373031343032-5445414d20544d3846503632353647-00000001
+    machineSpec:
+      useUKI: true
+      secureboot: true
+    schematic:
+      customization:
+        systemExtensions:
+          officialExtensions: &intel
+            - siderolabs/binfmt-misc
+            - siderolabs/nvme-cli
+            - siderolabs/util-linux-tools
+            - siderolabs/wasmedge
+            - siderolabs/intel-ucode
+            - siderolabs/i915
+    ipAddress: 172.21.0.17
+    disableSearchDomain: true
+    nameservers: &nameservers
+      - 10.3.0.1
+      - 172.21.0.1
+    networkInterfaces:
+      - deviceSelector:
+          hardwareAddr: "a8:a1:59:f9:12:cb"
+        dhcp: false
+        mtu: 9000
+        addresses:
+          - 172.21.0.17/20
+        routes: *mgmt_routes
+        vip:
+          ip: 172.21.0.10
+      - deviceSelector:
+          hardwareAddr: "a8:a1:59:f9:12:c9"
+        dhcp: false
+  # R12 Worker Node
+  - hostname: rampage.homelab.danmanners.com
+    controlPlane: true
+    installDiskSelector:
+      wwid: eui.e8238fa6bf530001001b448b4e96d8e1
+    machineSpec:
+      useUKI: true
+      secureboot: true
+    schematic:
+      customization:
+        systemExtensions:
+          officialExtensions: *amd
+    ipAddress: 172.21.0.18
+    disableSearchDomain: true
+    nameservers: *nameservers
+    networkInterfaces:
+      - deviceSelector:
+          hardwareAddr: "9c:6b:00:84:ce:47"
+        dhcp: false
+        mtu: 9000
+        addresses:
+          - 172.21.0.18/20
+        routes: *mgmt_routes
+        vip:
+          ip: 172.21.0.10
+      - deviceSelector:
+          hardwareAddr: "9c:6b:00:84:cd:21"
+        dhcp: false
+      - deviceSelector:
+          hardwareAddr: "9c:6b:00:84:cb:4d"
+        dhcp: false
+  ## MINI PCs
+  - hostname: publicforum.homelab.danmanners.com # Minisforum MS-01
+    controlPlane: false
+    installDiskSelector:
+      wwid: eui.002538d31151de66
+    # machineSpec: # Disabling SecureBoot
+    #   useUKI: true
+    #   secureboot: true
+    schematic:
+      customization:
+        systemExtensions:
+          officialExtensions: *intel
+    ipAddress: 172.21.0.11
+    disableSearchDomain: true
+    nameservers: *nameservers
+    networkInterfaces:
+      - deviceSelector:
+          hardwareAddr: "58:47:ca:79:7b:54"
+        dhcp: false
+        mtu: 9000
+        addresses:
+          - 172.21.0.11/20
+        routes: *mgmt_routes
+      - deviceSelector:
+          hardwareAddr: "58:47:ca:79:7b:55"
+        dhcp: false
+      - deviceSelector:
+          hardwareAddr: "58:47:ca:79:7b:56"
+        dhcp: false
+      - deviceSelector:
+          hardwareAddr: "58:47:ca:79:7b:57"
+        dhcp: false
+  - hostname: stackover.homelab.danmanners.com # R29, Bottom Right Mini PC
+    controlPlane: false
+    installDiskSelector:
+      wwid: naa.57c35481fb0e1110
+    # machineSpec: # Disabling SecureBoot
+    #   useUKI: true
+    #   secureboot: true
+    schematic:
+      customization:
+        systemExtensions:
+          officialExtensions: *intel
+    ipAddress: 172.21.0.13
+    disableSearchDomain: true
+    nameservers: *nameservers
+    networkInterfaces:
+      - deviceSelector:
+          hardwareAddr: "e4:3a:6e:59:d4:45"
+        dhcp: false
+        mtu: 9000
+        addresses:
+          - 172.21.0.13/20
+        routes: *mgmt_routes
+      - deviceSelector:
+          hardwareAddr: "e4:3a:6e:59:d4:46"
+        dhcp: false
+      - deviceSelector:
+          hardwareAddr: "e4:3a:6e:59:d4:47"
+        dhcp: false
+      - deviceSelector:
+          hardwareAddr: "e4:3a:6e:59:d4:48"
+        dhcp: false
+      - deviceSelector:
+          hardwareAddr: "e4:3a:6e:59:d4:49"
+        dhcp: false
+      - deviceSelector:
+          hardwareAddr: "e4:3a:6e:59:d4:4a"
+        dhcp: false
+  - hostname: zephyr.homelab.danmanners.com # R29, Bottom Right Mini PC
+    controlPlane: false
+    installDiskSelector:
+      wwid: naa.57c35481fae85f81
+    # machineSpec: # Disabling SecureBoot
+    #   useUKI: true
+    #   secureboot: true
+    schematic:
+      customization:
+        systemExtensions:
+          officialExtensions: *intel
+    ipAddress: 172.21.0.14
+    disableSearchDomain: true
+    nameservers: *nameservers
+    networkInterfaces:
+      - deviceSelector:
+          hardwareAddr: "e4:3a:6e:5b:a9:b9"
+        dhcp: false
+        mtu: 9000
+        addresses:
+          - 172.21.0.14/20
+        routes: *mgmt_routes
+      - deviceSelector:
+          hardwareAddr: "e4:3a:6e:5b:a9:ba"
+        dhcp: false
+      - deviceSelector:
+          hardwareAddr: "e4:3a:6e:5b:a9:bb"
+        dhcp: false
+      - deviceSelector:
+          hardwareAddr: "e4:3a:6e:5b:a9:bc"
+        dhcp: false
+      - deviceSelector:
+          hardwareAddr: "e4:3a:6e:5b:a9:bd"
+        dhcp: false
+      - deviceSelector:
+          hardwareAddr: "e4:3a:6e:5b:a9:be"
+        dhcp: false
 
 patches:
-- |-
-  - op: add
-    path: /machine/install/wipe
-    value: true
-- |-
-  - op: add
-    path: /machine/network/extraHostEntries
-    value:
-      - ip: 172.31.0.10
-        aliases:
-          - harbor.cloud.danmanners.com
-          - ollama.cloud.danmanners.com
-          - n8n.cloud.danmanners.com
-- |-
-  - op: add
-    path: /machine/sysctls
-    value:
-      net.core.bpf_jit_harden: 1
-      vm.max_map_count: 524288
-      fs.file-max: 131072
-      fs.inotify.max_user_instances: "8192"
-      fs.inotify.max_user_watches: "1048576"
-      net.core.default_qdisc: fq
-      net.core.rmem_max: "67108864"
-      net.core.wmem_max: "67108864"
-      net.ipv4.neigh.default.gc_thresh1: "4096"
-      net.ipv4.neigh.default.gc_thresh2: "8192"
-      net.ipv4.neigh.default.gc_thresh3: "16384"
-      net.ipv4.tcp_congestion_control: bbr
-      net.ipv4.tcp_fastopen: "3"
-      net.ipv4.tcp_mtu_probing: "1"
-      net.ipv4.tcp_rmem: 4096 87380 33554432
-      net.ipv4.tcp_window_scaling: "1"
-      net.ipv4.tcp_wmem: 4096 65536 33554432
-      sunrpc.tcp_max_slot_table_entries: "128"
-      sunrpc.tcp_slot_table_entries: "128"
-      user.max_user_namespaces: "11255"
-      vm.nr_hugepages: "1024"
-- |-
-  - op: add
-    path: /machine/time
-    value:
-      servers: [time.cloudflare.com]
-- |-
-  - op: add
-    path: /machine/features
-    value:
-      stableHostname: true
-      diskQuotaSupport: true
-      rbac: true
-      kubePrism:
+  - |-
+    - op: add
+      path: /machine/install/wipe
+      value: true
+  - |-
+    - op: add
+      path: /machine/network/extraHostEntries
+      value:
+        - ip: 172.31.0.10
+          aliases:
+            - harbor.cloud.danmanners.com
+            - ollama.cloud.danmanners.com
+            - n8n.cloud.danmanners.com
+  - |-
+    - op: add
+      path: /machine/sysctls
+      value:
+        net.core.bpf_jit_harden: 1
+        vm.max_map_count: 524288
+        fs.file-max: 131072
+        fs.inotify.max_user_instances: "8192"
+        fs.inotify.max_user_watches: "1048576"
+        net.core.default_qdisc: fq
+        net.core.rmem_max: "67108864"
+        net.core.wmem_max: "67108864"
+        net.ipv4.neigh.default.gc_thresh1: "4096"
+        net.ipv4.neigh.default.gc_thresh2: "8192"
+        net.ipv4.neigh.default.gc_thresh3: "16384"
+        net.ipv4.tcp_congestion_control: bbr
+        net.ipv4.tcp_fastopen: "3"
+        net.ipv4.tcp_mtu_probing: "1"
+        net.ipv4.tcp_rmem: 4096 87380 33554432
+        net.ipv4.tcp_window_scaling: "1"
+        net.ipv4.tcp_wmem: 4096 65536 33554432
+        sunrpc.tcp_max_slot_table_entries: "128"
+        sunrpc.tcp_slot_table_entries: "128"
+        user.max_user_namespaces: "11255"
+        vm.nr_hugepages: "1024"
+  - |-
+    - op: add
+      path: /machine/time
+      value:
+        servers: [time.cloudflare.com]
+  - |-
+    - op: add
+      path: /machine/features
+      value:
+        stableHostname: true
+        diskQuotaSupport: true
+        rbac: true
+        kubePrism:
+          enabled: true
+          port: 7445
+  - |-
+    - op: add
+      path: /machine/features/hostDNS
+      value:
         enabled: true
-        port: 7445
-- |-
-  - op: add
-    path: /machine/features/hostDNS
-    value:
-      enabled: true
-      resolveMemberNames: false
-      forwardKubeDNSToHost: false
-- |-
-  - op: add
-    path: /cluster/proxy
-    value:
-      disabled: true
+        resolveMemberNames: false
+        forwardKubeDNSToHost: false
+  - |-
+    - op: add
+      path: /cluster/proxy
+      value:
+        disabled: true
 
 controlPlane:
   schematic:
@@ -275,69 +381,69 @@ controlPlane:
         - selinux=0 # Less security, faster puter
         - talos.auditd.disabled=1 # Less security, faster puter
   patches:
-  - |-
-    - op: add
-      path: /machine/kubelet/extraArgs
-      value:
-        rotate-server-certificates: true
-        rotate-certificates: true
-  - |-
-    - op: add
-      path: /cluster/coreDNS
-      value:
-        disabled: true
-  - |-
-    - op: remove
-      path: /cluster/apiServer/admissionControl
-  # - |-
-  #   - op: add
-  #     path: /cluster/apiServer/extraArgs
-  #     value:
-  #       feature-gates: ImageVolume=true
-  #       runtime-config: admissionregistration.k8s.io/v1alpha1=true
-  - |-
-    - op: add
-      path: /machine/features/kubernetesTalosAPIAccess
-      value:
-        enabled: true
-        allowedRoles:
-          - os:admin
-        allowedKubernetesNamespaces:
-          - actions-runner-system
-          - system-upgrade
-  - |-
-    - op: add
-      path: /cluster/etcd/advertisedSubnets
-      value:
-        - 172.21.0.0/20
-  - |-
-    - op: add
-      path: /cluster/scheduler/config
-      value:
-        apiVersion: kubescheduler.config.k8s.io/v1
-        kind: KubeSchedulerConfiguration
-        profiles:
-          - schedulerName: default-scheduler
-            plugins:
-              score:
-                disabled:
-                  - name: ImageLocality
-            pluginConfig:
-              - name: PodTopologySpread
-                args:
-                  defaultingType: List
-                  defaultConstraints:
-                    - maxSkew: 1
-                      topologyKey: kubernetes.io/hostname
-                      whenUnsatisfiable: ScheduleAnyway
+    - |-
+      - op: add
+        path: /machine/kubelet/extraArgs
+        value:
+          rotate-server-certificates: true
+          rotate-certificates: true
+    - |-
+      - op: add
+        path: /cluster/coreDNS
+        value:
+          disabled: true
+    - |-
+      - op: remove
+        path: /cluster/apiServer/admissionControl
+    # - |-
+    #   - op: add
+    #     path: /cluster/apiServer/extraArgs
+    #     value:
+    #       feature-gates: ImageVolume=true
+    #       runtime-config: admissionregistration.k8s.io/v1alpha1=true
+    - |-
+      - op: add
+        path: /machine/features/kubernetesTalosAPIAccess
+        value:
+          enabled: true
+          allowedRoles:
+            - os:admin
+          allowedKubernetesNamespaces:
+            - actions-runner-system
+            - system-upgrade
+    - |-
+      - op: add
+        path: /cluster/etcd/advertisedSubnets
+        value:
+          - 172.21.0.0/20
+    - |-
+      - op: add
+        path: /cluster/scheduler/config
+        value:
+          apiVersion: kubescheduler.config.k8s.io/v1
+          kind: KubeSchedulerConfiguration
+          profiles:
+            - schedulerName: default-scheduler
+              plugins:
+                score:
+                  disabled:
+                    - name: ImageLocality
+              pluginConfig:
+                - name: PodTopologySpread
+                  args:
+                    defaultingType: List
+                    defaultConstraints:
+                      - maxSkew: 1
+                        topologyKey: kubernetes.io/hostname
+                        whenUnsatisfiable: ScheduleAnyway
 
 worker:
   schematic:
     customization:
       extraKernelArgs: *extraKernelArgs
   patches:
-  - |-
-    - op: add
-      path: /machine/kubelet/nodeIP
-      value:
-        validSubnets: [172.21.0.0/20]
+    - |-
+      - op: add
+        path: /machine/kubelet/nodeIP
+        value:
+          validSubnets: [172.21.0.0/20]
