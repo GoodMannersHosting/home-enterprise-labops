@@ -316,6 +316,7 @@ patches:
             - harbor.cloud.danmanners.com
             - ollama.cloud.danmanners.com
             - n8n.cloud.danmanners.com
+            - keycloak.cloud.danmanners.com
   - |-
     - op: add
       path: /machine/sysctls
@@ -395,12 +396,21 @@ controlPlane:
     - |-
       - op: remove
         path: /cluster/apiServer/admissionControl
-    # - |-
-    #   - op: add
-    #     path: /cluster/apiServer/extraArgs
-    #     value:
-    #       feature-gates: ImageVolume=true
-    #       runtime-config: admissionregistration.k8s.io/v1alpha1=true
+    - |-
+      - op: add
+        path: /cluster/externalCloudProvider
+        value:
+          enabled: true
+    - |-
+      - op: add
+        path: /cluster/apiServer/extraArgs
+        value:
+          oidc-issuer-url: https://keycloak.cloud.danmanners.com/realms/gmh
+          oidc-client-id: helo-k8s
+          oidc-username-claim: preferred_username
+          oidc-username-prefix: "oidc:/"
+          oidc-groups-claim: groups
+          oidc-groups-prefix: "oidc:/"
     - |-
       - op: add
         path: /machine/features/kubernetesTalosAPIAccess
