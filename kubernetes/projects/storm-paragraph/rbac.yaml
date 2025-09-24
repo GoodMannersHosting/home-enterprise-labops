@@ -1,0 +1,64 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: oidc:storm-paragraph
+  namespace: storm-paragraph
+rules:
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["*"]
+    resourceNames: []
+    # Exclude ResourceQuotas, ceph.rook.io, and appproject.argoproj.io using separate deny rules (not natively supported in Kubernetes RBAC).
+    # You must ensure there are no other Roles granting access to these resources.
+  - apiGroups: [""]
+    resources: ["resourcequotas"]
+    verbs: ["list", "get", "watch"]
+  - apiGroups: ["ceph.rook.io"]
+    resources: ["*"]
+    verbs: ["list", "get", "watch"]
+  - apiGroups: ["appproject.argoproj.io"]
+    resources: ["*"]
+    verbs: ["list", "get", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: group:oidc:storm-paragraph
+  namespace: storm-paragraph
+subjects:
+  - kind: Group
+    name: oidc:/storm-paragraph
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: oidc:storm-paragraph
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: oidc:storm-paragraph:restrictedclusteraccess
+rules:
+  - apiGroups: [""]
+    resources:
+      [
+        "namespaces",
+        "persistentvolumes",
+        "nodes",
+        "storageclasses",
+        "persistentvolumeclaims",
+      ]
+    verbs: ["list", "get", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: group:oidc:storm-paragraph:restrictedclusteraccess
+subjects:
+  - kind: Group
+    name: oidc:/storm-paragraph
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: oidc:storm-paragraph:restrictedclusteraccess
+  apiGroup: rbac.authorization.k8s.io
