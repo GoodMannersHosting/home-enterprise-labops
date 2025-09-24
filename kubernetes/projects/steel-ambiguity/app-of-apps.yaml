@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: steel-ambiguity
+  namespace: argocd
+spec:
+  destination:
+    namespace: steel-ambiguity
+    server: https://kubernetes.default.svc
+  project: steel-ambiguity
+  sources:
+    - repoURL: https://github.com/GoodMannersHosting/home-enterprise-education.git
+      targetRevision: main
+      path: steel-ambiguity/applications
+      directory: {} # We don't want to dive into the disabled directory, so recurse will not be set.

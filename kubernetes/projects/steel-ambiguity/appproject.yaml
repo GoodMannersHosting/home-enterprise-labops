@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: &ns steel-ambiguity
+  namespace: argocd
+spec:
+  description: Educational environment for the Steel Ambiguity Namespace
+  roles:
+    - name: admin
+      description: "Admins can do anything for their project"
+      groups:
+        - *ns
+      policies:
+        - p, proj:steel-ambiguity:admin, applications, *, *, allow
+  clusterResourceBlacklist:
+    - group: "*"
+      kind: "*"
+  clusterResourceWhitelist:
+    - group: ""
+      kind: "persistentvolumes"
+  destinations:
+    # Allow deployments to steel-ambiguity namespace
+    - namespace: *ns
+      server: https://kubernetes.default.svc
+  sourceNamespaces:
+    - *ns
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  namespaceResourceBlacklist:
+    - group: ""
+      kind: "ResourceQuota"
+    - group: "ceph.rook.io"
+      kind: "*"
+    - group: "argoproj.io"
+      kind: "appprojects"
+  sourceRepos:
+    - "*"
