@@ -18,7 +18,7 @@ controllers:
       prep-models-dir:
         image:
           repository: &repo harbor.cloud.danmanners.com/library/danmanners/comfyui
-          tag: &tag v0.3.59
+          tag: &tag v0.3.60
         command:
           - /bin/sh
           - -c
@@ -52,7 +52,7 @@ controllers:
       browser:
         image:
           repository: harbor.cloud.danmanners.com/library/gtsteffaniak/filebrowser
-          tag: 0.8.5-beta-slim
+          tag: 0.8.7-beta-slim
         ports:
           - name: browser
             containerPort: 80
