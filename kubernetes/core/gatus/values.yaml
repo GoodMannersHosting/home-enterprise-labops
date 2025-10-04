@@ -42,11 +42,9 @@ controllers:
         securityContext:
           allowPrivilegeEscalation: false
         args:
-          - --auto-routes
-          - --auto-ingresses
-          - --auto-services
-          - --auto-group
-          - --gateway-name=production-gateway
+          - --auto-httproute
+          - --auto-ingress
+          - --auto-service
           - --output=/config/gatus-sidecar.yaml
         resources:
           requests:
@@ -128,7 +126,7 @@ route:
     rules:
       - backendRefs:
           - name: gatus-core
-            port: http
+            port: 80
             weight: 1
         matches:
           - path:
