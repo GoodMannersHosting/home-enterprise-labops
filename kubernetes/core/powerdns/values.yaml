@@ -214,6 +214,13 @@ route:
     kind: HTTPRoute
     annotations:
       external-dns.alpha.kubernetes.io/controller: "false"
+      gatus.home-operations.com/enabled: "true"
+      gatus.home-operations.com/endpoint: |-
+        name: PowerDNS
+        conditions:
+          - "[STATUS] == 401"
+        url: http://powerdns-api.powerdns.svc.cluster.local/
+        method: GET
     parentRefs:
       - group: gateway.networking.k8s.io
         kind: Gateway
