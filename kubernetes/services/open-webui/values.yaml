@@ -19,7 +19,7 @@ ollama:
       pull: []
       run: []
   image:
-    tag: "0.11.6"
+    tag: "0.12.3"
     pullPolicy: "Always"
   extraEnv:
     - name: "OLLAMA_NUM_PARALLEL"

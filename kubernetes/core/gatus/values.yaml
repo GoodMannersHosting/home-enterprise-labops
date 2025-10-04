@@ -1,0 +1,144 @@
+---
+defaultPodOptions:
+  automountServiceAccountToken: true
+  enableServiceLinks: true
+  restartPolicy: Always
+  securityContext:
+    fsGroup: 1000
+    fsGroupChangePolicy: OnRootMismatch
+
+controllers:
+  main:
+    enabled: true
+    type: deployment
+    replicas: 1
+    revisionHistoryLimit: 1
+    serviceAccount:
+      name: gatus
+    containers:
+      core:
+        ports:
+          - name: http
+            containerPort: 8080
+            protocol: TCP
+        image:
+          repository: ghcr.io/twin/gatus
+          tag: "latest"
+          pullPolicy: "IfNotPresent"
+        securityContext:
+          allowPrivilegeEscalation: false
+        resources:
+          limits:
+            cpu: 1500m
+            memory: 2Gi
+          requests:
+            cpu: 500m
+            memory: 1Gi
+      sidecar:
+        image:
+          repository: ghcr.io/home-operations/gatus-sidecar
+          tag: "latest"
+          pullPolicy: "IfNotPresent"
+        securityContext:
+          allowPrivilegeEscalation: false
+        args:
+          - --auto-routes
+          - --auto-ingresses
+          - --auto-services
+          - --auto-group
+          - --gateway-name=production-gateway
+          - --output=/config/gatus-sidecar.yaml
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+
+service:
+  core:
+    enabled: true
+    controller: main
+    primary: true
+    type: ClusterIP
+    ports:
+      core:
+        enabled: true
+        port: 80
+        targetPort: 8080
+        protocol: TCP
+  extname:
+    enabled: true
+    primary: false
+    controller: main
+    type: ExternalName
+    externalName: unifi-home.homelab.danmanners.com
+    ports: {}
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: status.cloud.danmanners.com
+      external-dns.alpha.kubernetes.io/ttl: "300"
+
+serviceAccount:
+  gatus:
+    enabled: true
+
+rbac:
+  roles:
+    gatus-sidecar:
+      enabled: true
+      type: ClusterRole
+      rules:
+        - apiGroups: [""]
+          resources: ["services"]
+          verbs: ["get", "list", "watch"]
+        - apiGroups: ["networking.k8s.io"]
+          resources: ["ingresses"]
+          verbs: ["get", "list", "watch"]
+        - apiGroups: ["gateway.networking.k8s.io"]
+          resources: ["httproutes", "gateways"]
+          verbs: ["get", "list", "watch"]
+  bindings:
+    gatus-sidecar:
+      enabled: true
+      type: ClusterRoleBinding
+      roleRef:
+        kind: ClusterRole
+        name: gatus
+        apiGroup: rbac.authorization.k8s.io
+      subjects:
+        - kind: ServiceAccount
+          name: gatus
+          namespace: aiml
+
+route:
+  core:
+    enabled: true
+    kind: HTTPRoute
+    annotations:
+      external-dns.alpha.kubernetes.io/controller: "false"
+    parentRefs:
+      - group: gateway.networking.k8s.io
+        kind: Gateway
+        name: gwapi
+        namespace: default
+        sectionName: https-cloud
+    hostnames:
+      - status.cloud.danmanners.com
+    rules:
+      - backendRefs:
+          - name: gatus-core
+            port: http
+            weight: 1
+        matches:
+          - path:
+              type: PathPrefix
+              value: /
+        timeouts:
+          backendRequest: 0s
+          request: 0s
+
+persistence:
+  data:
+    enabled: true
+    type: emptyDir
