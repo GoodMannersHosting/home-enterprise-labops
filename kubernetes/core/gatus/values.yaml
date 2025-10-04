@@ -130,6 +130,7 @@ route:
     kind: HTTPRoute
     annotations:
       external-dns.alpha.kubernetes.io/controller: "false"
+      gatus.home-operations.com/enabled: "false"
     parentRefs:
       - group: gateway.networking.k8s.io
         kind: Gateway
