@@ -12,10 +12,21 @@ ui:
   logo: https://avatars.githubusercontent.com/u/17593824
   link: https://github.com/danmanners
   buttons:
-    - name: Github
+    - name: GitHub Profile
       link: https://github.com/danmanners
-    - name: Homelab
-      link: https://github.com/danmanners/home-ops
+    - name: Homelab Repository
+      link: https://github.com/GoodMannersHosting/home-enterprise-labops
 
 web:
-  port: 8080
+  port: 80
+
+endpoints:
+  - name: Homelab Unifi
+    url: "1.1.1.1" # Address of the DNS server to use
+    interval: 5m
+    dns:
+      query-name: "unifi-home.homelab.danmanners.com"
+      query-type: "A"
+    conditions:
+      - "[BODY] == pat(*.*.*.*)"
+      - "[DNS_RCODE] == NOERROR"

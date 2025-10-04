@@ -152,8 +152,7 @@ route:
           request: 0s
 
 persistence:
-  data:
-    enabled: true
+  config:
     type: emptyDir
   config-file:
     type: configMap
