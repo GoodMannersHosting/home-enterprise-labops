@@ -161,3 +161,13 @@ persistence:
     globalMounts:
       - path: /config/config.yaml
         subPath: config.yaml
+  db:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-block-retain
+    accessMode: ReadWriteOnce
+    size: 4Gi
+    retain: true
+    globalMounts:
+      - path: /database/
+        readOnly: false
