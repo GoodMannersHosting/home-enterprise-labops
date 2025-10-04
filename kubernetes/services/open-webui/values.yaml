@@ -37,6 +37,15 @@ ollama:
     storageClass: ceph-block-retain
     accessModes:
       - ReadWriteOnce
+  service:
+    annotations:
+      gatus.home-operations.com/enabled: "true"
+      gatus.home-operations.com/endpoint: |-
+        name: Ollama (Internal)
+        conditions:
+          - "[STATUS] == 200"
+        url: http://ollama.aiml.svc.cluster.local:11434
+        method: GET
 
 pipelines:
   enabled: false
@@ -163,8 +172,8 @@ extraResources:
           name: Open WebUI
           conditions:
             - "[STATUS] == 200"
-          url: https://ollama.cloud.danmanners.com
-          method: HEAD
+          url: http://open-webui.aiml.svc.cluster.local/status
+          method: GET
     spec:
       hostnames:
         - ollama.cloud.danmanners.com
