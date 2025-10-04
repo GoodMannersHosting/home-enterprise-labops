@@ -17,6 +17,11 @@ ui:
     - name: Homelab Repository
       link: https://github.com/GoodMannersHosting/home-enterprise-labops
 
+storage:
+  type: sqlite
+  path: /database/gatus.db
+  maximum-number-of-results: 200
+
 web:
   port: 80
 
