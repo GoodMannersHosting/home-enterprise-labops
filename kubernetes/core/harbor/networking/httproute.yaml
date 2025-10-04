@@ -10,7 +10,7 @@ metadata:
       name: Harbor
       conditions:
         - "[STATUS] == 200"
-      url: http://harbor.cloud.danmanners.com
+      url: http://harbor.harbor.svc.cluster.local/
       method: HEAD
 spec:
   hostnames:
