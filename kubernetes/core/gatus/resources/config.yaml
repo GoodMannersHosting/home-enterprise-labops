@@ -1,0 +1,21 @@
+---
+connectivity:
+  checker:
+    target: 1.1.1.1:53
+    interval: 30s
+
+metrics: true
+
+ui:
+  title: Status | Gatus
+  header: Status
+  logo: https://avatars.githubusercontent.com/u/17593824
+  link: https://github.com/danmanners
+  buttons:
+    - name: Github
+      link: https://github.com/danmanners
+    - name: Homelab
+      link: https://github.com/danmanners/home-ops
+
+web:
+  port: 8080

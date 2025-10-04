@@ -13,27 +13,48 @@ controllers:
     type: deployment
     replicas: 1
     revisionHistoryLimit: 1
+    annotations:
+      reloader.stakater.com/auto: "true"
     serviceAccount:
       name: gatus
     containers:
       core:
         ports:
           - name: http
-            containerPort: 8080
+            containerPort: 80
             protocol: TCP
         image:
           repository: ghcr.io/twin/gatus
           tag: "latest"
           pullPolicy: "IfNotPresent"
+        env:
+          GATUS_CONFIG_PATH: /config
+          GATUS_DELAY_START_SECONDS: 5
+          GATUS_WEB_PORT: &port 80
+          TZ: America/New_York
+        probes:
+          liveness: &probes
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /health
+                port: *port
+              initialDelaySeconds: 0
+              periodSeconds: 10
+              timeoutSeconds: 1
+              failureThreshold: 3
+          readiness: *probes
         securityContext:
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities: { drop: ["ALL"] }
         resources:
           limits:
             cpu: 1500m
             memory: 2Gi
           requests:
             cpu: 500m
-            memory: 1Gi
       sidecar:
         image:
           repository: ghcr.io/home-operations/gatus-sidecar
@@ -64,7 +85,7 @@ service:
       core:
         enabled: true
         port: 80
-        targetPort: 8080
+        targetPort: 80
         protocol: TCP
   extname:
     enabled: true
@@ -83,7 +104,7 @@ serviceAccount:
 
 rbac:
   roles:
-    gatus-sidecar:
+    gatus:
       enabled: true
       type: ClusterRole
       rules:
@@ -97,17 +118,13 @@ rbac:
           resources: ["httproutes", "gateways"]
           verbs: ["get", "list", "watch"]
   bindings:
-    gatus-sidecar:
+    gatus:
       enabled: true
       type: ClusterRoleBinding
       roleRef:
-        kind: ClusterRole
-        name: gatus
-        apiGroup: rbac.authorization.k8s.io
+        identifier: gatus
       subjects:
-        - kind: ServiceAccount
-          name: gatus
-          namespace: aiml
+        - identifier: gatus
 
 route:
   core:
@@ -140,3 +157,9 @@ persistence:
   data:
     enabled: true
     type: emptyDir
+  config-file:
+    type: configMap
+    name: "gatus-configmap"
+    globalMounts:
+      - path: /config/config.yaml
+        subPath: config.yaml
