@@ -63,17 +63,15 @@ controllers:
         securityContext:
           allowPrivilegeEscalation: false
         args:
-          - --auto-httproute
-          - --auto-ingress
-          - --auto-service
+          - --auto-httproute=true
           - --output=/config/gatus-sidecar.yaml
         resources:
           requests:
-            cpu: 200m
-            memory: 512Mi
+            cpu: 20m
+            memory: 64Mi
           limits:
-            cpu: 500m
-            memory: 1Gi
+            cpu: 100m
+            memory: 256Mi
 
 service:
   core:

@@ -17,9 +17,6 @@ spec:
       path: kubernetes/core/gatus
     - repoURL: *repo
       targetRevision: main
-      path: kubernetes/core/gatus
-    - repoURL: *repo
-      targetRevision: main
       ref: values
     - repoURL: https://bjw-s-labs.github.io/helm-charts
       chart: app-template
