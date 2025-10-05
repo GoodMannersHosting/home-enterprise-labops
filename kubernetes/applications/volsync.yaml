@@ -9,7 +9,7 @@ metadata:
     volsyncChartVersion: &volsyncChartVersion 0.16.9
 spec:
   destination:
-    namespace: aiml
+    namespace: volsync
     server: https://kubernetes.default.svc
   project: default
   sources:
@@ -34,3 +34,4 @@ spec:
       selfHeal: true
     syncOptions:
       - ServerSideApply=true
+      - CreateNamespace=true

@@ -71,6 +71,17 @@ repoServer:
 
 server:
   replicas: 2
+  service:
+    annotations:
+      gatus.home-operations.com/enabled: "true"
+      gatus.home-operations.com/endpoint: |-
+        name: ArgoCD
+        client:
+          insecure: true
+        conditions:
+          - "[STATUS] == 200"
+        url: https://argocd-server.argocd.svc.cluster.local/
+        method: HEAD
   config:
     application.instanceLabelKey: argocd.argoproj.io/instance
     url: *fullUrl
