@@ -27,7 +27,7 @@ ollama:
     - name: "OLLAMA_FLASH_ATTENTION"
       value: "1"
     - name: "OLLAMA_MAX_LOADED_MODELS"
-      value: "1"
+      value: "2"
     # - name: "OLLAMA_KV_CACHE_TYPE"
     #   value: "q8_0"
   runtimeClassName: nvidia
