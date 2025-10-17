@@ -1,0 +1,52 @@
+name: "embeddings-ollama"
+enabled: true
+fullnameOverride: ""
+runtimeClassName: nvidia
+
+resources:
+  requests:
+    nvidia.com/gpu: "1"
+    memory: "3Gi"
+  limits:
+    memory: "4Gi"
+    cpu: "2"
+    nvidia.com/gpu: "1"
+
+ollama:
+  gpu:
+    enabled: true
+    type: nvidia
+  models:
+    pull:
+      - embeddinggemma:300m
+    run:
+      - embeddinggemma:300m
+
+image:
+  tag: "0.12.6"
+  pullPolicy: "Always"
+
+extraEnv:
+  - name: "OLLAMA_NUM_PARALLEL"
+    value: "2"
+  - name: "OLLAMA_FLASH_ATTENTION"
+    value: "1"
+  - name: "OLLAMA_MAX_LOADED_MODELS"
+    value: "1"
+
+persistentVolume:
+  enabled: true
+  size: 10Gi
+  storageClass: ceph-block-retain
+  accessModes:
+    - ReadWriteOnce
+
+service:
+  annotations:
+    gatus.home-operations.com/enabled: "true"
+    gatus.home-operations.com/endpoint: |-
+      name: LibreChat Ollama - Embeddings
+      conditions:
+        - "[STATUS] == 200"
+      url: http://embeddings-ollama.aiml.svc.cluster.local:11434
+      method: GET

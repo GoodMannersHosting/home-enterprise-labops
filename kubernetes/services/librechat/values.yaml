@@ -1,0 +1,431 @@
+---
+defaultPodOptions:
+  automountServiceAccountToken: false
+  enableServiceLinks: true
+  restartPolicy: Always
+  securityContext:
+    fsGroup: 1000
+    fsGroupChangePolicy: OnRootMismatch
+
+controllers:
+  api:
+    enabled: true
+    type: deployment
+    replicas: 1
+    revisionHistoryLimit: 2
+    pod:
+      runtimeClassName: nvidia
+    containers:
+      main:
+        ports:
+          - name: http
+            containerPort: 3080
+            protocol: TCP
+        image:
+          repository: ghcr.io/danny-avila/librechat-dev
+          tag: "latest"
+          pullPolicy: "IfNotPresent"
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+        env: &envs
+          - name: HOST
+            value: "0.0.0.0"
+          - name: MONGO_URI
+            value: "mongodb://librechat-mongodb:27017/LibreChat"
+          # Meili search configuration
+          - name: MEILI_HOST
+            value: "http://librechat-meilisearch:7700"
+          - name: MEILI_NO_ANALYTICS
+            value: "true"
+          - name: MEILI_MASTER_KEY
+            valueFrom:
+              secretKeyRef:
+                name: librechat-secrets
+                key: MEILI_MASTER_KEY
+          - name: RAG_PORT
+            value: "8000"
+          - name: RAG_API_URL
+            value: "http://librechat-rag-api:8000"
+          - name: DOMAIN_CLIENT
+            value: &publicUrl "https://librechat.cloud.danmanners.com"
+          - name: DOMAIN_SERVER
+            value: *publicUrl
+          - name: APP_TITLE
+            value: "LibreChat"
+          - name: SESSION_EXPIRY
+            value: "900000"
+          - name: REFRESH_TOKEN_EXPIRY
+            value: "604800000"
+          - name: ALLOW_SOCIAL_LOGIN
+            value: "true"
+          - name: ALLOW_EMAIL_LOGIN
+            value: "true"
+          - name: ALLOW_REGISTRATION
+            value: "true" # Set to false for private instance
+          - name: ALLOW_PASSWORD_RESET
+            value: "false"
+          - name: ALLOW_UNVERIFIED_EMAIL_LOGIN
+            value: "false" # Security best practice
+          - name: LIMIT_CONCURRENT_MESSAGES
+            value: "true"
+          - name: CONCURRENT_MESSAGE_MAX
+            value: "1"
+          - name: BAN_VIOLATIONS
+            value: "true"
+          - name: DEBUG_LOGGING
+            value: "true"
+          - name: CONSOLE_JSON
+            value: "true" # For cloud deployments
+          - name: OPENAI_MODERATION
+            value: "false" # Enable if you have OpenAI key
+          - name: JWT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: librechat-secrets
+                key: JWT_SECRET
+          - name: JWT_REFRESH_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: librechat-secrets
+                key: JWT_REFRESH_SECRET
+          - name: CREDS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: librechat-secrets
+                key: CREDS_KEY
+          - name: CREDS_IV
+            valueFrom:
+              secretKeyRef:
+                name: librechat-secrets
+                key: CREDS_IV
+          - name: PGDATA
+            value: "/var/lib/postgresql/data/pgdata"
+          - name: POSTGRES_DB
+            valueFrom:
+              secretKeyRef:
+                name: librechat-secrets
+                key: POSTGRES_DB
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: librechat-secrets
+                key: POSTGRES_USER
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: librechat-secrets
+                key: POSTGRES_PASS
+          - name: DB_HOST
+            value: "librechat-vectordb"
+          - name: EMBEDDINGS_PROVIDER
+            value: "ollama"
+          - name: OLLAMA_BASE_URL
+            value: "http://embeddings-ollama.aiml.svc.cluster.local:11434"
+          - name: EMBEDDINGS_MODEL
+            value: "embeddinggemma:300m"
+        resources:
+          limits:
+            cpu: 2
+            memory: 4Gi
+            nvidia.com/gpu: 1
+          requests:
+            cpu: 500m
+            memory: 2Gi
+            nvidia.com/gpu: 1
+
+  mongodb:
+    enabled: true
+    type: statefulset
+    replicas: 1
+    containers:
+      main:
+        ports:
+          - name: mongodb
+            containerPort: &mongoPort 27017
+            protocol: TCP
+        image:
+          repository: mongo
+          tag: "latest"
+          pullPolicy: "IfNotPresent"
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+        args:
+          - mongod
+          - --noauth
+        resources:
+          limits:
+            cpu: 1
+            memory: 2Gi
+          requests:
+            cpu: 250m
+            memory: 1Gi
+
+  meilisearch:
+    enabled: true
+    type: deployment
+    replicas: 1
+    containers:
+      main:
+        ports:
+          - name: http
+            containerPort: &meiliPort 7700
+            protocol: TCP
+        image:
+          repository: getmeili/meilisearch
+          tag: "v1.12.3"
+          pullPolicy: "IfNotPresent"
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+        env: *envs
+        resources:
+          limits:
+            cpu: 1
+            memory: 2Gi
+          requests:
+            cpu: 250m
+            memory: 512Mi
+
+  vectordb:
+    enabled: true
+    type: deployment
+    replicas: 1
+    containers:
+      main:
+        ports:
+          - name: postgres
+            containerPort: &pgPort 5432
+            protocol: TCP
+        image:
+          repository: pgvector/pgvector
+          tag: "0.8.0-pg15-trixie"
+          pullPolicy: "IfNotPresent"
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+        env: *envs
+        resources:
+          limits:
+            cpu: 1
+            memory: 2Gi
+          requests:
+            cpu: 250m
+            memory: 1Gi
+
+  rag-api:
+    enabled: true
+    type: deployment
+    replicas: 1
+    containers:
+      main:
+        ports:
+          - name: http
+            containerPort: &ragPort 8000
+            protocol: TCP
+        image:
+          repository: ghcr.io/danny-avila/librechat-rag-api-dev-lite
+          tag: "latest"
+          pullPolicy: "IfNotPresent"
+        securityContext:
+          allowPrivilegeEscalation: false
+        env: *envs
+        resources:
+          limits:
+            cpu: 1
+            memory: 2Gi
+          requests:
+            cpu: 250m
+            memory: 1Gi
+
+service:
+  api:
+    enabled: true
+    controller: api
+    primary: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        port: 80
+        targetPort: http
+        protocol: TCP
+
+  mongodb:
+    enabled: true
+    controller: mongodb
+    type: ClusterIP
+    ports:
+      mongodb:
+        enabled: true
+        port: *mongoPort
+        targetPort: mongodb
+        protocol: TCP
+
+  meilisearch:
+    enabled: true
+    controller: meilisearch
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        port: *meiliPort
+        targetPort: http
+        protocol: TCP
+
+  vectordb:
+    enabled: true
+    controller: vectordb
+    type: ClusterIP
+    ports:
+      postgres:
+        enabled: true
+        port: *pgPort
+        targetPort: postgres
+        protocol: TCP
+
+  rag-api:
+    enabled: true
+    controller: rag-api
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        port: *ragPort
+        targetPort: http
+        protocol: TCP
+
+  extname:
+    enabled: true
+    primary: false
+    controller: api
+    type: ExternalName
+    externalName: unifi-home.homelab.danmanners.com
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: &publicUri librechat.cloud.danmanners.com
+      external-dns.alpha.kubernetes.io/ttl: "300"
+
+route:
+  core:
+    enabled: false
+  api:
+    enabled: true
+    kind: HTTPRoute
+    annotations:
+      external-dns.alpha.kubernetes.io/controller: "false"
+      gatus.home-operations.com/enabled: "false"
+    parentRefs:
+      - group: gateway.networking.k8s.io
+        kind: Gateway
+        name: gwapi
+        namespace: default
+        sectionName: https-cloud
+    hostnames:
+      - *publicUri
+    rules:
+      - backendRefs:
+          - name: librechat-api
+            port: 80
+            weight: 1
+        matches:
+          - path:
+              type: PathPrefix
+              value: /
+        timeouts:
+          backendRequest: 0s
+          request: 0s
+
+persistence:
+  config:
+    enabled: true
+    type: configMap
+    name: librechat-config
+    advancedMounts:
+      api:
+        main:
+          - path: /app/librechat.yaml
+            subPath: librechat.yaml
+            readOnly: true
+
+  api-images:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-block-retain
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    retain: true
+    advancedMounts:
+      api:
+        main:
+          - path: /app/client/public/images
+            readOnly: false
+
+  api-uploads:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-block-retain
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    retain: true
+    advancedMounts:
+      api:
+        main:
+          - path: /app/uploads
+            readOnly: false
+
+  api-logs:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-block-retain
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    retain: true
+    advancedMounts:
+      api:
+        main:
+          - path: /app/logs
+            readOnly: false
+
+  mongodb-data:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-block-retain
+    accessMode: ReadWriteOnce
+    size: 20Gi
+    retain: true
+    advancedMounts:
+      mongodb:
+        main:
+          - path: /data/db
+            readOnly: false
+
+  meilisearch-data:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-block-retain
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    retain: true
+    advancedMounts:
+      meilisearch:
+        main:
+          - path: /meili_data
+            readOnly: false
+
+  vectordb-data:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-block-retain
+    accessMode: ReadWriteOnce
+    size: 20Gi
+    retain: true
+    advancedMounts:
+      vectordb:
+        main:
+          - path: /var/lib/postgresql/data
+            readOnly: false
