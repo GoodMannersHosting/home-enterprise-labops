@@ -1,0 +1,29 @@
+---
+projectName: "danger-million"
+projectNamespaceLabels:
+  security: "restricted"
+  educational: "true"
+
+oidc:
+  enabled: true
+  groupPrefix: "oidc:/"
+
+argo:
+  appOfAppsNamespace: "argocd"
+  targetRepoURL: "https://github.com/GoodMannersHosting/home-enterprise-education.git"
+  targetRevision: "main"
+  pathOverride: wander-winter/applications
+
+quotas:
+  compute:
+    cpu: "4000m" # Can pass an integer or m (milli) suffix for CPU; must end in '00m' if using millicores.
+    memory: "8Gi"
+    ephemeralStorage: "20Gi"
+  storage:
+    maxPvc: "10" # Number of Persistent Volume Claims
+    requests:
+      min: "1Gi"
+      max: "4Gi"
+  gpu:
+    enabled: true
+    count: "0" # Number of GPUs

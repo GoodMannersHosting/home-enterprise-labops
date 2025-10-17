@@ -12,6 +12,9 @@ spec:
     - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
       targetRevision: main
       path: kubernetes/projects
+      kustomize:
+        commonLabels:
+          educational: "true"
   syncPolicy:
     automated:
       prune: true

@@ -19,7 +19,7 @@ ollama:
       pull: []
       run: []
   image:
-    tag: "0.12.3"
+    tag: "0.12.6"
     pullPolicy: "Always"
   extraEnv:
     - name: "OLLAMA_NUM_PARALLEL"
@@ -28,12 +28,12 @@ ollama:
       value: "1"
     - name: "OLLAMA_MAX_LOADED_MODELS"
       value: "1"
-    - name: "OLLAMA_KV_CACHE_TYPE"
-      value: "q8_0"
+    # - name: "OLLAMA_KV_CACHE_TYPE"
+    #   value: "q8_0"
   runtimeClassName: nvidia
   persistentVolume:
     enabled: true
-    size: 200Gi
+    size: 240Gi
     storageClass: ceph-block-retain
     accessModes:
       - ReadWriteOnce
@@ -56,7 +56,7 @@ clusterDomain: cluster.local
 
 image:
   repository: ghcr.io/open-webui/open-webui
-  tag: "0.6.32"
+  tag: "0.6.34"
   pullPolicy: "IfNotPresent"
 
 serviceAccount:
