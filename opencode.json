@@ -6,11 +6,14 @@
       "name": "danollama",
       "options": {
         "baseURL": "https://ollama.cloud.danmanners.com/api",
-        "apiKey": "env:OLLAMA_API_KEY"
+        "apiKey": "{env:OLLAMA_API_KEY}"
       },
       "models": {
         "qwen3:4b": {
           "name": "Qwen3"
+        },
+        "qwen3-coder:30b": {
+          "name": "Qwen3 Coder"
         }
       }
     }

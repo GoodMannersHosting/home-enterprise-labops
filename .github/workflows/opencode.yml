@@ -29,4 +29,4 @@ jobs:
         env:
           OLLAMA_API_KEY: ${{ secrets.OLLAMA_API_KEY }}
         with:
-          model: "qwen3:4b"
+          model: "danollama/qwen3-coder:30b"
