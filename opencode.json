@@ -1,0 +1,18 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "danollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "danollama",
+      "options": {
+        "baseURL": "https://ollama.cloud.danmanners.com/api",
+        "apiKey": "env:OLLAMA_API_KEY"
+      },
+      "models": {
+        "qwen3:4b": {
+          "name": "Qwen3"
+        }
+      }
+    }
+  }
+}
