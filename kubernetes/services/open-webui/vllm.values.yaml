@@ -1,0 +1,103 @@
+---
+defaultPodOptions:
+  automountServiceAccountToken: false
+  enableServiceLinks: false
+  restartPolicy: Always
+  securityContext:
+    fsGroup: 1000
+    fsGroupChangePolicy: OnRootMismatch
+
+controllers:
+  main:
+    enabled: true
+    type: deployment
+    replicas: 1
+    revisionHistoryLimit: 0
+    pod:
+      runtimeClassName: nvidia
+    containers:
+      core:
+        image:
+          repository: harbor.cloud.danmanners.com/library/vllm/vllm-openai
+          tag: "latest"
+          pullPolicy: "IfNotPresent"
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            vllm serve Qwen/Qwen3-4B-Thinking-2507-FP8 \
+            --trust-remote-code --enable-chunked-prefill \
+            --max_num_batched_tokens 1024 \
+            --max_model_len 65536
+        env:
+          - name: HF_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: hf-secret
+                key: token
+          - name: VLLM_PORT
+            value: "8000"
+        ports:
+          - name: http
+            containerPort: &port 8001
+            protocol: TCP
+        resources:
+          limits:
+            cpu: "8"
+            memory: 32Gi
+            nvidia.com/gpu: "1"
+          requests:
+            cpu: "2"
+            memory: 6Gi
+            nvidia.com/gpu: "1"
+        # probes:
+        #   liveness:
+        #     enabled: true
+        #     custom: true
+        #     spec:
+        #       httpGet:
+        #         path: /health
+        #         port: http
+        #       initialDelaySeconds: 60
+        #       periodSeconds: 10
+        #   readiness:
+        #     enabled: true
+        #     custom: true
+        #     spec:
+        #       httpGet:
+        #         path: /health
+        #         port: http
+        #       initialDelaySeconds: 60
+        #       periodSeconds: 5
+
+service:
+  core:
+    enabled: true
+    controller: main
+    primary: true
+    type: ClusterIP
+    ports:
+      api:
+        enabled: true
+        port: *port
+        targetPort: http
+        protocol: TCP
+
+persistence:
+  cache:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-block-retain
+    accessMode: ReadWriteOnce
+    size: 120Gi
+    retain: true
+    globalMounts:
+      - path: /root/.cache/huggingface
+        readOnly: false
+  shm:
+    enabled: true
+    type: emptyDir
+    medium: Memory
+    sizeLimit: 2Gi
+    globalMounts:
+      - path: /dev/shm
+        readOnly: false

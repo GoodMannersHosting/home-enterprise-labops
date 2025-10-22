@@ -5,5 +5,6 @@ namespace: aiml
 resources:
 - db-creds.yaml
 - db-superuser.yaml
+- hf.secret.yaml
 - namespace.yaml
 - oidc-secret.yaml
