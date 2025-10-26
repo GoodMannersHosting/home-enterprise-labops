@@ -6,72 +6,82 @@ metadata:
 spec:
   gatewayClassName: cilium
   listeners:
-  - name: http
-    protocol: HTTP
-    port: 80
-    hostname: "*.capi-core.homelab.danmanners.com"
-    allowedRoutes:
-      namespaces:
-        from: All
-  - name: http-cloud
-    protocol: HTTP
-    port: 80
-    hostname: "*.cloud.danmanners.com"
-    allowedRoutes:
-      namespaces:
-        from: All
-  - name: https
-    protocol: HTTPS
-    port: 443
-    hostname: "*.capi-core.homelab.danmanners.com"
-    allowedRoutes:
-      namespaces:
-        from: All
-    tls:
-      mode: Terminate
-      certificateRefs:
-      - name: wildcard
-        kind: Secret
-        group: ""
-  - name: https-cloud
-    protocol: HTTPS
-    port: 443
-    hostname: "*.cloud.danmanners.com"
-    allowedRoutes:
-      namespaces:
-        from: All
-    tls:
-      mode: Terminate
-      certificateRefs:
-      - name: wildcard
-        kind: Secret
-        group: ""
-  - name: argocd
-    protocol: TLS
-    port: 443
-    hostname: "argocd.cloud.danmanners.com"
-    allowedRoutes:
-      namespaces:
-        from: All
-    tls:
-      mode: Passthrough
-  - name: palworld-server
-    protocol: UDP
-    port: 8211
-    allowedRoutes:
-      namespaces:
-        from: Selector
-        selector:
-          matchLabels:
-            app.kubernetes.io/instance: palworld
-            app.kubernetes.io/name: palworld
-  - name: palworld-steam
-    protocol: UDP
-    port: 27015
-    allowedRoutes:
-      namespaces:
-        from: Selector
-        selector:
-          matchLabels:
-            app.kubernetes.io/instance: palworld
-            app.kubernetes.io/name: palworld
+    - name: http
+      protocol: HTTP
+      port: 80
+      hostname: "*.capi-core.homelab.danmanners.com"
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: http-cloud
+      protocol: HTTP
+      port: 80
+      hostname: "*.cloud.danmanners.com"
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: https
+      protocol: HTTPS
+      port: 443
+      hostname: "*.capi-core.homelab.danmanners.com"
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: wildcard
+            kind: Secret
+            group: ""
+    - name: https-cloud
+      protocol: HTTPS
+      port: 443
+      hostname: "*.cloud.danmanners.com"
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: wildcard
+            kind: Secret
+            group: ""
+    - name: argocd
+      protocol: TLS
+      port: 443
+      hostname: "argocd.cloud.danmanners.com"
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Passthrough
+    - name: forgejo-ssh
+      protocol: TCP
+      port: 22
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              app.kubernetes.io/instance: forgejo
+              app.kubernetes.io/name: forgejo
+    - name: palworld-server
+      protocol: UDP
+      port: 8211
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              app.kubernetes.io/instance: palworld
+              app.kubernetes.io/name: palworld
+    - name: palworld-steam
+      protocol: UDP
+      port: 27015
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              app.kubernetes.io/instance: palworld
+              app.kubernetes.io/name: palworld

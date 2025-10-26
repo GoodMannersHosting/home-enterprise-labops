@@ -1,0 +1,6 @@
+namespace: forgejo
+resources:
+  - namespace.yaml
+  - db-superuser.yaml
+  - secret.forgejo.yaml
+  - secret.meilisearch.yaml
