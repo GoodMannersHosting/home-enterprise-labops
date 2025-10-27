@@ -1,4 +1,4 @@
 resources:
-- gateway.yaml
-- cert-wildcard.yaml
-- https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.3.0/experimental-install.yaml
+  - gateway.yaml
+  - cert-wildcard.yaml
+  - https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.0/experimental-install.yaml
