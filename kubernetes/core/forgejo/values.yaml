@@ -56,10 +56,10 @@ controllers:
       main:
         ports:
           - name: http
-            containerPort: 3000
+            containerPort: &apiWebPort 3000
             protocol: TCP
           - name: ssh
-            containerPort: 222
+            containerPort: &apiSshPort 222
             protocol: TCP
         image:
           repository: harbor.cloud.danmanners.com/library/forgejo/forgejo
@@ -80,6 +80,8 @@ controllers:
             value: &domain "git.cloud.danmanners.com"
           - name: FORGEJO__SERVER__ROOT_URL
             value: "https://git.cloud.danmanners.com/"
+          - name: FORGEJO__SERVER__HTTP_PORT
+            value: 3000
           # - name: FORGEJO__SERVER__START_SSH_SERVER
           #   value: "true"
           # Repository Configuration
@@ -133,6 +135,21 @@ controllers:
           requests:
             cpu: 500m
             memory: 2Gi
+        probes:
+          liveness: &probes
+            enabled: true
+            custom: true
+            spec:
+              exec:
+                command:
+                  - curl
+                  - -sI
+                  - http://localhost:$(FORGEJO__SERVER__HTTP_PORT)
+              initialDelaySeconds: 5
+              periodSeconds: 10
+              timeoutSeconds: 1
+              failureThreshold: 3
+          readiness: *probes
 
   meilisearch:
     enabled: true
@@ -238,22 +255,26 @@ service:
       external-dns.alpha.kubernetes.io/ttl: "300"
 
 route:
-  core:
-    enabled: false
   api:
     enabled: true
     kind: HTTPRoute
     annotations:
       external-dns.alpha.kubernetes.io/controller: "false"
       gatus.home-operations.com/enabled: "false"
+      gatus.home-operations.com/endpoint: |-
+        name: Forgejo
+        conditions:
+          - "[STATUS] == 200"
+        url: https://git.cloud.danmanners.com/
+        method: HEAD
     parentRefs:
-      - group: gateway.networking.k8s.io
-        kind: Gateway
+      - kind: Gateway
+        group: gateway.networking.k8s.io
         name: gwapi
         namespace: default
         sectionName: https-cloud
     hostnames:
-      - *domain
+      - git.cloud.danmanners.com
     rules:
       - backendRefs:
           - name: forgejo-api
@@ -274,7 +295,7 @@ route:
         kind: Gateway
         name: gwapi
         namespace: default
-        sectionName: ssh-cloud
+        sectionName: forgejo-ssh
     rules:
       - backendRefs:
           - name: forgejo-api
