@@ -223,6 +223,15 @@ service:
         port: 80
         targetPort: http
         protocol: TCP
+
+  ssh:
+    enabled: true
+    controller: api
+    primary: false
+    type: LoadBalancer
+    annotations:
+      lbipam.cilium.io/ips: 172.31.0.30
+    ports:
       ssh:
         enabled: true
         port: 22
@@ -296,20 +305,6 @@ route:
         timeouts:
           backendRequest: 0s
           request: 0s
-  ssh:
-    enabled: true
-    kind: TCPRoute
-    parentRefs:
-      - group: gateway.networking.k8s.io
-        kind: Gateway
-        name: gwapi
-        namespace: default
-        sectionName: forgejo-ssh
-    rules:
-      - backendRefs:
-          - name: forgejo-api
-            port: 22
-            weight: 1
 
 persistence:
   forgejo-app-data:

@@ -58,9 +58,6 @@ spec:
           from: All
       tls:
         mode: Passthrough
-    - name: forgejo-ssh
-      protocol: TCP
-      port: 2222
     - name: palworld-server
       protocol: UDP
       port: 8211
