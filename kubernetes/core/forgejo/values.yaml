@@ -117,6 +117,15 @@ controllers:
           # Admin Configuration
           - name: FORGEJO__ADMIN__DEFAULT_EMAIL_NOTIFICATIONS
             value: "onmention"
+          # OIDC and OAUTH2 Configuration
+          - name: FORGEJO__OAUTH2_CLIENT__REGISTER_EMAIL_CONFIRM
+            value: "disabled"
+          - name: FORGEJO__OAUTH2_CLIENT__OPENID_CONNECT_SCOPES
+            value: "email profile groups"
+          - name: FORGEJO__OAUTH2_CLIENT__ENABLE_AUTO_REGISTRATION
+            value: "true"
+          - name: FORGEJO__OAUTH2_CLIENT__ACCOUNT_LINKING
+            value: "auto"
           # Cache Configuration
           - name: FORGEJO__CACHE__ADAPTER
             value: "redis"
