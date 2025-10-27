@@ -60,14 +60,7 @@ spec:
         mode: Passthrough
     - name: forgejo-ssh
       protocol: TCP
-      port: 22
-      allowedRoutes:
-        namespaces:
-          from: Selector
-          selector:
-            matchLabels:
-              app.kubernetes.io/instance: forgejo
-              app.kubernetes.io/name: forgejo
+      port: 2222
     - name: palworld-server
       protocol: UDP
       port: 8211
