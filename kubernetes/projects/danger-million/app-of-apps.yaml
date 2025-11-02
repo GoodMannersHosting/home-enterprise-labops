@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: danger-million
+  namespace: argocd
+spec:
+  destination:
+    namespace: danger-million
+    server: https://kubernetes.default.svc
+  project: danger-million
+  sources:
+    - repoURL: https://github.com/GoodMannersHosting/home-enterprise-education.git
+      targetRevision: main
+      path: danger-million/applications
+      directory: {} # We don't want to dive into the disabled directory, so recurse will not be set.
