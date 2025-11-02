@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: &ns danger-million
+  namespace: argocd
+spec:
+  description: Educational environment for the Wander Winter Namespace
+  roles:
+    - name: admin
+      description: "Admins can do anything for their project"
+      groups:
+        - *ns
+      policies:
+        - p, proj:danger-million:admin, applications, *, *, allow
+  clusterResourceBlacklist:
+    - group: "*"
+      kind: "*"
+  clusterResourceWhitelist:
+    - group: ""
+      kind: "persistentvolumes"
+  destinations:
+    # Allow deployments to danger-million namespace
+    - namespace: *ns
+      server: https://kubernetes.default.svc
+  sourceNamespaces:
+    - *ns
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  namespaceResourceBlacklist:
+    - group: ""
+      kind: "ResourceQuota"
+    - group: "ceph.rook.io"
+      kind: "*"
+    - group: "argoproj.io"
+      kind: "appprojects"
+  sourceRepos:
+    - "*"
