@@ -12,15 +12,15 @@ spec:
   renewBefore: 168h # 7 days
   commonName: "*.cloud.danmanners.com"
   dnsNames:
-  - "*.capi-core.homelab.danmanners.com"
-  - "*.cloud.danmanners.com"
+    # - "*.capi-core.homelab.danmanners.com"
+    - "*.cloud.danmanners.com"
   issuerRef:
     name: letsencrypt-dns01
     kind: ClusterIssuer
     group: cert-manager.io
   usages:
-  - server auth
-  - client auth
+    - server auth
+    - client auth
   secretTemplate:
     annotations:
       reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
