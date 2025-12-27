@@ -137,6 +137,15 @@ controllers:
           # Git Configuration
           - name: FORGEJO__GIT__MAX_GIT_DIFF_FILES
             value: "200"
+          # Runner Cron Configuration
+          - name: FORGEJO__CRON__CLEANUP_OFFLINE_RUNNERS__ENABLED
+            value: "true"
+          - name: FORGEJO__CRON__CLEANUP_OFFLINE_RUNNERS__RUN_AT_START
+            value: "true"
+          - name: FORGEJO__CRON__CLEANUP_OFFLINE_RUNNERS__GLOBAL_SCOPE_ONLY
+            value: "false"
+          - name: FORGEJO__CRON__CLEANUP_OFFLINE_RUNNERS__OLDER_THAN
+            value: "2h"
         resources:
           limits:
             cpu: 4
