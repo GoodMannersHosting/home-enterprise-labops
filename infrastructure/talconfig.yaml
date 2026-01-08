@@ -1,6 +1,6 @@
 clusterName: helo
 talosVersion: v1.11.1
-kubernetesVersion: 1.34.0
+kubernetesVersion: 1.35.0
 endpoint: "https://k8s.homelab.danmanners.com:6443"
 allowSchedulingOnControlPlanes: true
 cniConfig:
