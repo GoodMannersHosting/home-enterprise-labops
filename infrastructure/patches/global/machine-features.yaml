@@ -1,0 +1,11 @@
+machine:
+  features:
+    diskQuotaSupport: true
+    rbac: true
+    kubePrism:
+      enabled: true
+      port: 7445
+    hostDNS:
+      enabled: true
+      resolveMemberNames: false
+      forwardKubeDNSToHost: false

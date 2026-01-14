@@ -1,0 +1,9 @@
+machine:
+  network:
+    extraHostEntries:
+      - ip: 172.31.0.10
+        aliases:
+          - harbor.cloud.danmanners.com
+          - ollama.cloud.danmanners.com
+          - n8n.cloud.danmanners.com
+          - keycloak.cloud.danmanners.com

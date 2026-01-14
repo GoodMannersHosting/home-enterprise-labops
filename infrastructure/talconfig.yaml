@@ -1,5 +1,5 @@
 clusterName: helo
-talosVersion: v1.11.1
+talosVersion: v1.12.1
 kubernetesVersion: 1.35.0
 endpoint: "https://k8s.homelab.danmanners.com:6443"
 allowSchedulingOnControlPlanes: true
@@ -76,27 +76,7 @@ nodes:
       - name: nvidia_drm
       - name: nvidia_modeset
     patches:
-      - |-
-        - op: add
-          path: /machine/files
-          value:
-            - op: create
-              path: /etc/cri/conf.d/20-customization.part
-              content: |
-                [plugins."io.containerd.grpc.v1.cri"]
-                  enable_unprivileged_ports = true
-                  enable_unprivileged_icmp = true
-                [plugins."io.containerd.grpc.v1.cri".containerd]
-                  discard_unpacked_layers = false
-                [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
-                  discard_unpacked_layers = false
-                [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia]
-                  privileged_without_host_devices = false
-                  runtime_engine = ""
-                  runtime_root = ""
-                  runtime_type = "io.containerd.runc.v2"
-                [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.options]
-                  BinaryName = "/usr/bin/nvidia-container-runtime"
+      - "@./patches/workers/gpu-node-machine-files.yaml"
     schematic:
       customization:
         systemExtensions:
@@ -302,74 +282,6 @@ nodes:
           hardwareAddr: "e4:3a:6e:5b:a9:be"
         dhcp: false
 
-patches:
-  - |-
-    - op: add
-      path: /machine/install/wipe
-      value: true
-  - |-
-    - op: add
-      path: /machine/network/extraHostEntries
-      value:
-        - ip: 172.31.0.10
-          aliases:
-            - harbor.cloud.danmanners.com
-            - ollama.cloud.danmanners.com
-            - n8n.cloud.danmanners.com
-            - keycloak.cloud.danmanners.com
-  - |-
-    - op: add
-      path: /machine/sysctls
-      value:
-        net.core.bpf_jit_harden: 1
-        vm.max_map_count: 524288
-        fs.file-max: 131072
-        fs.inotify.max_user_instances: "8192"
-        fs.inotify.max_user_watches: "1048576"
-        net.core.default_qdisc: fq
-        net.core.rmem_max: "67108864"
-        net.core.wmem_max: "67108864"
-        net.ipv4.neigh.default.gc_thresh1: "4096"
-        net.ipv4.neigh.default.gc_thresh2: "8192"
-        net.ipv4.neigh.default.gc_thresh3: "16384"
-        net.ipv4.tcp_congestion_control: bbr
-        net.ipv4.tcp_fastopen: "3"
-        net.ipv4.tcp_mtu_probing: "1"
-        net.ipv4.tcp_rmem: 4096 87380 33554432
-        net.ipv4.tcp_window_scaling: "1"
-        net.ipv4.tcp_wmem: 4096 65536 33554432
-        sunrpc.tcp_max_slot_table_entries: "128"
-        sunrpc.tcp_slot_table_entries: "128"
-        user.max_user_namespaces: "11255"
-        vm.nr_hugepages: "1024"
-  - |-
-    - op: add
-      path: /machine/time
-      value:
-        servers: [time.cloudflare.com]
-  - |-
-    - op: add
-      path: /machine/features
-      value:
-        stableHostname: true
-        diskQuotaSupport: true
-        rbac: true
-        kubePrism:
-          enabled: true
-          port: 7445
-  - |-
-    - op: add
-      path: /machine/features/hostDNS
-      value:
-        enabled: true
-        resolveMemberNames: false
-        forwardKubeDNSToHost: false
-  - |-
-    - op: add
-      path: /cluster/proxy
-      value:
-        disabled: true
-
 controlPlane:
   schematic:
     customization:
@@ -382,78 +294,26 @@ controlPlane:
         - selinux=0 # Less security, faster puter
         - talos.auditd.disabled=1 # Less security, faster puter
   patches:
-    - |-
-      - op: add
-        path: /machine/kubelet/extraArgs
-        value:
-          rotate-server-certificates: true
-          rotate-certificates: true
-    - |-
-      - op: add
-        path: /cluster/coreDNS
-        value:
-          disabled: true
-    - |-
-      - op: remove
-        path: /cluster/apiServer/admissionControl
-    - |-
-      - op: add
-        path: /cluster/externalCloudProvider
-        value:
-          enabled: true
-    - |-
-      - op: add
-        path: /cluster/apiServer/extraArgs
-        value:
-          oidc-issuer-url: https://keycloak.cloud.danmanners.com/realms/gmh
-          oidc-client-id: helo-k8s
-          oidc-username-claim: preferred_username
-          oidc-username-prefix: "oidc:/"
-          oidc-groups-claim: groups
-          oidc-groups-prefix: "oidc:/"
-    - |-
-      - op: add
-        path: /machine/features/kubernetesTalosAPIAccess
-        value:
-          enabled: true
-          allowedRoles:
-            - os:admin
-          allowedKubernetesNamespaces:
-            - actions-runner-system
-            - system-upgrade
-    - |-
-      - op: add
-        path: /cluster/etcd/advertisedSubnets
-        value:
-          - 172.21.0.0/20
-    - |-
-      - op: add
-        path: /cluster/scheduler/config
-        value:
-          apiVersion: kubescheduler.config.k8s.io/v1
-          kind: KubeSchedulerConfiguration
-          profiles:
-            - schedulerName: default-scheduler
-              plugins:
-                score:
-                  disabled:
-                    - name: ImageLocality
-              pluginConfig:
-                - name: PodTopologySpread
-                  args:
-                    defaultingType: List
-                    defaultConstraints:
-                      - maxSkew: 1
-                        topologyKey: kubernetes.io/hostname
-                        whenUnsatisfiable: ScheduleAnyway
+    - "@./patches/controlplanes/machine-kubelet.yaml"
+    - "@./patches/controlplanes/cluster-core-dns.yaml"
+    - "@./patches/controlplanes/cluster-admission-controller.yaml"
+    - "@./patches/controlplanes/cluster-external-cloud-provider.yaml"
+    - "@./patches/controlplanes/cluster-apiserver-args.yaml"
+    - "@./patches/controlplanes/cluster-k8s-talos-api.yaml"
+    - "@./patches/controlplanes/cluster-etcd-subnets.yaml"
+    - "@./patches/controlplanes/cluster-scheduler.yaml"
 
 worker:
   schematic:
     customization:
       extraKernelArgs: *extraKernelArgs
   patches:
-    - |-
-      - op: add
-        path: /machine/kubelet/nodeIP
-        value:
-          validSubnets: [172.21.0.0/20]
+    - "@./patches/workers/machine-kubelet-nodeip.yaml"
+
+patches:
+  - "@./patches/global/machine-install-wipe.yaml"
+  - "@./patches/global/machine-network-extrahosts.yaml"
+  - "@./patches/global/machine-sysctls.yaml"
+  - "@./patches/global/machine-time.yaml"
+  - "@./patches/global/machine-features.yaml"
+  - "@./patches/global/cluster-proxy.yaml"

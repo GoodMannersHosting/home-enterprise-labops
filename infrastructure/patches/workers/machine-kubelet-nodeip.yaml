@@ -1,0 +1,5 @@
+machine:
+  kubelet:
+    nodeIP:
+      validSubnets:
+        - "172.21.0.0/20"

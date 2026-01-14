@@ -1,0 +1,3 @@
+cluster:
+  externalCloudProvider:
+    enabled: true
