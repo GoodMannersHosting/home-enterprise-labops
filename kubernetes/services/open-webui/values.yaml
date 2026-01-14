@@ -9,7 +9,7 @@ ollama:
       nvidia.com/gpu: "1"
     limits:
       memory: "24Gi"
-      cpu: "3"
+      cpu: "4"
       nvidia.com/gpu: "1"
   ollama:
     gpu:
@@ -23,11 +23,11 @@ ollama:
     pullPolicy: "Always"
   extraEnv:
     - name: "OLLAMA_NUM_PARALLEL"
-      value: "1"
+      value: "2"
     - name: "OLLAMA_FLASH_ATTENTION"
       value: "1"
     - name: "OLLAMA_MAX_LOADED_MODELS"
-      value: "1"
+      value: "2"
     # - name: "OLLAMA_KV_CACHE_TYPE"
     #   value: "q8_0"
   runtimeClassName: nvidia
