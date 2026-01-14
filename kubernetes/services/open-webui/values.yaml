@@ -8,7 +8,7 @@ ollama:
     requests:
       nvidia.com/gpu: "1"
     limits:
-      memory: "12Gi"
+      memory: "24Gi"
       cpu: "3"
       nvidia.com/gpu: "1"
   ollama:
