@@ -1,0 +1,4 @@
+machine:
+  time:
+    servers:
+      - time.cloudflare.com

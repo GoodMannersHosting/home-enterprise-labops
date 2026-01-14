@@ -1,0 +1,4 @@
+cluster:
+  etcd:
+    advertisedSubnets:
+      - "172.21.0.0/20"
