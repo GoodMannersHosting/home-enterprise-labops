@@ -212,6 +212,12 @@ controllers:
           - --pass-user-headers=true
           - --ssl-insecure-skip-verify=false
         resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
         env:
           - name: KEYCLOAK_CLIENT_ID
             valueFrom:
@@ -223,15 +229,9 @@ controllers:
               secretKeyRef:
                 name: listen-secrets
                 key: KEYCLOAK_CLIENT_SECRET
-        limits:
-          cpu: 100m
-          memory: 128Mi
-        requests:
-          cpu: 50m
-          memory: 64Mi
-      lifecycle: {}
-      terminationMessagePath: /dev/termination-log
-      terminationMessagePolicy: File
+        lifecycle: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
 
   rabbitmq:
     enabled: true
