@@ -23,7 +23,7 @@ controllers:
             protocol: TCP
         image:
           repository: ghcr.io/goodmannershosting/listen-api
-          tag: "sha-53b2920"
+          tag: "sha-79fa5f5"
           pullPolicy: "Always"
         securityContext:
           allowPrivilegeEscalation: false
@@ -86,7 +86,7 @@ controllers:
       worker:
         image:
           repository: ghcr.io/goodmannershosting/listen-worker
-          tag: "sha-53b2920"
+          tag: "sha-79fa5f5"
           pullPolicy: "Always"
         securityContext:
           allowPrivilegeEscalation: false
@@ -158,7 +158,7 @@ controllers:
       core:
         image:
           repository: ghcr.io/goodmannershosting/listen-worker
-          tag: "sha-53b2920"
+          tag: "sha-79fa5f5"
           pullPolicy: "Always"
         securityContext:
           allowPrivilegeEscalation: false
@@ -237,7 +237,7 @@ controllers:
             protocol: TCP
         image:
           repository: ghcr.io/goodmannershosting/listen-frontend
-          tag: "sha-53b2920"
+          tag: "sha-79fa5f5"
           pullPolicy: "Always"
         securityContext:
           allowPrivilegeEscalation: false
