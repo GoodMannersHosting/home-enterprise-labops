@@ -273,13 +273,7 @@ controllers:
           - --code-challenge-method=S256
           - --cookie-secret=f34ca6b3b8822bc581618f375fa97187
           - --cookie-secure=true
-          - --cookie-httponly=true
-          - --cookie-samesite=lax
           - --email-domain=*
-          - --set-authorization-header=true
-          - --pass-access-token=true
-          - --pass-user-headers=true
-          - --ssl-insecure-skip-verify=false
         resources:
           limits:
             cpu: 100m
