@@ -369,7 +369,7 @@ persistence:
   data:
     enabled: true
     type: persistentVolumeClaim
-    storageClass: ceph-block-retain
+    storageClass: cephfs-retain
     accessMode: ReadWriteOnce
     size: 20Gi
     retain: true
@@ -386,7 +386,7 @@ persistence:
   rabbitmq-data:
     enabled: true
     type: persistentVolumeClaim
-    storageClass: ceph-block-retain
+    storageClass: cephfs-retain
     accessMode: ReadWriteOnce
     size: 10Gi
     retain: true
