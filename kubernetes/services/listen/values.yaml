@@ -1,0 +1,404 @@
+---
+defaultPodOptions:
+  automountServiceAccountToken: true
+  enableServiceLinks: true
+  restartPolicy: Always
+  securityContext:
+    fsGroup: 1000
+    fsGroupChangePolicy: OnRootMismatch
+
+controllers:
+  api:
+    enabled: true
+    type: deployment
+    replicas: 1
+    revisionHistoryLimit: 2
+    containers:
+      core:
+        ports:
+          - name: http
+            containerPort: &apiPort 8000
+            protocol: TCP
+        image:
+          repository: ghcr.io/goodmannershosting/listen-api
+          tag: "sha-0febcfe"
+          pullPolicy: "Always"
+        securityContext:
+          allowPrivilegeEscalation: false
+        env:
+          - name: ENV
+            value: "dev"
+          - name: API_HOST
+            value: "0.0.0.0"
+          - name: API_PORT
+            value: "8000"
+          - name: DATABASE_URL
+            value: "sqlite:////data/listen.db"
+          - name: UPLOAD_DIR
+            value: "/data/uploads"
+          - name: RABBITMQ_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: listen-secrets
+                key: RABBITMQ_USERNAME
+          - name: RABBITMQ_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: listen-secrets
+                key: RABBITMQ_PASSWORD
+          # Note: Ideally RABBITMQ_URL should be added to the secret with full URL: amqp://username:password@listen-rabbitmq.aiml.svc.cluster.local:5672//
+          # For now, this assumes RabbitMQ service is at listen-rabbitmq.aiml.svc.cluster.local
+          # The application may need to construct the URL from RABBITMQ_USERNAME/PASSWORD, or RABBITMQ_URL should be added to secrets.yaml
+          - name: RABBITMQ_URL
+            value: "amqp://listen-rabbitmq.aiml.svc.cluster.local:5672//"
+          - name: WHISPER_MODEL
+            value: "turbo"
+          - name: AUDIO_CHUNK_SECONDS
+            value: "15"
+          - name: OPENWEBUI_URL
+            valueFrom:
+              secretKeyRef:
+                name: listen-secrets
+                key: OPENWEBUI_URL
+          - name: OPENWEBUI_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: listen-secrets
+                key: OPENWEBUI_API_KEY
+          - name: OPENWEBUI_DEFAULT_MODEL
+            value: "gpt-oss:20b"
+          - name: OPENWEBUI_MAX_TOKENS
+            value: "65535"
+          - name: OPENWEBUI_TEMPERATURE
+            value: "0.7"
+        resources:
+          limits:
+            cpu: 2
+            memory: 4Gi
+          requests:
+            cpu: 500m
+            memory: 2Gi
+        lifecycle: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+
+  worker:
+    enabled: true
+    type: deployment
+    replicas: 1
+    revisionHistoryLimit: 2
+    pod:
+      runtimeClassName: nvidia
+    containers:
+      core:
+        image:
+          repository: ghcr.io/goodmannershosting/listen-worker
+          tag: "sha-0febcfe"
+          pullPolicy: "Always"
+        securityContext:
+          allowPrivilegeEscalation: false
+        command:
+          - celery
+          - -A
+          - worker.celery_worker
+          - worker
+          - --loglevel=INFO
+          - --concurrency=2
+        env:
+          - name: ENV
+            value: "dev"
+          - name: DATABASE_URL
+            value: "sqlite:////data/listen.db"
+          - name: UPLOAD_DIR
+            value: "/data/uploads"
+          - name: RABBITMQ_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: listen-secrets
+                key: RABBITMQ_USERNAME
+          - name: RABBITMQ_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: listen-secrets
+                key: RABBITMQ_PASSWORD
+          # Note: Ideally RABBITMQ_URL should be added to the secret with full URL: amqp://username:password@rabbitmq.aiml.svc.cluster.local:5672//
+          # For now, this assumes RabbitMQ service is at rabbitmq.aiml.svc.cluster.local (adjust if different)
+          # The application may need to construct the URL from RABBITMQ_USERNAME/PASSWORD, or RABBITMQ_URL should be added to secrets.yaml
+          - name: RABBITMQ_URL
+            value: "amqp://listen-rabbitmq.aiml.svc.cluster.local:5672//"
+          - name: WHISPER_MODEL
+            value: "base"
+          - name: AUDIO_CHUNK_SECONDS
+            value: "15"
+          - name: OPENWEBUI_URL
+            valueFrom:
+              secretKeyRef:
+                name: listen-secrets
+                key: OPENWEBUI_URL
+          - name: OPENWEBUI_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: listen-secrets
+                key: OPENWEBUI_API_KEY
+          - name: OPENWEBUI_DEFAULT_MODEL
+            value: "gpt-oss:20b"
+          - name: OPENWEBUI_MAX_TOKENS
+            value: "65535"
+          - name: OPENWEBUI_TEMPERATURE
+            value: "0.7"
+        resources:
+          limits:
+            cpu: 2
+            memory: 4Gi
+          requests:
+            cpu: 500m
+            memory: 2Gi
+        lifecycle: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+
+  frontend:
+    enabled: true
+    type: deployment
+    replicas: 1
+    revisionHistoryLimit: 2
+    containers:
+      core:
+        ports:
+          - name: http
+            containerPort: 80
+            protocol: TCP
+        image:
+          repository: ghcr.io/goodmannershosting/listen-frontend
+          tag: "sha-0febcfe"
+          pullPolicy: "Always"
+        securityContext:
+          allowPrivilegeEscalation: false
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        lifecycle: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      oauth2-proxy:
+        ports:
+          - name: http
+            containerPort: &frontendPort 4180
+            protocol: TCP
+        image:
+          repository: quay.io/oauth2-proxy/oauth2-proxy
+          tag: "latest"
+          pullPolicy: "IfNotPresent"
+        securityContext:
+          allowPrivilegeEscalation: false
+        args:
+          - --provider=keycloak-oidc
+          - --client-id=$(KEYCLOAK_CLIENT_ID)
+          - --client-secret=$(KEYCLOAK_CLIENT_SECRET)
+          - --oidc-issuer-url=https://keycloak.cloud.danmanners.com/realms/gmh
+          - --redirect-url=https://listen.cloud.danmanners.com/oauth2/callback
+          - --upstream=http://127.0.0.1:80
+          - --http-address=0.0.0.0:4180
+          - --code-challenge-method=S256
+          - --cookie-secure=true
+          - --cookie-httponly=true
+          - --cookie-samesite=lax
+          - --set-authorization-header=true
+          - --pass-access-token=true
+          - --pass-user-headers=true
+          - --ssl-insecure-skip-verify=false
+        resources:
+        env:
+          - name: KEYCLOAK_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: listen-secrets
+                key: KEYCLOAK_CLIENT_ID
+          - name: KEYCLOAK_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: listen-secrets
+                key: KEYCLOAK_CLIENT_SECRET
+        limits:
+          cpu: 100m
+          memory: 128Mi
+        requests:
+          cpu: 50m
+          memory: 64Mi
+      lifecycle: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+
+  rabbitmq:
+    enabled: true
+    type: deployment
+    replicas: 1
+    revisionHistoryLimit: 2
+    containers:
+      core:
+        ports:
+          - name: amqp
+            containerPort: 5672
+            protocol: TCP
+          - name: management
+            containerPort: 15672
+            protocol: TCP
+        image:
+          repository: docker.io/library/rabbitmq
+          tag: "4.2-management"
+          pullPolicy: "IfNotPresent"
+        securityContext:
+          allowPrivilegeEscalation: false
+        env:
+          - name: RABBITMQ_DEFAULT_USER
+            valueFrom:
+              secretKeyRef:
+                name: listen-secrets
+                key: RABBITMQ_USERNAME
+          - name: RABBITMQ_DEFAULT_PASS
+            valueFrom:
+              secretKeyRef:
+                name: listen-secrets
+                key: RABBITMQ_PASSWORD
+        resources:
+          limits:
+            cpu: 1
+            memory: 2Gi
+          requests:
+            cpu: 250m
+            memory: 1Gi
+        lifecycle: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+
+service:
+  api:
+    enabled: true
+    controller: api
+    primary: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        port: *apiPort
+        targetPort: http
+        protocol: TCP
+
+  frontend:
+    enabled: true
+    controller: frontend
+    primary: false
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        port: *frontendPort
+        targetPort: http
+        protocol: TCP
+
+  rabbitmq:
+    enabled: true
+    controller: rabbitmq
+    primary: false
+    type: ClusterIP
+    ports:
+      amqp:
+        enabled: true
+        port: 5672
+        targetPort: amqp
+        protocol: TCP
+      management:
+        enabled: true
+        port: 15672
+        targetPort: management
+        protocol: TCP
+
+route:
+  api:
+    enabled: true
+    kind: HTTPRoute
+    annotations:
+      external-dns.alpha.kubernetes.io/controller: "false"
+      gatus.home-operations.com/enabled: "false"
+    parentRefs:
+      - group: gateway.networking.k8s.io
+        kind: Gateway
+        name: gwapi
+        namespace: default
+        sectionName: https-cloud
+    hostnames:
+      - listen-api.cloud.danmanners.com
+    rules:
+      - backendRefs:
+          - name: listen-api
+            port: *apiPort
+            weight: 1
+        matches:
+          - path:
+              type: PathPrefix
+              value: /
+        timeouts:
+          backendRequest: 0s
+          request: 0s
+
+  frontend:
+    enabled: true
+    kind: HTTPRoute
+    annotations:
+      external-dns.alpha.kubernetes.io/controller: "false"
+      gatus.home-operations.com/enabled: "false"
+    parentRefs:
+      - group: gateway.networking.k8s.io
+        kind: Gateway
+        name: gwapi
+        namespace: default
+        sectionName: https-cloud
+    hostnames:
+      - listen.cloud.danmanners.com
+    rules:
+      - backendRefs:
+          - name: listen-frontend
+            port: *frontendPort
+            weight: 1
+        matches:
+          - path:
+              type: PathPrefix
+              value: /
+        timeouts:
+          backendRequest: 0s
+          request: 0s
+
+persistence:
+  data:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-block-retain
+    accessMode: ReadWriteOnce
+    size: 20Gi
+    retain: true
+    advancedMounts:
+      api:
+        core:
+          - path: /data
+            readOnly: false
+      worker:
+        core:
+          - path: /data
+            readOnly: false
+
+  rabbitmq-data:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-block-retain
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    retain: true
+    advancedMounts:
+      rabbitmq:
+        core:
+          - path: /var/lib/rabbitmq
+            readOnly: false
