@@ -352,6 +352,8 @@ configMaps:
         server {
           listen 80;
 
+          proxy_buffer_size 8k;
+
           # Allow larger audio uploads (default is ~1MB, which triggers 413).
           client_max_body_size 512m;
 
