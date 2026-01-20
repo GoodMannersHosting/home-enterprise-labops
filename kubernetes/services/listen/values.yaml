@@ -204,7 +204,7 @@ controllers:
           - --upstream=http://127.0.0.1:80
           - --http-address=0.0.0.0:4180
           - --code-challenge-method=S256
-          - --cookie-secret=tJKqh1IsD/3cyrPFF/JALjraZeU1QdB4YukvpfmI1V0=
+          - --cookie-secret=f34ca6b3b8822bc581618f375fa97187
           - --cookie-secure=true
           - --cookie-httponly=true
           - --cookie-samesite=lax
