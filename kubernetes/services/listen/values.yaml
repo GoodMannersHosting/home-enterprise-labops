@@ -374,6 +374,19 @@ route:
           backendRequest: 0s
           request: 0s
 
+extraResources:
+  # Create the public Listen Web UI service
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: listen-extname
+      annotations:
+        external-dns.alpha.kubernetes.io/hostname: listen.cloud.danmanners.com
+        external-dns.alpha.kubernetes.io/ttl: "300"
+    spec:
+      type: ExternalName
+      externalName: unifi-home.homelab.danmanners.com
+
 persistence:
   data:
     enabled: true
