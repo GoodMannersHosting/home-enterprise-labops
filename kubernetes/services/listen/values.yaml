@@ -322,33 +322,6 @@ service:
         protocol: TCP
 
 route:
-  api:
-    enabled: true
-    kind: HTTPRoute
-    annotations:
-      external-dns.alpha.kubernetes.io/controller: "false"
-      gatus.home-operations.com/enabled: "false"
-    parentRefs:
-      - group: gateway.networking.k8s.io
-        kind: Gateway
-        name: gwapi
-        namespace: default
-        sectionName: https-cloud
-    hostnames:
-      - listen-api.cloud.danmanners.com
-    rules:
-      - backendRefs:
-          - name: listen-api
-            port: *apiPort
-            weight: 1
-        matches:
-          - path:
-              type: PathPrefix
-              value: /
-        timeouts:
-          backendRequest: 0s
-          request: 0s
-
   frontend:
     enabled: true
     kind: HTTPRoute
