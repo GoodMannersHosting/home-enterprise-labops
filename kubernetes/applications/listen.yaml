@@ -12,8 +12,11 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   sources:
-    - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
-      targetRevision: main
+    - repoURL: &url https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: &branch main
+      path: kubernetes/services/listen
+    - repoURL: *url
+      targetRevision: *branch
       ref: values
     - repoURL: https://bjw-s-labs.github.io/helm-charts
       chart: app-template
