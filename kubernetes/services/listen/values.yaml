@@ -11,8 +11,10 @@ controllers:
   api:
     enabled: true
     type: deployment
-    replicas: 2
+    replicas: 1
     revisionHistoryLimit: 2
+    pod:
+      runtimeClassName: nvidia
     containers:
       core:
         ports:
@@ -81,14 +83,77 @@ controllers:
         lifecycle: {}
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
+      worker:
+        image:
+          repository: ghcr.io/goodmannershosting/listen-worker
+          tag: "sha-53b2920"
+          pullPolicy: "Always"
+        securityContext:
+          allowPrivilegeEscalation: false
+        command:
+          - celery
+          - -A
+          - worker.celery_worker
+          - worker
+          - --loglevel=INFO
+          - --concurrency=2
+        env:
+          - name: ENV
+            value: "dev"
+          - name: DATABASE_URL
+            value: "sqlite:////data/listen.db"
+          - name: UPLOAD_DIR
+            value: "/data/uploads"
+          - name: RABBITMQ_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: listen-secrets
+                key: RABBITMQ_USERNAME
+          - name: RABBITMQ_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: listen-secrets
+                key: RABBITMQ_PASSWORD
+          - name: RABBITMQ_URL
+            value: "amqp://listen-rabbitmq.aiml.svc.cluster.local:5672//"
+          - name: WHISPER_MODEL
+            value: "base"
+          - name: AUDIO_CHUNK_SECONDS
+            value: "15"
+          - name: OPENWEBUI_URL
+            valueFrom:
+              secretKeyRef:
+                name: listen-secrets
+                key: OPENWEBUI_URL
+          - name: OPENWEBUI_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: listen-secrets
+                key: OPENWEBUI_API_KEY
+          - name: OPENWEBUI_DEFAULT_MODEL
+            value: "gpt-oss:20b"
+          - name: OPENWEBUI_MAX_TOKENS
+            value: "65535"
+          - name: OPENWEBUI_TEMPERATURE
+            value: "0.7"
+        resources:
+          limits:
+            cpu: 3
+            memory: 8Gi
+            nvidia.com/gpu: "1"
+          requests:
+            cpu: 500m
+            memory: 2Gi
+            nvidia.com/gpu: "1"
+        lifecycle: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
 
   worker:
-    enabled: true
+    enabled: false
     type: deployment
     replicas: 1
     revisionHistoryLimit: 2
-    pod:
-      runtimeClassName: nvidia
     containers:
       core:
         image:
@@ -369,7 +434,7 @@ persistence:
   data:
     enabled: true
     type: persistentVolumeClaim
-    storageClass: cephfs-retain
+    storageClass: ceph-block-retain
     accessMode: ReadWriteOnce
     size: 20Gi
     retain: true
@@ -378,15 +443,14 @@ persistence:
         core:
           - path: /data
             readOnly: false
-      worker:
-        core:
+        worker:
           - path: /data
             readOnly: false
 
   rabbitmq-data:
     enabled: true
     type: persistentVolumeClaim
-    storageClass: cephfs-retain
+    storageClass: ceph-block-retain
     accessMode: ReadWriteOnce
     size: 10Gi
     retain: true
