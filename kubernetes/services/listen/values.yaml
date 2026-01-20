@@ -148,11 +148,12 @@ controllers:
             value: "0.7"
         resources:
           limits:
-            cpu: 2
-            memory: 4Gi
+            cpu: 3
+            memory: 8Gi
           requests:
             cpu: 500m
             memory: 2Gi
+            nvidia.com/gpu: "1"
         lifecycle: {}
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
