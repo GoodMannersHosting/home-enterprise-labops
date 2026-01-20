@@ -15,6 +15,11 @@ controllers:
     revisionHistoryLimit: 2
     pod:
       runtimeClassName: nvidia
+      dnsPolicy: ClusterFirstWithHostNet
+      hostAliases:
+        - ip: "172.31.0.10"
+          hostnames:
+            - "ollama.cloud.danmanners.com"
     containers:
       core:
         ports:
