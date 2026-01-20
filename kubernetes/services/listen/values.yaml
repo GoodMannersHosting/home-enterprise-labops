@@ -21,7 +21,7 @@ controllers:
             protocol: TCP
         image:
           repository: ghcr.io/goodmannershosting/listen-api
-          tag: "sha-0febcfe"
+          tag: "sha-53b2920"
           pullPolicy: "Always"
         securityContext:
           allowPrivilegeEscalation: false
@@ -93,7 +93,7 @@ controllers:
       core:
         image:
           repository: ghcr.io/goodmannershosting/listen-worker
-          tag: "sha-0febcfe"
+          tag: "sha-53b2920"
           pullPolicy: "Always"
         securityContext:
           allowPrivilegeEscalation: false
@@ -171,7 +171,7 @@ controllers:
             protocol: TCP
         image:
           repository: ghcr.io/goodmannershosting/listen-frontend
-          tag: "sha-0febcfe"
+          tag: "sha-53b2920"
           pullPolicy: "Always"
         securityContext:
           allowPrivilegeEscalation: false
