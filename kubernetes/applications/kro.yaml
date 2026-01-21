@@ -1,0 +1,25 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kro
+  namespace: argocd
+  labels:
+    chartVersion: &chartVersion 0.7.1
+spec:
+  destination:
+    namespace: kro-system
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    name: kro
+    repoURL: registry.k8s.io/kro/charts
+    chart: kro
+    targetRevision: *chartVersion
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true
