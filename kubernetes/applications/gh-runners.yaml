@@ -5,7 +5,7 @@ metadata:
   name: gh-runners
   namespace: argocd
   labels:
-    controllerChartVersion: &chartVersion 0.12.1
+    controllerChartVersion: &chartVersion 0.13.1
 spec:
   ignoreDifferences:
     - &ignore
