@@ -6,12 +6,12 @@ metadata:
   name: shr
   namespace: github
   labels:
-    app.kubernetes.io/version: "0.12.1"
+    app.kubernetes.io/version: "0.13.1"
     actions.github.com/scale-set-name: shr
     actions.github.com/scale-set-namespace: github
     app.kubernetes.io/component: "autoscaling-runner-set"
   annotations:
-    actions.github.com/values-hash: 1319406b35e3b13fe35f9169db4bed59945400809fcce4de085b7570ab8dca9
+    actions.github.com/values-hash: 74c709d6fc85dec4ffc74b7eed8410dc978df0729a49a9e7e682d809dba2370
     actions.github.com/cleanup-manager-role-binding: shr-gha-rs-manager
     actions.github.com/cleanup-manager-role-name: shr-gha-rs-manager
     actions.github.com/cleanup-no-permission-service-account-name: shr-gha-rs-no-permission
@@ -51,7 +51,7 @@ spec:
               drop:
                 - ALL
         - name: dind
-          image: docker:dind
+          image: docker.io/library/docker:dind
           args:
             - dockerd
             - --host=unix:///var/run/docker.sock

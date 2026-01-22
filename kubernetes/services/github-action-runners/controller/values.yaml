@@ -9,12 +9,12 @@ serviceAccount:
   create: true
 
 flags:
-  logLevel: "debug"
+  logLevel: "info"
   logFormat: "json"
   runnerMaxConcurrentReconciles: 4
   updateStrategy: "eventual"
   excludeLabelPropagationPrefixes:
-  - "argocd.argoproj.io/instance"
+    - "argocd.argoproj.io/instance"
 
 k8sClientRateLimiterQPS: 20
 k8sClientRateLimiterBurst: 30
