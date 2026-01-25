@@ -5,7 +5,7 @@ defaultPodOptions:
   restartPolicy: Always
   runtimeClassName: nvidia
   securityContext:
-    fsGroup: 1000
+    fsGroup: 1001
     fsGroupChangePolicy: OnRootMismatch
 
 controllers:
