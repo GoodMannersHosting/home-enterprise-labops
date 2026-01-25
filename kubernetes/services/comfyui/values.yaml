@@ -18,7 +18,7 @@ controllers:
       prep-models-dir:
         image:
           repository: &repo harbor.cloud.danmanners.com/library/danmanners/comfyui
-          tag: &tag v0.3.60
+          tag: &tag v0.10.0
         command:
           - /bin/sh
           - -c
