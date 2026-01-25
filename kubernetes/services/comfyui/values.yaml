@@ -186,7 +186,7 @@ persistence:
     globalMounts:
       - path: /app/ComfyUI/output/
         readOnly: false
-  workflows:
+  user-data:
     enabled: true
     type: persistentVolumeClaim
     storageClass: ceph-block-retain
@@ -194,7 +194,7 @@ persistence:
     size: 4Gi
     retain: true
     globalMounts:
-      - path: /app/ComfyUI/user/default/workflows/
+      - path: /app/ComfyUI/user/
         readOnly: false
   custom-nodes:
     enabled: true
