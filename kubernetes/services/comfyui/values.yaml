@@ -171,7 +171,7 @@ persistence:
     type: persistentVolumeClaim
     storageClass: ceph-block-retain
     accessMode: ReadWriteOnce
-    size: 400Gi
+    size: 500Gi
     retain: true
     globalMounts:
       - path: /app/ComfyUI/models/
