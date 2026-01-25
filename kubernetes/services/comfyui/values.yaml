@@ -86,7 +86,7 @@ controllers:
           - name: NVIDIA_DRIVER_CAPABILITIES
             value: all
           - name: CLI_ARGS
-            value: "--verbose=DEBUG"
+            value: "--verbose=DEBUG --enable-manager"
         resources:
           limits:
             cpu: 6
