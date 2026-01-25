@@ -52,7 +52,7 @@ controllers:
       browser:
         image:
           repository: harbor.cloud.danmanners.com/library/gtsteffaniak/filebrowser
-          tag: 0.8.7-beta-slim
+          tag: 1.1.1-stable-slim
         ports:
           - name: browser
             containerPort: 80
