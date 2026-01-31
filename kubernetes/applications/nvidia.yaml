@@ -5,7 +5,7 @@ metadata:
   name: nvdp
   namespace: argocd
   labels:
-    chartVersion: &chartVersion 0.17.3
+    chartVersion: &chartVersion 0.18.2
 spec:
   destination:
     namespace: nvidia-device-plugin

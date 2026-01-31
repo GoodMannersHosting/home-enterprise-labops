@@ -5,7 +5,7 @@ metadata:
   name: reflector
   namespace: argocd
   labels:
-    chartVersion: &chartVersion 9.1.7
+    chartVersion: &chartVersion 10.0.3
 spec:
   destination:
     namespace: kube-system

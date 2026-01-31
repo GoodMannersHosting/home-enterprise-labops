@@ -5,7 +5,7 @@ metadata:
   name: metrics-server
   namespace: argocd
   labels:
-    chartVersion: &chartVersion 3.12.2
+    chartVersion: &chartVersion 3.13.0
 spec:
   destination:
     namespace: kube-system

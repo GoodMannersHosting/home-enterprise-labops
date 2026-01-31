@@ -5,7 +5,7 @@ metadata:
   name: istio
   namespace: argocd
   labels:
-    chartVersion: &chartVersion 1.26.0
+    chartVersion: &chartVersion 1.28.3
 spec:
   # Need the ignore differences to prevent ArgoCD from trying to update
   # the failurePolicy to Ignore. This is a known issue with Istio and

@@ -5,7 +5,7 @@ metadata:
   name: external-dns
   namespace: argocd
   labels:
-    chartVersion: &chartVersion 1.18.0
+    chartVersion: &chartVersion 1.20.0
 spec:
   destination:
     namespace: kube-system
