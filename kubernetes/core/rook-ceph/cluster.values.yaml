@@ -12,6 +12,10 @@ toolbox:
 #     - name: internal
 #       namespace: kube-system
 #       sectionName: https
+
+cephImage:
+  imagePullPolicy: IfNotPresent
+
 cephClusterSpec:
   cephConfig:
     global:
