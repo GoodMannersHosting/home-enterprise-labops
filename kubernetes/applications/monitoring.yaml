@@ -5,7 +5,7 @@ metadata:
   name: monitoring
   namespace: argocd
   labels:
-    chartVersion: &chartVersion 77.11.0
+    chartVersion: &chartVersion 81.4.2
 spec:
   destination:
     namespace: monitoring
