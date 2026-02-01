@@ -4,9 +4,6 @@ defaultPodOptions:
   automountServiceAccountToken: false
   enableServiceLinks: false
   restartPolicy: Always
-  # securityContext:
-  #   fsGroup: 1000
-  #   fsGroupChangePolicy: OnRootMismatch
 
 controllers:
   main:
@@ -76,7 +73,8 @@ service:
     enabled: true
     controller: main
     primary: true
-    type: ClusterIP
+    type: LoadBalancer
+    loadBalancerIP: 172.31.0.32
     ports:
       game:
         enabled: true
@@ -97,36 +95,6 @@ service:
     annotations:
       external-dns.alpha.kubernetes.io/hostname: valheim.cloud.danmanners.com
       external-dns.alpha.kubernetes.io/ttl: "300"
-
-route:
-  game:
-    enabled: true
-    kind: UDPRoute
-    parentRefs:
-      - group: gateway.networking.k8s.io
-        kind: Gateway
-        name: gwapi
-        namespace: default
-        sectionName: valheim-game
-    rules:
-      - backendRefs:
-          - name: valheim-main
-            port: 2456
-            weight: 1
-  query:
-    enabled: true
-    kind: UDPRoute
-    parentRefs:
-      - group: gateway.networking.k8s.io
-        kind: Gateway
-        name: gwapi
-        namespace: default
-        sectionName: valheim-query
-    rules:
-      - backendRefs:
-          - name: valheim-main
-            port: 2457
-            weight: 1
 
 persistence:
   config:

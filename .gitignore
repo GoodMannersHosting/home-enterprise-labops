@@ -9,3 +9,8 @@ age.txt
 
 *.venv/
 history/
+
+# Cursor things
+.helm-*.rc
+.helm-*.err
+.helm-*.yaml
