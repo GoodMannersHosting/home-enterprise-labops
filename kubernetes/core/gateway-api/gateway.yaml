@@ -78,3 +78,23 @@ spec:
             matchLabels:
               app.kubernetes.io/instance: palworld
               app.kubernetes.io/name: palworld
+    - name: valheim-game
+      protocol: UDP
+      port: 2456
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              app.kubernetes.io/instance: valheim
+              app.kubernetes.io/name: valheim
+    - name: valheim-query
+      protocol: UDP
+      port: 2457
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              app.kubernetes.io/instance: valheim
+              app.kubernetes.io/name: valheim
