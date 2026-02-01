@@ -4,9 +4,9 @@ defaultPodOptions:
   automountServiceAccountToken: false
   enableServiceLinks: false
   restartPolicy: Always
-  securityContext:
-    fsGroup: 1000
-    fsGroupChangePolicy: OnRootMismatch
+  # securityContext:
+  #   fsGroup: 1000
+  #   fsGroupChangePolicy: OnRootMismatch
 
 controllers:
   main:
@@ -34,19 +34,20 @@ controllers:
           pullPolicy: "Always"
         securityContext:
           allowPrivilegeEscalation: false
-          privileged: false
-          readOnlyRootFilesystem: false
-          runAsNonRoot: false
-          runAsUser: 0
-          runAsGroup: 0
-          procMount: Default
-          seccompProfile:
-            type: RuntimeDefault
-          capabilities:
-            drop:
-              - ALL
-            add:
-              - SYS_NICE
+          # privileged: false
+          # readOnlyRootFilesystem: false
+          # runAsNonRoot: false
+          # runAsUser: 0
+          # runAsGroup: 0
+          # procMount: Default
+          # seccompProfile:
+          #   type: RuntimeDefault
+          # capabilities:
+          #   drop:
+          #     - ALL
+          #   add:
+          #     - SYS_NICE
+          #     - CAP_NET_ADMIN
         env:
           - name: SERVER_NAME
             value: "Biscuitville"
