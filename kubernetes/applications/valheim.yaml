@@ -1,0 +1,34 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: valheim
+  namespace: argocd
+  labels:
+    chartVersion: &chartVersion 4.4.0
+spec:
+  destination:
+    namespace: gaming
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+    - repoURL: &repo https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: main
+      path: kubernetes/services/valheim
+    - repoURL: *repo
+      targetRevision: main
+      ref: values
+    - repoURL: https://bjw-s-labs.github.io/helm-charts
+      chart: app-template
+      targetRevision: *chartVersion
+      helm:
+        valueFiles:
+          - $values/kubernetes/services/valheim/values.yaml
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true
+

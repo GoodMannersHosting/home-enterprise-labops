@@ -1,0 +1,139 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+defaultPodOptions:
+  automountServiceAccountToken: false
+  enableServiceLinks: false
+  restartPolicy: Always
+  securityContext:
+    fsGroup: 1000
+    fsGroupChangePolicy: OnRootMismatch
+
+controllers:
+  main:
+    enabled: true
+    type: statefulset
+    replicas: 1
+    revisionHistoryLimit: 2
+    containers:
+      main:
+        ports:
+          - name: game
+            containerPort: 2456
+            protocol: UDP
+          - name: query
+            containerPort: 2457
+            protocol: UDP
+        image:
+          repository: ghcr.io/lloesche/valheim-server
+          tag: "latest"
+          pullPolicy: "IfNotPresent"
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            add:
+              - SYS_NICE
+        env:
+          - name: SERVER_NAME
+            value: "Biscuitville"
+          - name: WORLD_NAME
+            value: "Biscuithalla"
+          - name: SERVER_PASS
+            valueFrom:
+              secretKeyRef:
+                name: valheim-secrets
+                key: SERVER_PASS
+          - name: TZ
+            value: "UTC"
+        resources:
+          limits:
+            cpu: 4000m
+            memory: 8Gi
+          requests:
+            cpu: 2000m
+            memory: 4Gi
+        lifecycle: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+
+service:
+  main:
+    enabled: true
+    controller: main
+    primary: true
+    type: ClusterIP
+    ports:
+      game:
+        enabled: true
+        port: 2456
+        targetPort: game
+        protocol: UDP
+      query:
+        enabled: true
+        port: 2457
+        targetPort: query
+        protocol: UDP
+  extname:
+    enabled: true
+    primary: false
+    controller: main
+    type: ExternalName
+    externalName: unifi-home.homelab.danmanners.com
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: valheim.cloud.danmanners.com
+      external-dns.alpha.kubernetes.io/ttl: "300"
+
+route:
+  game:
+    enabled: true
+    kind: UDPRoute
+    parentRefs:
+      - group: gateway.networking.k8s.io
+        kind: Gateway
+        name: gwapi
+        namespace: default
+        sectionName: valheim-game
+    rules:
+      - backendRefs:
+          - name: valheim-main
+            port: 2456
+            weight: 1
+  query:
+    enabled: true
+    kind: UDPRoute
+    parentRefs:
+      - group: gateway.networking.k8s.io
+        kind: Gateway
+        name: gwapi
+        namespace: default
+        sectionName: valheim-query
+    rules:
+      - backendRefs:
+          - name: valheim-main
+            port: 2457
+            weight: 1
+
+persistence:
+  config:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-block-retain
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    retain: true
+    advancedMounts:
+      main:
+        main:
+          - path: /config
+            readOnly: false
+  data:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-block-retain
+    accessMode: ReadWriteOnce
+    size: 20Gi
+    retain: true
+    advancedMounts:
+      main:
+        main:
+          - path: /opt/valheim
+            readOnly: false
