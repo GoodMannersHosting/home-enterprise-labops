@@ -7,7 +7,7 @@ defaultPodOptions:
     runAsNonRoot: true
     runAsUser: 1000
     fsGroup: 1000
-    fsGroupChangePolicy: OnRootMismatch
+    # fsGroupChangePolicy: OnRootMismatch
 
 controllers:
   backend:
@@ -16,20 +16,6 @@ controllers:
     replicas: 1
     revisionHistoryLimit: 2
     initContainers:
-      fix-permissions:
-        image:
-          repository: docker.io/library/busybox
-          tag: "1.37"
-        command:
-          - sh
-          - -c
-          - |
-            chown -R 1000:1000 /data || true
-            chmod -R 755 /data || true
-            mkdir -p /data/storage/plugins || true
-            chown -R 1000:1000 /data/storage/plugins || true
-        securityContext:
-          runAsUser: 0
       wait-for-db:
         image:
           repository: docker.io/library/busybox
@@ -118,6 +104,8 @@ controllers:
             value: "filesystem"
           - name: STORAGE_PATH
             value: "/data/storage/artifacts"
+          - name: PLUGINS_PATH
+            value: "/data/storage/plugins"
           # Search Integration
           - name: MEILISEARCH_URL
             value: "http://artifact-keeper-meilisearch:7700"
@@ -127,6 +115,8 @@ controllers:
                 name: artifact-keeper-meilisearch-credentials
                 key: masterkey
           # Security Scanning
+          - name: TRIVY_URL
+            value: "http://artifact-keeper-trivy:8090"
           - name: SCAN_WORKSPACE_PATH
             value: "/data/storage/scan-workspace"
           # Logging
@@ -210,6 +200,8 @@ controllers:
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
         env:
           - name: MEILI_MASTER_KEY
             valueFrom:
@@ -236,6 +228,51 @@ controllers:
               timeoutSeconds: 5
               failureThreshold: 3
           readiness: *meilisearchProbes
+
+  trivy:
+    enabled: true
+    type: deployment
+    replicas: 1
+    containers:
+      main:
+        ports:
+          - name: http
+            containerPort: 8090
+            protocol: TCP
+        image:
+          repository: aquasec/trivy
+          tag: "latest"
+          pullPolicy: "IfNotPresent"
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+        command:
+          - server
+          - --listen
+          - 0.0.0.0:8090
+          - --cache-dir
+          - /data/.cache/trivy
+        resources:
+          limits:
+            cpu: 1
+            memory: 2Gi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        probes:
+          liveness: &trivyProbes
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /
+                port: http
+              initialDelaySeconds: 10
+              periodSeconds: 10
+              timeoutSeconds: 5
+              failureThreshold: 3
+          readiness: *trivyProbes
 
 service:
   backend:
@@ -271,6 +308,18 @@ service:
       http:
         enabled: true
         port: 7700
+        targetPort: http
+        protocol: TCP
+
+  trivy:
+    enabled: true
+    controller: trivy
+    primary: false
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        port: 8090
         targetPort: http
         protocol: TCP
 
@@ -354,4 +403,17 @@ persistence:
       meilisearch:
         main:
           - path: /data/data.meilisearch
+            readOnly: false
+
+  trivy-cache:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-block-retain
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    retain: true
+    advancedMounts:
+      trivy:
+        main:
+          - path: /data/.cache/trivy
             readOnly: false
