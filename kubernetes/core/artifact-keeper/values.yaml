@@ -3,8 +3,8 @@ defaultPodOptions:
   automountServiceAccountToken: false
   enableServiceLinks: true
   restartPolicy: Always
-  securityContext:
-    fsGroup: 1000
+  # securityContext:
+  #   fsGroup: 999
 
 controllers:
   backend:
@@ -21,16 +21,62 @@ controllers:
           - sh
           - -c
           - |
+            # Check current user/group
+            echo "Current UID: $(id -u)"
+            echo "Current GID: $(id -g)"
+            echo "Current user: $(whoami)"
+
+            # Check /data permissions
+            echo "Checking /data permissions..."
+            ls -la /data || true
+
+            # Check if /data is writable by current user
+            if [ -w /data ]; then
+              echo "/data is writable by current user"
+            else
+              echo "ERROR: /data is NOT writable by current user"
+              exit 1
+            fi
+
+            # Check if /data is globally writable (group or other)
+            DATA_PERMS=$(stat -c "%a" /data 2>/dev/null || stat -f "%OLp" /data 2>/dev/null || echo "unknown")
+            echo "/data permissions: $DATA_PERMS"
+
+            # Check if permissions allow group/other write (last digit should be 2, 3, 6, or 7)
+            if echo "$DATA_PERMS" | grep -qE '[2367]$'; then
+              echo "/data appears to be writable by group or other"
+            else
+              echo "WARNING: /data may not be writable by group/other"
+            fi
+
+            # Verify we can write with current uid/gid
+            TEST_FILE="/data/.test_write_$(id -u)_$(id -g)"
+            if touch "$TEST_FILE" 2>/dev/null && rm -f "$TEST_FILE" 2>/dev/null; then
+              echo "SUCCESS: Can write to /data with current uid/gid"
+            else
+              echo "ERROR: Cannot write to /data with current uid/gid"
+              exit 1
+            fi
+
+            # All checks passed, create directories
+            echo "All permission checks passed. Creating directories..."
             mkdir -p /data/storage/artifacts
             mkdir -p /data/storage/plugins
             mkdir -p /data/storage/scan-workspace
-            # Ensure directories are writable by group (fsGroup: 1000)
-            chmod -R 775 /data/storage || true
-            # Verify permissions
+
+            # Verify directories were created and are writable
+            for dir in /data/storage/artifacts /data/storage/plugins /data/storage/scan-workspace; do
+              if [ -d "$dir" ] && [ -w "$dir" ]; then
+                echo "SUCCESS: $dir created and writable"
+              else
+                echo "ERROR: $dir not created or not writable"
+                exit 1
+              fi
+            done
+
+            # Final verification
+            echo "Final directory structure:"
             ls -la /data/storage || true
-        securityContext:
-          runAsUser: 1000
-          runAsGroup: 1000
       wait-for-db:
         image:
           repository: docker.io/library/busybox
@@ -81,7 +127,7 @@ controllers:
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: false
-          runAsUser: 1000
+          runAsUser: 999
         env:
           # Database Configuration
           - name: ARTIFACT_KEEPER_DB_USER
@@ -215,7 +261,7 @@ controllers:
         securityContext:
           allowPrivilegeEscalation: false
           runAsNonRoot: true
-          runAsUser: 1000
+          runAsUser: 999
         env:
           - name: MEILI_MASTER_KEY
             valueFrom:
@@ -260,7 +306,7 @@ controllers:
         securityContext:
           allowPrivilegeEscalation: false
           runAsNonRoot: true
-          runAsUser: 1000
+          runAsUser: 999
         command:
           - server
           - --listen
