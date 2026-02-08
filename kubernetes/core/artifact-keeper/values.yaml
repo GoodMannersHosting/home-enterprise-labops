@@ -1,0 +1,328 @@
+---
+defaultPodOptions:
+  automountServiceAccountToken: false
+  enableServiceLinks: true
+  restartPolicy: Always
+  securityContext:
+    fsGroup: 1000
+    fsGroupChangePolicy: OnRootMismatch
+
+controllers:
+  backend:
+    enabled: true
+    type: statefulset
+    replicas: 1
+    revisionHistoryLimit: 2
+    initContainers:
+      wait-for-db:
+        image:
+          repository: docker.io/library/busybox
+          tag: "1.37"
+        command:
+          - sh
+          - -c
+          - |
+            until nc -z -v -w30 db-rw.database.svc.cluster.local 5432
+            do
+              echo "Waiting for database connection..."
+              sleep 5
+            done
+            echo "Database is up - continuing..."
+      init-db:
+        image:
+          repository: ghcr.io/home-operations/postgres-init
+          tag: "17.6"
+        env:
+          - name: INIT_POSTGRES_DBNAME
+            value: artifact_registry
+          - name: INIT_POSTGRES_HOST
+            value: db-rw.database.svc.cluster.local
+          - name: INIT_POSTGRES_SUPER_PASS
+            valueFrom:
+              secretKeyRef:
+                name: db-superuser
+                key: password
+          - name: INIT_POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: artifact-keeper-database-credentials
+                key: username
+          - name: INIT_POSTGRES_PASS
+            valueFrom:
+              secretKeyRef:
+                name: artifact-keeper-database-credentials
+                key: password
+    containers:
+      main:
+        ports:
+          - name: http
+            containerPort: 8080
+            protocol: TCP
+        image:
+          repository: ghcr.io/artifact-keeper/artifact-keeper-backend
+          tag: "latest"
+          pullPolicy: "IfNotPresent"
+        securityContext:
+          allowPrivilegeEscalation: false
+        env:
+          # Database Configuration
+          - name: ARTIFACT_KEEPER_DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: artifact-keeper-database-credentials
+                key: username
+          - name: ARTIFACT_KEEPER_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: artifact-keeper-database-credentials
+                key: password
+          - name: DATABASE_URL
+            value: "postgresql://$(ARTIFACT_KEEPER_DB_USER):$(ARTIFACT_KEEPER_DB_PASSWORD)@db-rw.database.svc.cluster.local:5432/artifact_registry"
+          # JWT Secret
+          - name: JWT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: artifact-keeper-jwt-secret
+                key: jwt-secret
+          # Admin Password (optional, to skip first-boot setup)
+          - name: ADMIN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: artifact-keeper-admin-password
+                key: password
+          # Server Configuration
+          - name: HOST
+            value: "0.0.0.0"
+          - name: PORT
+            value: "8080"
+          # Storage Configuration
+          - name: STORAGE_BACKEND
+            value: "filesystem"
+          - name: STORAGE_PATH
+            value: "/data/storage/artifacts"
+          # Logging
+          - name: RUST_LOG
+            value: "info,artifact_keeper=debug"
+        resources:
+          limits:
+            cpu: 2
+            memory: 4Gi
+          requests:
+            cpu: 250m
+            memory: 512Mi
+        probes:
+          liveness: &backendProbes
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /health
+                port: http
+              initialDelaySeconds: 10
+              periodSeconds: 10
+              timeoutSeconds: 5
+              failureThreshold: 3
+          readiness: *backendProbes
+
+  web:
+    enabled: true
+    type: deployment
+    replicas: 1
+    revisionHistoryLimit: 2
+    containers:
+      main:
+        ports:
+          - name: http
+            containerPort: 3000
+            protocol: TCP
+        image:
+          repository: ghcr.io/artifact-keeper/artifact-keeper-web
+          tag: "latest"
+          pullPolicy: "IfNotPresent"
+        securityContext:
+          allowPrivilegeEscalation: false
+        env:
+          - name: NEXT_PUBLIC_API_URL
+            value: "https://registry.cloud.danmanners.com/api"
+        resources:
+          limits:
+            cpu: 1
+            memory: 2Gi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        probes:
+          liveness: &webProbes
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /
+                port: http
+              initialDelaySeconds: 10
+              periodSeconds: 10
+              timeoutSeconds: 5
+              failureThreshold: 3
+          readiness: *webProbes
+
+  meilisearch:
+    enabled: true
+    type: deployment
+    replicas: 1
+    containers:
+      main:
+        ports:
+          - name: http
+            containerPort: 7700
+            protocol: TCP
+        image:
+          repository: getmeili/meilisearch
+          tag: "v1.12"
+          pullPolicy: "IfNotPresent"
+        securityContext:
+          allowPrivilegeEscalation: false
+        env:
+          - name: MEILI_MASTER_KEY
+            valueFrom:
+              secretKeyRef:
+                name: artifact-keeper-meilisearch-credentials
+                key: masterkey
+        resources:
+          limits:
+            cpu: 1
+            memory: 2Gi
+          requests:
+            cpu: 250m
+            memory: 512Mi
+        probes:
+          liveness: &meilisearchProbes
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /health
+                port: http
+              initialDelaySeconds: 10
+              periodSeconds: 10
+              timeoutSeconds: 5
+              failureThreshold: 3
+          readiness: *meilisearchProbes
+
+service:
+  backend:
+    enabled: true
+    controller: backend
+    primary: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        port: 80
+        targetPort: http
+        protocol: TCP
+
+  web:
+    enabled: true
+    controller: web
+    primary: false
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        port: 80
+        targetPort: http
+        protocol: TCP
+
+  meilisearch:
+    enabled: true
+    controller: meilisearch
+    primary: false
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        port: 7700
+        targetPort: http
+        protocol: TCP
+
+  extname:
+    enabled: true
+    primary: false
+    controller: web
+    type: ExternalName
+    externalName: unifi-home.homelab.danmanners.com
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: registry.cloud.danmanners.com
+      external-dns.alpha.kubernetes.io/ttl: "300"
+
+route:
+  web:
+    enabled: true
+    kind: HTTPRoute
+    annotations:
+      external-dns.alpha.kubernetes.io/controller: "false"
+      gatus.home-operations.com/enabled: "false"
+      gatus.home-operations.com/endpoint: |-
+        name: Artifact Keeper
+        conditions:
+          - "[STATUS] == 200"
+        url: https://registry.cloud.danmanners.com/
+        method: HEAD
+    parentRefs:
+      - kind: Gateway
+        group: gateway.networking.k8s.io
+        name: gwapi
+        namespace: default
+        sectionName: https-cloud
+    hostnames:
+      - registry.cloud.danmanners.com
+    rules:
+      - backendRefs:
+          - name: artifact-keeper-backend
+            port: 80
+            weight: 1
+        matches:
+          - path:
+              type: PathPrefix
+              value: /api
+        timeouts:
+          backendRequest: 0s
+          request: 0s
+      - backendRefs:
+          - name: artifact-keeper-web
+            port: 80
+            weight: 1
+        matches:
+          - path:
+              type: PathPrefix
+              value: /
+        timeouts:
+          backendRequest: 0s
+          request: 0s
+
+persistence:
+  artifacts:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-block-retain
+    accessMode: ReadWriteOnce
+    size: 100Gi
+    retain: true
+    advancedMounts:
+      backend:
+        main:
+          - path: /data
+            readOnly: false
+
+  meilisearch-data:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-block-retain
+    accessMode: ReadWriteOnce
+    size: 20Gi
+    retain: true
+    advancedMounts:
+      meilisearch:
+        main:
+          - path: /data/data.meilisearch
+            readOnly: false

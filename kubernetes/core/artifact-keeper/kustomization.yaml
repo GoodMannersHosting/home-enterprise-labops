@@ -1,0 +1,7 @@
+namespace: artifact-keeper
+resources:
+  - namespace.yaml
+  - db-superuser.yaml
+  - secret.artifact-keeper.yaml
+  - secret.meilisearch.yaml
+
