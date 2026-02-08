@@ -3,11 +3,6 @@ defaultPodOptions:
   automountServiceAccountToken: false
   enableServiceLinks: true
   restartPolicy: Always
-  securityContext:
-    runAsNonRoot: true
-    runAsUser: 1000
-    fsGroup: 1000
-    # fsGroupChangePolicy: OnRootMismatch
 
 controllers:
   backend:
@@ -16,6 +11,18 @@ controllers:
     replicas: 1
     revisionHistoryLimit: 2
     initContainers:
+      create-storage-dirs:
+        image:
+          repository: docker.io/library/busybox
+          tag: "1.37"
+        command:
+          - sh
+          - -c
+          - |
+            mkdir -p /data/storage/artifacts
+            mkdir -p /data/storage/plugins
+            mkdir -p /data/storage/scan-workspace
+            chmod -R 755 /data/storage || true
       wait-for-db:
         image:
           repository: docker.io/library/busybox
@@ -66,7 +73,6 @@ controllers:
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: false
-          runAsNonRoot: true
           runAsUser: 1000
         env:
           # Database Configuration
