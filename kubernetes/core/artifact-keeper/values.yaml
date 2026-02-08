@@ -4,7 +4,9 @@ defaultPodOptions:
   enableServiceLinks: true
   restartPolicy: Always
   securityContext:
-    fsGroup: 999
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
     fsGroupChangePolicy: OnRootMismatch
 
 controllers:
@@ -14,19 +16,6 @@ controllers:
     replicas: 1
     revisionHistoryLimit: 2
     initContainers:
-      check-uid-gid:
-        image:
-          repository: ghcr.io/artifact-keeper/artifact-keeper-backend
-          tag: "latest"
-          pullPolicy: "IfNotPresent"
-        command:
-          - sh
-          - -c
-          - |
-            echo "Current UID: $(id -u)"
-            echo "Current GID: $(id -g)"
-            echo "User: $(whoami)"
-            echo "Groups: $(id -Gn)"
       fix-permissions:
         image:
           repository: docker.io/library/busybox
@@ -35,10 +24,10 @@ controllers:
           - sh
           - -c
           - |
-            chown -R 999:999 /data || true
+            chown -R 1000:1000 /data || true
             chmod -R 755 /data || true
             mkdir -p /data/storage/plugins || true
-            chown -R 999:999 /data/storage/plugins || true
+            chown -R 1000:1000 /data/storage/plugins || true
         securityContext:
           runAsUser: 0
       wait-for-db:
@@ -91,6 +80,8 @@ controllers:
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
         env:
           # Database Configuration
           - name: ARTIFACT_KEEPER_DB_USER
@@ -127,6 +118,17 @@ controllers:
             value: "filesystem"
           - name: STORAGE_PATH
             value: "/data/storage/artifacts"
+          # Search Integration
+          - name: MEILISEARCH_URL
+            value: "http://artifact-keeper-meilisearch:7700"
+          - name: MEILISEARCH_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: artifact-keeper-meilisearch-credentials
+                key: masterkey
+          # Security Scanning
+          - name: SCAN_WORKSPACE_PATH
+            value: "/data/storage/scan-workspace"
           # Logging
           - name: RUST_LOG
             value: "info,artifact_keeper=debug"
