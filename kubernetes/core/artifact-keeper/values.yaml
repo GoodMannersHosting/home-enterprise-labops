@@ -3,6 +3,8 @@ defaultPodOptions:
   automountServiceAccountToken: false
   enableServiceLinks: true
   restartPolicy: Always
+  securityContext:
+    fsGroup: 1000
 
 controllers:
   backend:
@@ -22,7 +24,13 @@ controllers:
             mkdir -p /data/storage/artifacts
             mkdir -p /data/storage/plugins
             mkdir -p /data/storage/scan-workspace
-            chmod -R 755 /data/storage || true
+            # Ensure directories are writable by group (fsGroup: 1000)
+            chmod -R 775 /data/storage || true
+            # Verify permissions
+            ls -la /data/storage || true
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
       wait-for-db:
         image:
           repository: docker.io/library/busybox
@@ -397,6 +405,9 @@ persistence:
         main:
           - path: /data
             readOnly: false
+        create-storage-dirs:
+          - path: /data
+            readOnly: false
 
   meilisearch-data:
     enabled: true
@@ -408,7 +419,7 @@ persistence:
     advancedMounts:
       meilisearch:
         main:
-          - path: /data/data.meilisearch
+          - path: /meili_data
             readOnly: false
 
   trivy-cache:
@@ -421,5 +432,17 @@ persistence:
     advancedMounts:
       trivy:
         main:
-          - path: /data/.cache/trivy
+          - path: /root/.cache/trivy
+            readOnly: false
+  trivy-scan-workspace:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-block-retain
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    retain: true
+    advancedMounts:
+      trivy:
+        main:
+          - path: /scan-workspace
             readOnly: false
