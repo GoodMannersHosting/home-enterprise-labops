@@ -251,8 +251,6 @@ controllers:
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: false
-          runAsNonRoot: true
-          runAsUser: *id
         env:
           - name: MEILI_MASTER_KEY
             valueFrom:
