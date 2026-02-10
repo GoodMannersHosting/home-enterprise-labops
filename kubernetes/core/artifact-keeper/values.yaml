@@ -214,6 +214,8 @@ controllers:
         env:
           - name: NEXT_PUBLIC_API_URL
             value: "https://registry.cloud.danmanners.com/api"
+          - name: BACKEND_URL
+            value: "http://artifact-keeper-backend:80"
         resources:
           limits:
             cpu: 1
@@ -315,7 +317,7 @@ controllers:
             custom: true
             spec:
               httpGet:
-                path: /
+                path: /healthz
                 port: http
               initialDelaySeconds: 10
               periodSeconds: 10
