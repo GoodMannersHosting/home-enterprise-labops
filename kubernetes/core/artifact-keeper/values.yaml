@@ -64,44 +64,9 @@ controllers:
               exit 1
             fi
 
-            # Create required subdirectories
-            echo "Creating required subdirectories..."
-            mkdir -p /data/storage/artifacts
-            mkdir -p /data/storage/plugins
-            mkdir -p /data/storage/scan-workspace
-
-            # Verify directories were created and are writable
-            for dir in /data/storage/artifacts /data/storage/plugins /data/storage/scan-workspace; do
-              if [ ! -d "$dir" ]; then
-                echo "ERROR: $dir not created"
-                exit 1
-              fi
-              
-              # Verify ownership
-              DIR_UID=$(stat -c "%u" "$dir" 2>/dev/null || stat -f "%u" "$dir" 2>/dev/null || echo "")
-              DIR_GID=$(stat -c "%g" "$dir" 2>/dev/null || stat -f "%g" "$dir" 2>/dev/null || echo "")
-              
-              if [ "$DIR_UID" = "$TARGET_UID" ] && [ "$DIR_GID" = "$TARGET_GID" ]; then
-                echo "SUCCESS: $dir ownership is correct ($TARGET_UID:$TARGET_GID)"
-              else
-                echo "ERROR: $dir ownership is incorrect ($DIR_UID:$DIR_GID, expected $TARGET_UID:$TARGET_GID)"
-                exit 1
-              fi
-              
-              # Verify directory is writable
-              if [ -w "$dir" ]; then
-                echo "SUCCESS: $dir is writable"
-              else
-                echo "ERROR: $dir is not writable"
-                exit 1
-              fi
-            done
-
             # Final verification
             echo "Final /data directory structure:"
             ls -la /data || true
-            echo "Final /data/storage directory structure:"
-            ls -la /data/storage || true
       wait-for-db:
         image:
           repository: docker.io/library/busybox
@@ -190,7 +155,7 @@ controllers:
             value: "filesystem"
           - name: STORAGE_PATH
             value: "/data/storage/artifacts"
-          - name: PLUGINS_PATH
+          - name: PLUGINS_DIR
             value: "/data/storage/plugins"
           # Search Integration
           - name: MEILISEARCH_URL
