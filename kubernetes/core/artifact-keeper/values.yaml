@@ -15,74 +15,77 @@ controllers:
     initContainers:
       create-storage-dirs:
         image:
-          repository: &akb "ghcr.io/artifact-keeper/artifact-keeper-backend"
-          tag: &akbTag "latest"
-        securityContext:
-          runAsUser: &id 999
-          runAsGroup: *id
-          # fsGroup: *id
+          repository: "docker.io/library/busybox"
+          tag: "1.37"
+        env:
+          - name: ARTIFACT_KEEPER_USER_ID
+            value: "999"
+          - name: ARTIFACT_KEEPER_GROUP_ID
+            value: "999"
         command:
           - sh
           - -c
           - |
-            # Check current user/group
-            echo "Current UID: $(id -u)"
-            echo "Current GID: $(id -g)"
-            echo "Current user: $(whoami)"
+            # Get target UID/GID from environment variables
+            TARGET_UID="${ARTIFACT_KEEPER_USER_ID:-999}"
+            TARGET_GID="${ARTIFACT_KEEPER_GROUP_ID:-999}"
+            echo "Target ownership: $TARGET_UID:$TARGET_GID"
 
             # Check /data permissions
             echo "Checking /data permissions..."
             ls -la /data || true
 
-            # Check if /data is writable by current user
+            # Check current ownership of /data
+            DATA_UID=$(stat -c "%u" /data 2>/dev/null || stat -f "%u" /data 2>/dev/null || echo "")
+            DATA_GID=$(stat -c "%g" /data 2>/dev/null || stat -f "%g" /data 2>/dev/null || echo "")
+            echo "Current /data ownership: $DATA_UID:$DATA_GID"
+
+            # Set ownership of entire /data directory to target UID/GID if there's a mismatch
+            if [ "$DATA_UID" != "$TARGET_UID" ] || [ "$DATA_GID" != "$TARGET_GID" ]; then
+              echo "Updating ownership of /data from $DATA_UID:$DATA_GID to $TARGET_UID:$TARGET_GID (recursive)"
+              chown -R "$TARGET_UID:$TARGET_GID" /data || {
+                echo "ERROR: Failed to chown /data"
+                exit 1
+              }
+            else
+              echo "Ownership of /data is correct ($TARGET_UID:$TARGET_GID)"
+            fi
+
+            # Ensure /data is writable (set permissions to 755 for directories, 644 for files)
+            chmod -R u+rwX,go+rX /data || {
+              echo "WARNING: Failed to set permissions on /data"
+            }
+
+            # Verify /data is writable
             if [ -w /data ]; then
-              echo "/data is writable by current user"
+              echo "SUCCESS: /data is writable"
             else
-              echo "ERROR: /data is NOT writable by current user"
-              # exit 1
+              echo "ERROR: /data is NOT writable after ownership change"
+              exit 1
             fi
 
-            # Check if /data is globally writable (group or other)
-            DATA_PERMS=$(stat -c "%a" /data 2>/dev/null || stat -f "%OLp" /data 2>/dev/null || echo "unknown")
-            echo "/data permissions: $DATA_PERMS"
+            # Create required subdirectories
+            echo "Creating required subdirectories..."
+            mkdir -p /data/storage/artifacts
+            mkdir -p /data/storage/plugins
+            mkdir -p /data/storage/scan-workspace
 
-            # Check if permissions allow group/other write (last digit should be 2, 3, 6, or 7)
-            if echo "$DATA_PERMS" | grep -qE '[2367]$'; then
-              echo "/data appears to be writable by group or other"
-            else
-              echo "WARNING: /data may not be writable by group/other"
-            fi
-
-            # All checks passed, create directories
-            echo "All permission checks passed. Creating directories..."
-            sudo mkdir -p /data/storage/artifacts
-            sudo mkdir -p /data/storage/plugins
-            sudo mkdir -p /data/storage/scan-workspace
-
-            # Get current UID/GID for ownership checks
-            CURRENT_UID=$(id -u)
-            CURRENT_GID=$(id -g)
-
-            # Verify directories were created and set ownership if needed
+            # Verify directories were created and are writable
             for dir in /data/storage/artifacts /data/storage/plugins /data/storage/scan-workspace; do
               if [ ! -d "$dir" ]; then
                 echo "ERROR: $dir not created"
                 exit 1
               fi
               
-              # Check current ownership
+              # Verify ownership
               DIR_UID=$(stat -c "%u" "$dir" 2>/dev/null || stat -f "%u" "$dir" 2>/dev/null || echo "")
               DIR_GID=$(stat -c "%g" "$dir" 2>/dev/null || stat -f "%g" "$dir" 2>/dev/null || echo "")
               
-              # Only update ownership if there's a mismatch
-              if [ "$DIR_UID" != "$CURRENT_UID" ] || [ "$DIR_GID" != "$CURRENT_GID" ]; then
-                echo "Updating ownership of $dir from $DIR_UID:$DIR_GID to $CURRENT_UID:$CURRENT_GID"
-                sudo chown -R "$CURRENT_UID:$CURRENT_GID" "$dir" || {
-                  echo "ERROR: Failed to chown $dir"
-                  exit 1
-                }
+              if [ "$DIR_UID" = "$TARGET_UID" ] && [ "$DIR_GID" = "$TARGET_GID" ]; then
+                echo "SUCCESS: $dir ownership is correct ($TARGET_UID:$TARGET_GID)"
               else
-                echo "Ownership of $dir is correct ($CURRENT_UID:$CURRENT_GID)"
+                echo "ERROR: $dir ownership is incorrect ($DIR_UID:$DIR_GID, expected $TARGET_UID:$TARGET_GID)"
+                exit 1
               fi
               
               # Verify directory is writable
@@ -95,7 +98,9 @@ controllers:
             done
 
             # Final verification
-            echo "Final directory structure:"
+            echo "Final /data directory structure:"
+            ls -la /data || true
+            echo "Final /data/storage directory structure:"
             ls -la /data/storage || true
       wait-for-db:
         image:
@@ -142,12 +147,13 @@ controllers:
             containerPort: 8080
             protocol: TCP
         image:
-          repository: *akb
-          tag: *akbTag
+          repository: &akb "ghcr.io/artifact-keeper/artifact-keeper-backend"
+          tag: &akbTag "latest"
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: false
-          runAsUser: *id
+          runAsUser: &id 999
+          runAsGroup: *id
         env:
           # Database Configuration
           - name: ARTIFACT_KEEPER_DB_USER
