@@ -53,20 +53,11 @@ controllers:
               echo "WARNING: /data may not be writable by group/other"
             fi
 
-            # # Verify we can write with current uid/gid
-            # TEST_FILE="/data/.test_write_$(id -u)_$(id -g)"
-            # if touch "$TEST_FILE" 2>/dev/null && rm -f "$TEST_FILE" 2>/dev/null; then
-            #   echo "SUCCESS: Can write to /data with current uid/gid"
-            # else
-            #   echo "ERROR: Cannot write to /data with current uid/gid"
-            #   exit 1
-            # fi
-
             # All checks passed, create directories
             echo "All permission checks passed. Creating directories..."
-            mkdir -p /data/storage/artifacts
-            mkdir -p /data/storage/plugins
-            mkdir -p /data/storage/scan-workspace
+            sudo mkdir -p /data/storage/artifacts
+            sudo mkdir -p /data/storage/plugins
+            sudo mkdir -p /data/storage/scan-workspace
 
             # Get current UID/GID for ownership checks
             CURRENT_UID=$(id -u)
@@ -86,7 +77,7 @@ controllers:
               # Only update ownership if there's a mismatch
               if [ "$DIR_UID" != "$CURRENT_UID" ] || [ "$DIR_GID" != "$CURRENT_GID" ]; then
                 echo "Updating ownership of $dir from $DIR_UID:$DIR_GID to $CURRENT_UID:$CURRENT_GID"
-                chown -R "$CURRENT_UID:$CURRENT_GID" "$dir" || {
+                sudo chown -R "$CURRENT_UID:$CURRENT_GID" "$dir" || {
                   echo "ERROR: Failed to chown $dir"
                   exit 1
                 }
