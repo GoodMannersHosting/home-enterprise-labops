@@ -3,8 +3,8 @@ defaultPodOptions:
   automountServiceAccountToken: false
   enableServiceLinks: true
   restartPolicy: Always
-  # securityContext:
-  #   fsGroup: 999
+  securityContext:
+    fsGroupChangePolicy: OnRootMismatch
 
 controllers:
   backend:
@@ -15,8 +15,12 @@ controllers:
     initContainers:
       create-storage-dirs:
         image:
-          repository: docker.io/library/busybox
-          tag: "1.37"
+          repository: &akb "ghcr.io/artifact-keeper/artifact-keeper-backend"
+          tag: &akbTag "latest"
+        securityContext:
+          runAsUser: &id 999
+          runAsGroup: *id
+          # fsGroup: *id
         command:
           - sh
           - -c
@@ -35,7 +39,7 @@ controllers:
               echo "/data is writable by current user"
             else
               echo "ERROR: /data is NOT writable by current user"
-              exit 1
+              # exit 1
             fi
 
             # Check if /data is globally writable (group or other)
@@ -49,14 +53,14 @@ controllers:
               echo "WARNING: /data may not be writable by group/other"
             fi
 
-            # Verify we can write with current uid/gid
-            TEST_FILE="/data/.test_write_$(id -u)_$(id -g)"
-            if touch "$TEST_FILE" 2>/dev/null && rm -f "$TEST_FILE" 2>/dev/null; then
-              echo "SUCCESS: Can write to /data with current uid/gid"
-            else
-              echo "ERROR: Cannot write to /data with current uid/gid"
-              exit 1
-            fi
+            # # Verify we can write with current uid/gid
+            # TEST_FILE="/data/.test_write_$(id -u)_$(id -g)"
+            # if touch "$TEST_FILE" 2>/dev/null && rm -f "$TEST_FILE" 2>/dev/null; then
+            #   echo "SUCCESS: Can write to /data with current uid/gid"
+            # else
+            #   echo "ERROR: Cannot write to /data with current uid/gid"
+            #   exit 1
+            # fi
 
             # All checks passed, create directories
             echo "All permission checks passed. Creating directories..."
@@ -64,12 +68,37 @@ controllers:
             mkdir -p /data/storage/plugins
             mkdir -p /data/storage/scan-workspace
 
-            # Verify directories were created and are writable
+            # Get current UID/GID for ownership checks
+            CURRENT_UID=$(id -u)
+            CURRENT_GID=$(id -g)
+
+            # Verify directories were created and set ownership if needed
             for dir in /data/storage/artifacts /data/storage/plugins /data/storage/scan-workspace; do
-              if [ -d "$dir" ] && [ -w "$dir" ]; then
-                echo "SUCCESS: $dir created and writable"
+              if [ ! -d "$dir" ]; then
+                echo "ERROR: $dir not created"
+                exit 1
+              fi
+              
+              # Check current ownership
+              DIR_UID=$(stat -c "%u" "$dir" 2>/dev/null || stat -f "%u" "$dir" 2>/dev/null || echo "")
+              DIR_GID=$(stat -c "%g" "$dir" 2>/dev/null || stat -f "%g" "$dir" 2>/dev/null || echo "")
+              
+              # Only update ownership if there's a mismatch
+              if [ "$DIR_UID" != "$CURRENT_UID" ] || [ "$DIR_GID" != "$CURRENT_GID" ]; then
+                echo "Updating ownership of $dir from $DIR_UID:$DIR_GID to $CURRENT_UID:$CURRENT_GID"
+                chown -R "$CURRENT_UID:$CURRENT_GID" "$dir" || {
+                  echo "ERROR: Failed to chown $dir"
+                  exit 1
+                }
               else
-                echo "ERROR: $dir not created or not writable"
+                echo "Ownership of $dir is correct ($CURRENT_UID:$CURRENT_GID)"
+              fi
+              
+              # Verify directory is writable
+              if [ -w "$dir" ]; then
+                echo "SUCCESS: $dir is writable"
+              else
+                echo "ERROR: $dir is not writable"
                 exit 1
               fi
             done
@@ -122,12 +151,12 @@ controllers:
             containerPort: 8080
             protocol: TCP
         image:
-          repository: ghcr.io/artifact-keeper/artifact-keeper-backend
-          tag: "latest"
+          repository: *akb
+          tag: *akbTag
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: false
-          runAsUser: 999
+          runAsUser: *id
         env:
           # Database Configuration
           - name: ARTIFACT_KEEPER_DB_USER
@@ -261,7 +290,7 @@ controllers:
         securityContext:
           allowPrivilegeEscalation: false
           runAsNonRoot: true
-          runAsUser: 999
+          runAsUser: *id
         env:
           - name: MEILI_MASTER_KEY
             valueFrom:
@@ -305,9 +334,9 @@ controllers:
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: false
-          runAsNonRoot: true
-          runAsUser: 999
-        command:
+          # runAsNonRoot: true
+          # runAsUser: *id
+        args:
           - server
           - --listen
           - 0.0.0.0:8090

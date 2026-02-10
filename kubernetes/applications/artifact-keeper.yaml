@@ -5,7 +5,7 @@ metadata:
   name: artifact-keeper
   namespace: argocd
   labels:
-    chartVersion: &chartVersion 4.4.0
+    chartVersion: &chartVersion 4.6.2
 spec:
   destination:
     namespace: artifact-keeper
@@ -31,4 +31,3 @@ spec:
     syncOptions:
       - ServerSideApply=true
       - CreateNamespace=true
-
