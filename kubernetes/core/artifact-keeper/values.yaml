@@ -384,6 +384,27 @@ service:
       external-dns.alpha.kubernetes.io/hostname: registry.cloud.danmanners.com
       external-dns.alpha.kubernetes.io/ttl: "300"
 
+rawResources:
+  backend-service:
+    enabled: true
+    apiVersion: v1
+    kind: Service
+    spec:
+      metadata:
+        name: backend
+        namespace: artifact-keeper
+      spec:
+        type: ClusterIP
+        selector:
+          app.kubernetes.io/controller: backend
+          app.kubernetes.io/instance: artifact-keeper
+          app.kubernetes.io/name: artifact-keeper
+        ports:
+          - name: http
+            port: 8080
+            targetPort: http
+            protocol: TCP
+
 route:
   web:
     enabled: true
