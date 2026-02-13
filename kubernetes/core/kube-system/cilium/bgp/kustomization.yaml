@@ -5,4 +5,5 @@ resources:
   - CiliumBGPAdvertisement.yaml
   - CiliumBGPClusterConfig.yaml
   - CiliumBGPPeerConfig.yaml
+  - CiliumL2AnnouncementPolicy.yaml
   - CiliumLoadBalancerIPPool.yaml
