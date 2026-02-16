@@ -89,12 +89,12 @@ controllers:
             value: "--verbose=DEBUG --enable-manager"
         resources:
           limits:
-            cpu: 6
-            memory: 40Gi
+            cpu: 4
+            memory: 32Gi
             nvidia.com/gpu: "1"
           requests:
-            cpu: 250m
-            memory: 1Gi
+            cpu: 2
+            memory: 16Gi
             nvidia.com/gpu: "1"
         lifecycle: {}
         terminationMessagePath: /dev/termination-log
