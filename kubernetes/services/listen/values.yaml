@@ -140,15 +140,15 @@ controllers:
           - name: OPENWEBUI_MAX_TOKENS
             value: "65535"
           - name: OPENWEBUI_TEMPERATURE
-            value: "0.7"
+            value: "0.85"
         resources:
           limits:
-            cpu: 3
-            memory: 8Gi
+            cpu: 2
+            memory: 2Gi
             nvidia.com/gpu: "1"
           requests:
             cpu: 500m
-            memory: 2Gi
+            memory: 1Gi
             nvidia.com/gpu: "1"
         lifecycle: {}
         terminationMessagePath: /dev/termination-log
