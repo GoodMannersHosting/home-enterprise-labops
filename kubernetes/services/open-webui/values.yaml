@@ -6,10 +6,12 @@ ollama:
   fullnameOverride: ""
   resources:
     requests:
-      nvidia.com/gpu: "1"
-    limits:
       memory: "24Gi"
       cpu: "4"
+      nvidia.com/gpu: "1"
+    limits:
+      memory: "48Gi"
+      cpu: "6"
       nvidia.com/gpu: "1"
   ollama:
     gpu:
