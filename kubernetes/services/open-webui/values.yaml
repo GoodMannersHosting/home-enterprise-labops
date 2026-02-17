@@ -195,3 +195,5 @@ extraEnvVars:
         key: POSTGRES_USER_PASSWORD
   - name: "POSTGRES_DB"
     value: "postgresql://ollama:$(POSTGRES_USER_PASSWORD)@db-rw.database.svc:5432/open-webui" #trufflehog:ignore
+  - name: "ENABLE_API_KEYS"
+    value: "true"
