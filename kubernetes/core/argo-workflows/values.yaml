@@ -44,55 +44,55 @@ extraObjects:
       annotations:
         workflows.argoproj.io/rbac-rule: "'ArgoCDAdmins' in groups"
         workflows.argoproj.io/rbac-rule-precedence: "1"
-  # - apiVersion: rbac.authorization.k8s.io/v1
-  #   kind: ClusterRole
-  #   metadata:
-  #     name: argo-workflows-admin
-  #   rules:
-  #     - apiGroups:
-  #         - argoproj.io
-  #       resources:
-  #         - workflows
-  #         - workfloweventbindings
-  #         - workfloweventbindings/finalizers
-  #         - workflowtemplates
-  #         - workflowtemplates/finalizers
-  #         - clusterworkflowtemplates
-  #         - clusterworkflowtemplates/finalizers
-  #         - cronworkflows
-  #         - cronworkflows/finalizers
-  #       verbs:
-  #         - create
-  #         - delete
-  #         - get
-  #         - list
-  #         - patch
-  #         - update
-  #         - watch
-  #     - apiGroups:
-  #         - ""
-  #       resources:
-  #         - pods
-  #         - pods/log
-  #         - configmaps
-  #         - persistentvolumeclaims
-  #       verbs:
-  #         - create
-  #         - delete
-  #         - get
-  #         - list
-  #         - patch
-  #         - update
-  #         - watch
-  # - apiVersion: rbac.authorization.k8s.io/v1
-  #   kind: ClusterRoleBinding
-  #   metadata:
-  #     name: argo-workflows-admin
-  #   roleRef:
-  #     apiGroup: rbac.authorization.k8s.io
-  #     kind: ClusterRole
-  #     name: argo-workflows-admin
-  #   subjects:
-  #     - kind: ServiceAccount
-  #       name: admin-user
-  #       namespace: argo
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: argo-workflows-custom-admin
+    rules:
+      - apiGroups:
+          - argoproj.io
+        resources:
+          - workflows
+          - workfloweventbindings
+          - workfloweventbindings/finalizers
+          - workflowtemplates
+          - workflowtemplates/finalizers
+          - clusterworkflowtemplates
+          - clusterworkflowtemplates/finalizers
+          - cronworkflows
+          - cronworkflows/finalizers
+        verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+      - apiGroups:
+          - ""
+        resources:
+          - pods
+          - pods/log
+          - configmaps
+          - persistentvolumeclaims
+        verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: argo-workflows-custom-admin
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: argo-workflows-custom-admin
+    subjects:
+      - kind: ServiceAccount
+        name: admin-user
+        namespace: argo
