@@ -74,6 +74,9 @@ extraObjects:
           - clusterworkflowtemplates/finalizers
           - cronworkflows
           - cronworkflows/finalizers
+          - eventsources
+          - sensors
+          - eventbuses
         verbs:
           - create
           - delete
