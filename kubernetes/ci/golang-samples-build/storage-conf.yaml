@@ -5,6 +5,13 @@ metadata:
   name: buildah-storage-conf
   namespace: cicd
 data:
+  policy.json: |
+    {
+      "default": [{"type": "insecureAcceptAnything"}],
+      "transports": {
+        "docker-daemon": {"": [{"type": "insecureAcceptAnything"}]}
+      }
+    }
   registries.conf: |
     unqualified-search-registries = ["docker.io"]
   storage.conf: |
