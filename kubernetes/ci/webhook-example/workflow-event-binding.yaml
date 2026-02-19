@@ -1,0 +1,21 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowEventBinding
+metadata:
+  name: webhook-hello
+  namespace: cicd
+spec:
+  event:
+    # Matches POST to /api/v1/events/cicd/webhook
+    selector: discriminator == "webhook"
+  submit:
+    workflowTemplateRef:
+      name: webhook-hello
+    # Optional: pass payload.message to customize the echoed text
+    # Omit arguments to use workflow default "triggered via webhook"
+    arguments:
+      parameters:
+        - name: message
+          valueFrom:
+            # payload.message ?? default when key is missing
+            event: 'payload.message ?? "triggered via webhook"'

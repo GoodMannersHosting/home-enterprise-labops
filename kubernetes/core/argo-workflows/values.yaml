@@ -3,7 +3,9 @@
 # Exposed at https://workflows.cloud.danmanners.com
 
 server:
+  # client: Bearer token for API (events webhook); sso: Keycloak for UI
   authModes:
+    - client
     - sso
   hostAliases:
     - ip: "172.31.0.10"
