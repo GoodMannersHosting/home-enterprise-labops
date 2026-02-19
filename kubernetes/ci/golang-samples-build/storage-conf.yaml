@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: buildah-storage-conf
+  namespace: cicd
+data:
+  storage.conf: |
+    [storage]
+    driver = "overlay"
+    runroot = "/storage/run/containers/storage"
+    graphroot = "/storage/.local/share/containers/storage"
+    rootless_storage_path = "/storage/.local/share/containers/storage"
+    [storage.options]
+    pull_options = {enable_partial_images = "true", use_hard_links = "false", ostree_repos=""}
+    [storage.options.overlay]

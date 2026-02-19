@@ -1,0 +1,26 @@
+---
+# Minimal RBAC for golang-samples-build workflow pods.
+# Argo executor needs create/patch on workflowtaskresults.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: golang-samples-build-executor
+  namespace: cicd
+rules:
+  - apiGroups: ["argoproj.io"]
+    resources: ["workflowtaskresults"]
+    verbs: ["create", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: golang-samples-build-executor
+  namespace: cicd
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: golang-samples-build-executor
+subjects:
+  - kind: ServiceAccount
+    name: golang-samples-build
+    namespace: cicd
