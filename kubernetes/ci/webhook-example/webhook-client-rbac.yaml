@@ -1,0 +1,37 @@
+---
+# Service account for webhook API authentication.
+# Used to obtain a Bearer token for curl requests to the events API.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: webhook-client
+  namespace: cicd
+---
+# Minimal RBAC: only create workflows and get workflow templates in cicd namespace.
+# No access to secrets, pods in other namespaces, or cluster-wide resources.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: webhook-submit-workflow
+  namespace: cicd
+rules:
+  - apiGroups: ["argoproj.io"]
+    resources: ["workflowtemplates", "workfloweventbindings"]
+    verbs: ["get", "list"]
+  - apiGroups: ["argoproj.io"]
+    resources: ["workflows"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: webhook-client-submit
+  namespace: cicd
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: webhook-submit-workflow
+subjects:
+  - kind: ServiceAccount
+    name: webhook-client
+    namespace: cicd

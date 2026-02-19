@@ -1,0 +1,23 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: webhook-hello
+  namespace: cicd
+spec:
+  # Workflow steps run as this SA - it has NO RBAC bindings (zero cluster access)
+  serviceAccountName: workflow-no-access
+  entrypoint: main
+  arguments:
+    parameters:
+      - name: message
+        value: "triggered via webhook"
+  templates:
+    - name: main
+      inputs:
+        parameters:
+          - name: message
+      container:
+        image: alpine:3.19
+        command: [echo]
+        args: ["{{inputs.parameters.message}}"]
