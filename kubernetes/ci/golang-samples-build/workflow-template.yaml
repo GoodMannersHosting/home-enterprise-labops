@@ -39,6 +39,10 @@ spec:
     - name: storage-conf
       configMap:
         name: buildah-storage-conf
+  hostAliases:
+    - ip: "172.31.0.10"
+      hostnames:
+        - "harbor.cloud.danmanners.com"
   templates:
     - name: build-push
       dag:
