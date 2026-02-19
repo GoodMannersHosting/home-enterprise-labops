@@ -13,27 +13,31 @@ A webhook-triggered workflow that you can trigger from the internet with curl. T
 
 ### Obtain a token
 
+Argo Workflows requires the legacy token from a Secret (not `kubectl create token`). After the argo-workflows and ci-workflows apps have synced, run:
+
 ```bash
-kubectl create token webhook-client -n cicd --duration=8760h
+TOKEN="Bearer $(kubectl get secret webhook-client.service-account-token -n argo -o=jsonpath='{.data.token}' | base64 --decode)"
 ```
+
+The Secret is created by the argo-workflows Helm chart. It may take a few seconds after sync for the token to be populated.
 
 ### Trigger the workflow
 
 ```bash
 # Basic trigger (uses default message "triggered via webhook")
 curl -X POST "https://workflows.cloud.danmanners.com/api/v1/events/cicd/webhook" \
-  -H "Authorization: Bearer $TOKEN" \
+  -H "Authorization: $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{}'
 
 # With custom message
 curl -X POST "https://workflows.cloud.danmanners.com/api/v1/events/cicd/webhook" \
-  -H "Authorization: Bearer $TOKEN" \
+  -H "Authorization: $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"message": "hello from curl"}'
 ```
 
 ### Security model
 
-- **webhook-client** SA: Minimal RBAC (create workflows, get templates in `cicd` only). Used for API auth.
+- **webhook-client** SA (argo namespace): Minimal RBAC (create workflows, get templates in `cicd` only). Used for API auth.
 - **workflow-no-access** SA: No RoleBindings. Workflow step pods run with zero cluster access.
