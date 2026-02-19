@@ -38,27 +38,9 @@ server:
       secretWhitelist:
         - argo-workflows-sso
         - admin-user.service-account-token
-        - default-user.service-account-token
 
-# SSO RBAC: Fallback ServiceAccount (matches all users; required so GetInfo/GetUserInfo work)
-# If no rule matches, Argo returns "no service account rule matches" -> Forbidden
+# SSO RBAC: Only ArgoCDAdmins can access; no fallback for other users
 extraObjects:
-  - apiVersion: v1
-    kind: ServiceAccount
-    metadata:
-      name: default-user
-      namespace: argo
-      annotations:
-        workflows.argoproj.io/rbac-rule: "true"
-        workflows.argoproj.io/rbac-rule-precedence: "0"
-  - apiVersion: v1
-    kind: Secret
-    metadata:
-      name: default-user.service-account-token
-      namespace: argo
-      annotations:
-        kubernetes.io/service-account.name: default-user
-    type: kubernetes.io/service-account-token
   - apiVersion: v1
     kind: ServiceAccount
     metadata:
@@ -101,6 +83,20 @@ extraObjects:
           - update
           - watch
       - apiGroups:
+          - events.argoproj.io
+        resources:
+          - eventsources
+          - sensors
+          - eventbuses
+        verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+      - apiGroups:
           - ""
         resources:
           - pods
@@ -126,7 +122,4 @@ extraObjects:
     subjects:
       - kind: ServiceAccount
         name: admin-user
-        namespace: argo
-      - kind: ServiceAccount
-        name: default-user
         namespace: argo
