@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: argo-workflows-extname
+  namespace: argo
+  annotations:
+    external-dns.alpha.kubernetes.io/alias: "true"
+    external-dns.alpha.kubernetes.io/hostname: workflows.cloud.danmanners.com
+    external-dns.alpha.kubernetes.io/ingress-hostname-source: annotation-only
+    external-dns.alpha.kubernetes.io/target: unifi-home.homelab.danmanners.com
+    external-dns.alpha.kubernetes.io/ttl: "300"
+spec:
+  externalName: unifi-home.homelab.danmanners.com
+  sessionAffinity: None
+  type: ExternalName

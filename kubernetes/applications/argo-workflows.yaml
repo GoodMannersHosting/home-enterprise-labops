@@ -1,0 +1,33 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argo-workflows
+  namespace: argocd
+  labels:
+    chartVersion: &chartVersion "0.47.4"
+spec:
+  destination:
+    namespace: argo
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+    - repoURL: &repo https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: main
+      path: kubernetes/core/argo-workflows
+    - repoURL: *repo
+      targetRevision: main
+      ref: values
+    - repoURL: https://argoproj.github.io/argo-helm
+      chart: argo-workflows
+      targetRevision: *chartVersion
+      helm:
+        valueFiles:
+          - $values/kubernetes/core/argo-workflows/values.yaml
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true
