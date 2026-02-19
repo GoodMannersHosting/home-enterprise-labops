@@ -1,0 +1,6 @@
+---
+namespace: argo
+resources:
+  - namespace.yaml
+  - oidc-secret.yaml
+  - external-dns.yaml
