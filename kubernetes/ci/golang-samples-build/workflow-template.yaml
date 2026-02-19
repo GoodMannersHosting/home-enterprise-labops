@@ -1,0 +1,168 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: golang-samples-build
+  namespace: cicd
+spec:
+  serviceAccountName: golang-samples-build
+  entrypoint: build-push
+  volumeClaimTemplates:
+    - metadata:
+        name: workspace
+      spec:
+        storageClassName: ceph-block
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi
+    - metadata:
+        name: amd64-storage
+      spec:
+        storageClassName: ceph-block
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi
+    - metadata:
+        name: arm64-storage
+      spec:
+        storageClassName: ceph-block
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi
+  volumes:
+    - name: registry-auth
+      secret:
+        secretName: harbor-push-cicd
+    - name: storage-conf
+      configMap:
+        name: buildah-storage-conf
+  templates:
+    - name: build-push
+      dag:
+        tasks:
+          - name: clone
+            template: git-clone
+          - name: build-amd64
+            dependencies: [clone]
+            template: buildah-build-amd64
+          - name: build-arm64
+            dependencies: [clone]
+            template: buildah-build-arm64
+          - name: manifest-push
+            dependencies: [build-amd64, build-arm64]
+            template: manifest-push
+
+    - name: git-clone
+      container:
+        image: docker.io/alpine/git:v2.52.0
+        command: [sh, -c]
+        args:
+          - |
+            git clone --depth 1 https://github.com/GoogleCloudPlatform/golang-samples.git /workspace/golang-samples
+        volumeMounts:
+          - name: workspace
+            mountPath: /workspace
+
+    - name: buildah-build-amd64
+      container:
+        image: quay.io/containers/buildah:v1.42.2
+        command: [sh, -c]
+        args:
+          - |
+            set -e
+            buildah login --authfile /auth/.dockerconfigjson harbor.cloud.danmanners.com
+            buildah bud --arch amd64 \
+              -t harbor.cloud.danmanners.com/library/golang-samples:demo-amd64 \
+              /workspace/golang-samples/run/helloworld
+            buildah push harbor.cloud.danmanners.com/library/golang-samples:demo-amd64
+        env:
+          - name: REGISTRY_AUTH_FILE
+            value: /auth/.dockerconfigjson
+          - name: STORAGE_DRIVER
+            value: overlay
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+          seccompProfile:
+            type: Unconfined
+        volumeMounts:
+          - name: workspace
+            mountPath: /workspace
+          - name: amd64-storage
+            mountPath: /storage
+          - name: storage-conf
+            mountPath: /etc/containers/
+          - name: registry-auth
+            mountPath: /auth
+            readOnly: true
+
+    - name: buildah-build-arm64
+      container:
+        image: quay.io/containers/buildah:v1.42.2
+        command: [sh, -c]
+        args:
+          - |
+            set -e
+            buildah login --authfile /auth/.dockerconfigjson harbor.cloud.danmanners.com
+            buildah bud --arch arm64 \
+              -t harbor.cloud.danmanners.com/library/golang-samples:demo-arm64 \
+              /workspace/golang-samples/run/helloworld
+            buildah push harbor.cloud.danmanners.com/library/golang-samples:demo-arm64
+        env:
+          - name: REGISTRY_AUTH_FILE
+            value: /auth/.dockerconfigjson
+          - name: STORAGE_DRIVER
+            value: overlay
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+          seccompProfile:
+            type: Unconfined
+        volumeMounts:
+          - name: workspace
+            mountPath: /workspace
+          - name: arm64-storage
+            mountPath: /storage
+          - name: storage-conf
+            mountPath: /etc/containers/
+          - name: registry-auth
+            mountPath: /auth
+            readOnly: true
+
+    - name: manifest-push
+      container:
+        image: quay.io/containers/buildah:v1.42.2
+        command: [sh, -c]
+        args:
+          - |
+            set -e
+            buildah login --authfile /auth/.dockerconfigjson harbor.cloud.danmanners.com
+            buildah manifest create golang-samples-demo
+            buildah manifest add golang-samples-demo docker://harbor.cloud.danmanners.com/library/golang-samples:demo-amd64
+            buildah manifest add golang-samples-demo docker://harbor.cloud.danmanners.com/library/golang-samples:demo-arm64
+            buildah manifest push --all golang-samples-demo docker://harbor.cloud.danmanners.com/library/golang-samples:demo
+        env:
+          - name: REGISTRY_AUTH_FILE
+            value: /auth/.dockerconfigjson
+          - name: STORAGE_DRIVER
+            value: overlay
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+          seccompProfile:
+            type: Unconfined
+        volumeMounts:
+          - name: storage
+            mountPath: /storage
+          - name: storage-conf
+            mountPath: /etc/containers/
+          - name: registry-auth
+            mountPath: /auth
+            readOnly: true
+      volumes:
+        - name: storage
+          emptyDir:
+            sizeLimit: 1Gi

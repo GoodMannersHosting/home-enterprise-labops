@@ -10,3 +10,7 @@ resources:
   - webhook-example/workflow-template.yaml
   - webhook-example/workflow-event-binding.yaml
   - webhook-example/webhook-client-rbac.yaml
+  - golang-samples-build/storage-conf.yaml
+  - golang-samples-build/service-account.yaml
+  - golang-samples-build/rbac.yaml
+  - golang-samples-build/workflow-template.yaml
