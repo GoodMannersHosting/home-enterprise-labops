@@ -6,6 +6,7 @@ namespace: cicd
 
 resources:
   - webhook-example/workflow-sa.yaml
+  - webhook-example/workflow-executor-rbac.yaml
   - webhook-example/workflow-template.yaml
   - webhook-example/workflow-event-binding.yaml
   - webhook-example/webhook-client-rbac.yaml

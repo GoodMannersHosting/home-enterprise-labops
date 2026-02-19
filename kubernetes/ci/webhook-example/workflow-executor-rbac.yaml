@@ -1,0 +1,27 @@
+---
+# Minimal RBAC for workflow step pods to function.
+# Argo executor needs create/patch on workflowtaskresults to report results.
+# No access to secrets, other pods, configmaps, or cluster resources.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: workflow-executor-minimal
+  namespace: cicd
+rules:
+  - apiGroups: ["argoproj.io"]
+    resources: ["workflowtaskresults"]
+    verbs: ["create", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: workflow-no-access-executor
+  namespace: cicd
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: workflow-executor-minimal
+subjects:
+  - kind: ServiceAccount
+    name: workflow-no-access
+    namespace: cicd
