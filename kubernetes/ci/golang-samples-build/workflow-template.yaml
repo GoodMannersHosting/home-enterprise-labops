@@ -61,10 +61,19 @@ spec:
         command: [sh, -c]
         args:
           - |
-            git clone --depth 1 https://github.com/GoogleCloudPlatform/golang-samples.git /workspace/golang-samples
+            set -e
+            git clone --depth 1 \
+              https://github.com/GoogleCloudPlatform/golang-samples.git \
+              /workspace/golang-samples
+            cp -a /workspace/golang-samples /amd64/source/
+            cp -a /workspace/golang-samples /arm64/source/
         volumeMounts:
           - name: workspace
             mountPath: /workspace
+          - name: amd64-storage
+            mountPath: /amd64
+          - name: arm64-storage
+            mountPath: /arm64
 
     - name: buildah-build-amd64
       container:
@@ -73,10 +82,9 @@ spec:
         args:
           - |
             set -e
-            buildah login --authfile /auth/.dockerconfigjson harbor.cloud.danmanners.com
+            cd /storage/source/run/helloworld
             buildah bud --arch amd64 \
-              -t harbor.cloud.danmanners.com/library/golang-samples:demo-amd64 \
-              /workspace/golang-samples/run/helloworld
+              -t harbor.cloud.danmanners.com/library/golang-samples:demo-amd64 .
             buildah push harbor.cloud.danmanners.com/library/golang-samples:demo-amd64
         env:
           - name: REGISTRY_AUTH_FILE
@@ -89,8 +97,6 @@ spec:
           seccompProfile:
             type: Unconfined
         volumeMounts:
-          - name: workspace
-            mountPath: /workspace
           - name: amd64-storage
             mountPath: /storage
           - name: storage-conf
@@ -106,10 +112,9 @@ spec:
         args:
           - |
             set -e
-            buildah login --authfile /auth/.dockerconfigjson harbor.cloud.danmanners.com
+            cd /storage/source/run/helloworld
             buildah bud --arch arm64 \
-              -t harbor.cloud.danmanners.com/library/golang-samples:demo-arm64 \
-              /workspace/golang-samples/run/helloworld
+              -t harbor.cloud.danmanners.com/library/golang-samples:demo-arm64 .
             buildah push harbor.cloud.danmanners.com/library/golang-samples:demo-arm64
         env:
           - name: REGISTRY_AUTH_FILE
@@ -122,8 +127,6 @@ spec:
           seccompProfile:
             type: Unconfined
         volumeMounts:
-          - name: workspace
-            mountPath: /workspace
           - name: arm64-storage
             mountPath: /storage
           - name: storage-conf
@@ -139,7 +142,6 @@ spec:
         args:
           - |
             set -e
-            buildah login --authfile /auth/.dockerconfigjson harbor.cloud.danmanners.com
             buildah manifest create golang-samples-demo
             buildah manifest add golang-samples-demo docker://harbor.cloud.danmanners.com/library/golang-samples:demo-amd64
             buildah manifest add golang-samples-demo docker://harbor.cloud.danmanners.com/library/golang-samples:demo-arm64

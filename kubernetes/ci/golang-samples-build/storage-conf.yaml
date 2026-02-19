@@ -5,6 +5,8 @@ metadata:
   name: buildah-storage-conf
   namespace: cicd
 data:
+  registries.conf: |
+    unqualified-search-registries = ["docker.io"]
   storage.conf: |
     [storage]
     driver = "overlay"
