@@ -1,6 +1,6 @@
 ---
-# Service account with NO cluster access - used by workflow step pods.
-# No RoleBinding or ClusterRoleBinding - pods run with zero RBAC permissions.
+# Service account for workflow step pods.
+# Minimal RBAC: only workflowtaskresults (create/patch) for Argo executor - no cluster access.
 apiVersion: v1
 kind: ServiceAccount
 metadata:

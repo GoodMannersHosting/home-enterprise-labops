@@ -40,4 +40,4 @@ curl -X POST "https://workflows.cloud.danmanners.com/api/v1/events/cicd/webhook"
 ### Security model
 
 - **webhook-client** SA (argo namespace): Minimal RBAC (create workflows, get templates in `cicd` only). Used for API auth.
-- **workflow-no-access** SA: No RoleBindings. Workflow step pods run with zero cluster access.
+- **workflow-no-access** SA: Minimal RBAC (workflowtaskresults create/patch only). No access to secrets, other pods, or cluster resources.
