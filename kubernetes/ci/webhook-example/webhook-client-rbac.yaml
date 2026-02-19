@@ -1,12 +1,6 @@
 ---
-# Service account for webhook API authentication.
-# Used to obtain a Bearer token for curl requests to the events API.
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: webhook-client
-  namespace: cicd
----
+# webhook-client SA lives in argo namespace (argo-workflows extraObjects).
+# This Role + RoleBinding grants it minimal RBAC in cicd: create workflows, get templates.
 # Minimal RBAC: only create workflows and get workflow templates in cicd namespace.
 # No access to secrets, pods in other namespaces, or cluster-wide resources.
 apiVersion: rbac.authorization.k8s.io/v1
@@ -34,4 +28,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: webhook-client
-    namespace: cicd
+    namespace: argo
