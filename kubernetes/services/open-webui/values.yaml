@@ -21,7 +21,7 @@ ollama:
       pull: []
       run: []
   image:
-    tag: "0.16.1"
+    tag: "0.17.5"
     pullPolicy: "Always"
   extraEnv:
     - name: "OLLAMA_NUM_PARALLEL"
@@ -58,7 +58,7 @@ clusterDomain: cluster.local
 
 image:
   repository: ghcr.io/open-webui/open-webui
-  tag: "0.8.2"
+  tag: "0.8.8"
   pullPolicy: "IfNotPresent"
 
 serviceAccount:
