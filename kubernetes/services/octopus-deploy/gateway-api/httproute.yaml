@@ -12,7 +12,7 @@ metadata:
       name: Octopus Deploy
       conditions:
         - "[STATUS] == 200"
-      url: http://octopus-deploy-gw.octopus.svc.cluster.local/
+      url: http://octopus-deploy.octopus.svc.cluster.local/
       method: GET
 spec:
   hostnames:
@@ -28,7 +28,7 @@ spec:
       backendRefs:
         - group: ""
           kind: Service
-          name: octopus-deploy-gw
+          name: octopus-deploy
           port: 80
           weight: 1
       matches:
