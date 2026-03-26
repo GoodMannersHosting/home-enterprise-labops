@@ -13,19 +13,23 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   sources:
-    - repoURL: &repo https://github.com/GoodMannersHosting/home-enterprise-labops.git
+    - name: kustomize
+      repoURL: &repo https://github.com/GoodMannersHosting/home-enterprise-labops.git
       targetRevision: main
       path: kubernetes/services/octopus-deploy
-    - repoURL: *repo
+    - name: helm-values
+      repoURL: *repo
       targetRevision: main
       ref: values
-    - repoURL: https://bjw-s-labs.github.io/helm-charts
+    - name: mssql-chart
+      repoURL: https://bjw-s-labs.github.io/helm-charts
       chart: app-template
       targetRevision: *mssqlChartVersion
       helm:
         valueFiles:
           - $values/kubernetes/services/octopus-deploy/mssql.values.yaml
-    - repoURL: ghcr.io/octopusdeploy # OCI Helm Chart
+    - name: octopus-deploy-chart
+      repoURL: ghcr.io/octopusdeploy # OCI Helm Chart
       chart: octopusdeploy-helm
       targetRevision: *octopusChartVersion
       helm:
