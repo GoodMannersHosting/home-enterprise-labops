@@ -151,7 +151,7 @@ extraResources:
         - backendRefs:
             - group: ""
               kind: Service
-              name: open-webui
+              name: ollama-open-webui
               port: 80
               weight: 1
           matches:
