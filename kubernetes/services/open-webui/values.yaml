@@ -35,7 +35,7 @@ ollama:
   runtimeClassName: nvidia
   persistentVolume:
     enabled: true
-    size: 240Gi
+    size: 300Gi
     storageClass: ceph-block-retain
     accessModes:
       - ReadWriteOnce
@@ -58,7 +58,7 @@ clusterDomain: cluster.local
 
 image:
   repository: ghcr.io/open-webui/open-webui
-  tag: "0.8.10"
+  tag: "0.8.11"
   pullPolicy: "IfNotPresent"
 
 serviceAccount:
