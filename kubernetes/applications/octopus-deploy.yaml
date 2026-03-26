@@ -1,0 +1,40 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: octopus-deploy
+  namespace: argocd
+  labels:
+    mssqlChartVersion: &mssqlChartVersion 4.4.0
+    octopusChartVersion: &octopusChartVersion 1.11.0
+spec:
+  destination:
+    namespace: octopus
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+    - repoURL: &repo https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: main
+      path: kubernetes/services/octopus-deploy
+    - repoURL: *repo
+      targetRevision: main
+      ref: values
+    - repoURL: https://bjw-s-labs.github.io/helm-charts
+      chart: app-template
+      targetRevision: *mssqlChartVersion
+      helm:
+        valueFiles:
+          - $values/kubernetes/services/octopus-deploy/mssql.values.yaml
+    - repoURL: ghcr.io/octopusdeploy # OCI Helm Chart
+      chart: octopusdeploy-helm
+      targetRevision: *octopusChartVersion
+      helm:
+        valueFiles:
+          - $values/kubernetes/services/octopus-deploy/od.values.yaml
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true

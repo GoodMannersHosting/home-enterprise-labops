@@ -12,6 +12,9 @@ octopus:
   adminpassword: overridden
 
   # Kubernetes Resources
+  statefulSet:
+    annotations:
+      argocd.argoproj.io/sync-wave: "20"
   resources:
     requests:
       memory: "4Gi"

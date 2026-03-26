@@ -16,6 +16,8 @@ controllers:
   mssql-bootstrap:
     enabled: true
     type: job
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
     job:
       backoffLimit: 5
       ttlSecondsAfterFinished: 600
@@ -98,6 +100,8 @@ controllers:
   main:
     enabled: true
     type: statefulset
+    annotations:
+      argocd.argoproj.io/sync-wave: "0"
     replicas: 1
     revisionHistoryLimit: 2
     statefulset:
