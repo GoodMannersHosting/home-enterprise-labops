@@ -1,0 +1,14 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: octopus-deploy-connectionstring
+  namespace: octopus
+spec:
+  encryptedData:
+    secret: AgBNPOYWIUQ/15COE0lXKkprrrD9R88i+buJCkSIq7+uIjcUpJco2GyyANpzlyw+/xYTPfCVZ1ny8GTRv/dK4wdyR/bIrTiSwElSuqN2qG7M5w5YnSPaq9Y/cK9nfRnxrYmvRYJEnlAHxwa/vDwCfThIUEz77wZizsJnOuMH2z51G1qoNJH/D7XOr2RP5F+wNHILzloSyf8ZDbXasVf32wqgf842rS8YErK4wOGuu9bjvYww7JlemMz7UIh/azdxaBCX1W1fik24DyZ9T/UQmqiJtJMEXt7A1FWuLP3b7uvLg4oYncD6uymY84Ujo3MmByYP45aSKPfxEuPtJqa0RZI47IvbZBHvX3av42IjztdjZBOBHIKIwsm3eb7/JZN7wWh6IeWs6YBiC73knn+BMj4Wzi9cUirseZ4ornxCuQS1AUK6jLI9g81IFKcuC0i6lGjEnynHUNrHLyE0oybx9k2z9t5U6lFSd65GrloygIGzdnUjZ/W86C9hBhQfduosT0K/ux7TIXhula6ymdfZM5V23DrzYmE+4JIUs6IY+xWhgbIZaomEJSGTToKjG3gRhjT1J12Q/BI3HAL/3QchIn+SyHCZXFbQhDNAZZ77GiXyffDv9qtqPtOoapSf6PdxFpz570oNvcKyIlfXKxGiN3IHcFBtP29kDu/7cG5C5lzz5ZTOkSTUAEKufP60Bykw6e1+duqfkVVAtDfDZl2xdTKo8XzOzdedzlFl/Fdtlm+KCsl1oylkewJOGJfMwxA6M+5O6Lw5gnQr4XAJkxYxMMuJpzCBXMI3HZcmbnBC2EQimf+zrsi+jnY/8E3AUZtfizQBaV/lj4QLfpNZ7XdVPXil9kNqXgDPMO2293MdJb+dkZdl6Af8Y6arW+p7+SqERfw0xGPcSQRkfKkTiymhuZsBTMvFGbcvaMcABl4jD+SaF9P83039zzGN5SRGoPmUSWX/En6h1EBlQxjZ3laDr+5WnZnIrQCdZkmt96lZ97epkDCyi0mKfl/gw0wXmzOY8PNi8Knh4uw3FyUc2sYmtc9ZAa1pygKNP4JwbrP4bLQUWVctne7Iq1YkWiCfTVWou65/n7EaYgCV9EXrMQ==
+  template:
+    metadata:
+      name: octopus-deploy-connectionstring
+      namespace: octopus
+    type: Opaque

@@ -1,0 +1,14 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: octopus-deploy-masterkey
+  namespace: octopus
+spec:
+  encryptedData:
+    secret: AgBoM9VFZz/DCA4qZlZKglxoHZbwZBLybsnLfBwdaWU0a6xf4N3Hx484TFvirUKdAwJh8Iv8lWeLF1ns8uTvcKqlHWUHPaqJtHq6RRPuRw2i4trYDCRWbZo3GBuOtpxXjcKNUeITtQNyEfCMbxdfk+H5i8dXXal22t14yGRNnTkNLrlScavq/ynOImAv6/D6Gn/GOJLyNafX1zVrl8cLGavJKw6lsK+IaxL6CTGw4id0RhTBRwwpyTSzNkHmin70dxeqI2dWWWThZqSymyu/fme91NzwOyKRXsUMbn5lflmxnd+7lvuQ/Aon/tYV9bH0Ivcgnaqj5LtFg8UnmM2KjeY/9BnD2gYS4P7W3D8N8VWuxwM9Uki/lXo838AiZ+9ha1MUJzVM89WjYRH/oV81JSSGMGO0Xo6FIYYz8QKrkG9q0ftJsVEdeYxmHkKTs1yFU/NrBcfs0MfQnHl9Lb3aqU8iM3p3kG+vva8swyGjnAw6c510Q5kXWM42eZP82H1gPsu496bln+rfdsz5Kd39t0eoDQ3tL5od4oei8xp2POC4VD01YLmt/+DvDjlB/VFi7Y4pl+3TLHcSkO++2B+95d9FFA61Jpd9KUUDt9VJ8ThQ/fHGy9PojuspKpYogJgqLzWpI4pRto66JX2z49thLmqjGpNcRIl7f+Wq7n8jKss07f1CZmInxc2yhKCBSHtpFJpOk2orUy5dJtJqi4GBGzV5Kmqa7iCnchw=
+  template:
+    metadata:
+      name: octopus-deploy-masterkey
+      namespace: octopus
+    type: Opaque

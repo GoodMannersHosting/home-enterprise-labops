@@ -1,0 +1,51 @@
+global:
+  storageClass: "ceph-block-retain"
+
+octopus:
+  # Licensing
+  acceptEula: "Y"
+  createSecrets: False
+
+  # User
+  email: daniel.a.manners@gmail.com
+  adminusername: demo
+  adminpassword: overridden
+
+  # Kubernetes Resources
+  resources:
+    requests:
+      memory: "4Gi"
+      cpu: "2"
+    limits:
+      memory: "4Gi"
+  
+  # Build Things
+  enableDockerInDocker: true
+
+  # Extra Env Vars for Secrets
+  extraEnv:
+    - name: ADMIN_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: "admin-user"
+          key: username
+    - name: ADMIN_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: "admin-user"
+          key: password
+
+
+  # Storage
+  packageRepositoryVolume: # 
+    size: 4Gi
+  artifactVolume: # Persistent deployment artifacts
+    size: 4Gi
+  taskLogVolume: # Task logs
+    size: 1Gi
+  auditLogVolume: # Archived audit logs
+    size: 1Gi
+
+mssql:
+  enabled: false
+

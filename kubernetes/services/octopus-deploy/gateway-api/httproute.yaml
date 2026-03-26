@@ -1,0 +1,40 @@
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: octopus-deploy
+  annotations:
+    external-dns.alpha.kubernetes.io/controller: "false"
+    external-dns.alpha.kubernetes.io/hostname: octopus.cloud.danmanners.com
+    external-dns.alpha.kubernetes.io/ttl: "300"
+    gatus.home-operations.com/enabled: "true"
+    gatus.home-operations.com/endpoint: |-
+      name: Octopus Deploy
+      conditions:
+        - "[STATUS] == 200"
+      url: http://octopus-deploy-gw.octopus.svc.cluster.local/
+      method: GET
+spec:
+  hostnames:
+    - octopus.cloud.danmanners.com
+  parentRefs:
+    - kind: Gateway
+      group: gateway.networking.k8s.io
+      name: gwapi
+      namespace: default
+      sectionName: https-cloud
+  rules:
+    - name: octopus-deploy
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: octopus-deploy-gw
+          port: 80
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+      timeouts:
+        backendRequest: 0s
+        request: 0s

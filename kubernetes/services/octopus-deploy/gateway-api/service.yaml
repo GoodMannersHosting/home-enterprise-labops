@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: octopus-deploy-gw
+  annotations:
+    external-dns.alpha.kubernetes.io/controller: "false"
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/component: octopus-server
+    app.kubernetes.io/instance: octopus-deploy
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: octopus-deploy
+    helm.sh/chart: octopusdeploy-helm-1.11.0
+  ports:
+    - name: web
+      port: 80
+      protocol: TCP
+      targetPort: 8080

@@ -1,0 +1,199 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+defaultPodOptions:
+  automountServiceAccountToken: false
+  enableServiceLinks: false
+  restartPolicy: Always
+  securityContext:
+    # MSSQL container runs as uid 10001 in the official image
+    runAsUser: 10001
+    runAsGroup: 0
+    runAsNonRoot: true
+    fsGroup: 10001
+    fsGroupChangePolicy: OnRootMismatch
+
+controllers:
+  mssql-bootstrap:
+    enabled: true
+    type: job
+    job:
+      backoffLimit: 5
+      ttlSecondsAfterFinished: 600
+      activeDeadlineSeconds: 600
+    pod:
+      securityContext:
+        # mssql-tools image (ODBC 13) fails under uid 10001 with SQLAllocHandle error.
+        # Run this one-shot bootstrap job as root; main MSSQL controller remains non-root.
+        runAsUser: 0
+        runAsGroup: 0
+        runAsNonRoot: false
+    containers:
+      init:
+        image:
+          repository: mcr.microsoft.com/mssql-tools
+          tag: "latest"
+          pullPolicy: IfNotPresent
+        env:
+          - name: MSSQL_HOST
+            value: octopus-mssql.octopus.svc.cluster.local
+          - name: MSSQL_PORT
+            value: "1433"
+          - name: MSSQL_SA_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: octopus-mssql-creds
+                key: SA_PASSWORD
+          - name: OCTOPUS_USER
+            value: octopus
+          - name: OCTOPUS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: octopus-mssql-creds
+                key: SA_PASSWORD
+        command:
+          - /bin/bash
+          - -lc
+          - |
+            set -euo pipefail
+
+            # wait for SQL Server to accept logins
+            for i in {1..20}; do
+              echo "💬 Attempt $i of 20 to connect to MSSQL"
+              if /opt/mssql-tools/bin/sqlcmd -S "${MSSQL_HOST},${MSSQL_PORT}" -U sa -P "${MSSQL_SA_PASSWORD}" -Q "SELECT 1" >/dev/null 2>&1; then
+                break
+              fi
+              echo "🔄 Waiting for MSSQL to be ready..."
+              sleep 3
+              if [ $i -eq 20 ]; then
+                echo "❌ Failed to connect to MSSQL after 20 attempts"
+                exit 1
+              fi
+            done
+
+            # sqlcmd in mssql-tools v13 does not support -v variable arguments
+            OCTOPUS_USER_ESCAPED="${OCTOPUS_USER//\'/\'\'}"
+            OCTOPUS_PASSWORD_ESCAPED="${OCTOPUS_PASSWORD//\'/\'\'}"
+
+            # Step 1: create login and database in master
+            /opt/mssql-tools/bin/sqlcmd -S "${MSSQL_HOST},${MSSQL_PORT}" -U sa -P "${MSSQL_SA_PASSWORD}" -d master -b -Q "
+            IF NOT EXISTS (SELECT 1 FROM sys.server_principals WHERE name = '${OCTOPUS_USER_ESCAPED}')
+              BEGIN
+                CREATE LOGIN [${OCTOPUS_USER}] WITH PASSWORD = '${OCTOPUS_PASSWORD_ESCAPED}';
+              END;
+            IF DB_ID('OctopusDeploy') IS NULL
+              BEGIN
+                CREATE DATABASE [OctopusDeploy];
+              END;
+            "
+
+            # Step 2: bind login to user and role in OctopusDeploy
+            /opt/mssql-tools/bin/sqlcmd -S "${MSSQL_HOST},${MSSQL_PORT}" -U sa -P "${MSSQL_SA_PASSWORD}" -d OctopusDeploy -b -Q "
+            IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = '${OCTOPUS_USER_ESCAPED}')
+              BEGIN
+                CREATE USER [${OCTOPUS_USER}] FOR LOGIN [${OCTOPUS_USER}];
+              END;
+            ALTER ROLE [db_owner] ADD MEMBER [${OCTOPUS_USER}];
+            "
+
+  main:
+    enabled: true
+    type: statefulset
+    replicas: 1
+    revisionHistoryLimit: 2
+    statefulset:
+      volumeClaimTemplates:
+        - name: data
+          accessMode: ReadWriteOnce
+          size: 10Gi
+          storageClass: ceph-block-retain
+          globalMounts:
+            - path: /var/opt/mssql
+    containers:
+      main:
+        image:
+          repository: mcr.microsoft.com/mssql/server
+          tag: "2022-latest"
+          pullPolicy: IfNotPresent
+        env:
+          - name: ACCEPT_EULA
+            value: "Y"
+          - name: MSSQL_PID
+            value: "Developer"
+          - name: MSSQL_SA_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: octopus-mssql-creds
+                key: SA_PASSWORD
+          - name: MSSQL_TCP_PORT
+            value: "1433"
+          - name: MSSQL_AGENT_ENABLED
+            value: "true"
+          - name: TZ
+            value: "America/New_York"
+        ports:
+          - name: sql
+            containerPort: 1433
+            protocol: TCP
+        securityContext:
+          # sqlservr binary has file capabilities (cap_net_bind_service=ep);
+          # with allowPrivilegeEscalation=false kube sets no_new_privs=true, which blocks exec.
+          allowPrivilegeEscalation: true
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          capabilities:
+            drop:
+              - ALL
+            # sqlservr is shipped with cap_net_bind_service; if the pod's capability bounding set is empty,
+            # exec can fail with "Operation not permitted" (exit 126). Keep least-priv while allowing exec.
+            add:
+              - NET_BIND_SERVICE
+        resources:
+          requests:
+            cpu: 500m
+            memory: 2Gi
+          limits:
+            memory: 6Gi
+        probes:
+          startup:
+            enabled: true
+            custom: true
+            spec:
+              tcpSocket:
+                port: sql
+              initialDelaySeconds: 10
+              periodSeconds: 5
+              timeoutSeconds: 1
+              failureThreshold: 60
+          liveness:
+            enabled: true
+            custom: true
+            spec:
+              tcpSocket:
+                port: sql
+              initialDelaySeconds: 30
+              periodSeconds: 10
+              timeoutSeconds: 1
+              failureThreshold: 3
+          readiness:
+            enabled: true
+            custom: true
+            spec:
+              tcpSocket:
+                port: sql
+              initialDelaySeconds: 10
+              periodSeconds: 5
+              timeoutSeconds: 1
+              failureThreshold: 6
+
+service:
+  main:
+    enabled: true
+    controller: main
+    primary: true
+    type: ClusterIP
+    ports:
+      sql:
+        enabled: true
+        port: 1433
+        targetPort: sql
+        protocol: TCP
