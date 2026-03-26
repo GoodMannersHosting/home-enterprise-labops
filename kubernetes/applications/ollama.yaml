@@ -7,6 +7,13 @@ metadata:
   labels:
     chartVersion: &chartVersion 12.5.0
 spec:
+  ignoreDifferences:
+      # Necessary after updating the volume name in the values.yaml file
+      # and re-deploying the application. Needed to re-associate the original
+      # volume/pv to avoid data loss.
+    - kind: PersistentVolumeClaim
+      jsonPointers:
+        - /spec/volumeName
   destination:
     namespace: aiml
     server: https://kubernetes.default.svc
@@ -30,3 +37,5 @@ spec:
       selfHeal: true
     syncOptions:
       - ServerSideApply=true
+      - RespectIgnoreDifferences=true
+
