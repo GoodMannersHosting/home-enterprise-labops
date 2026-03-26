@@ -1,0 +1,9 @@
+namespace: octopus
+resources:
+  - admin-user.yaml
+  - dbconnectionstring.yaml
+  - license.yaml
+  - masterkey.yaml
+  - mssql-creds.yaml
+  - namespace.yaml
+  - gateway-api

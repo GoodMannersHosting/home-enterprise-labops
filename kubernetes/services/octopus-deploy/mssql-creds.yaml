@@ -1,0 +1,14 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: octopus-mssql-creds
+  namespace: octopus
+spec:
+  encryptedData:
+    SA_PASSWORD: AgAoPpgBtLV9jFwjS4hhyYKwvJyN3jqPcKBNup+ZWfikxTx5FWKEdgoul8tm4pFAHgk6n0cy0TUFGDkiS3fRKL4FR9L1jM6iDp6HktLF1JWgnASVCES+BmS4enw+fgqwQgqPEzl6BlmsDfAMcegmxfu6TgZnqis9997H+w7j/DguNLouPZsJzDv1QqbkqY144QxRCHPlA11VqkmorV7yf6we725cTB/tUPhG2W7Lgz+/ZBDn1XdTg6+jHaVOjKqnNnvkfOqZprmAmCHpnmznNLCNMQQFNtdEEgYM/rjDk59+3kRAOu/PONdHlpKn+votw8KEQYu/Gg8nK+Owshn0nWgSJGUVj00YTQj5r9wQdj7xYsJKDbDn5sxyCLXfImYV2J4QrbMIykZaCLzjkkaEkp/5fq+YLhaZDIWJwIjlESp6LhxtoBWXhklYHgkko7UaEkT+VO60WAaH4Ydo0vtG+2U/QeujAT3wU5DbBtihZaDjhx9pz1iME7FoMVrkMc9/bzbBkDARfKvEmQVP2T72nf+47evqqG9WDRZ4BFRrWiPU7VhXKcfXwMNkAMuTeAOtvanf2gZRJR+kXrEHoRc627p2ngXRk1BnMftLai+xeeEeuMmmC0478gy78zzUL1fr3yu5wg9WVWXZwvXlbTwpbRtqvKu3OkT7ndTMCsgPgvqFd6a8Hh1xmbWKZRXDIfKD9EpgAbcBPHYTVAh6H9Nh3FZWyJLa1VrkrQOwJ1HmDrJKBehCnx6dmc3cfe0GYu2mercO9b6k5xxb7kX7oeshyYg7
+  template:
+    metadata:
+      name: octopus-mssql-creds
+      namespace: octopus
+    type: Opaque
