@@ -28,10 +28,14 @@ configs:
       name: Keycloak
       issuer: https://keycloak.cloud.danmanners.com/realms/gmh
       clientID: argocd
-      clientSecret: $argocd-oidc-secret:oidc.keycloak.clientSecret
+      refreshTokenThreshold: 2m
+      enablePKCEAuthentication: true
       requestedScopes: ["openid", "profile", "email", "groups"]
       userNameKey: email
       overrideClaimMapping: true
+    # Additional Users
+    accounts.octopus: apiKey
+    accounts.octopus.enabled: "true"
   rbac:
     policy.default: role:readonly
     policy.csv: |
@@ -62,6 +66,11 @@ configs:
       p, role:org-admin, gpgkeys, delete, *, allow
       p, role:org-admin, exec, create, */*, allow
       g, ArgoCDAdmins, role:org-admin
+      # Octopus Deploy
+      p, octopus, applications, get, *, allow
+      p, octopus, applications, sync, *, allow
+      p, octopus, clusters, get, *, allow
+      p, octopus, logs, get, */*, allow
 
 repoServer:
   replicas: 2
