@@ -1,0 +1,7 @@
+namespace: meticulous
+resources:
+  - namespace.yaml
+  - cnpg-cluster.yaml
+  - tcproute-nats.yaml
+  - tcproute-grpc.yaml
+  - cilium-netpol.yaml
