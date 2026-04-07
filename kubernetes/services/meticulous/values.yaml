@@ -1,0 +1,402 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+---
+# Meticulous stack (met-api, met-controller, NATS, SeaweedFS). Images and secrets: see SECRETS.md.
+defaultPodOptions:
+  automountServiceAccountToken: false
+  enableServiceLinks: true
+  restartPolicy: Always
+  securityContext:
+    fsGroup: 1000
+    fsGroupChangePolicy: OnRootMismatch
+
+serviceAccount:
+  meticulous-api:
+    enabled: true
+  meticulous-controller:
+    enabled: true
+  meticulous-nats:
+    enabled: true
+  meticulous-seaweed:
+    enabled: true
+
+controllers:
+  nats:
+    enabled: true
+    type: statefulset
+    replicas: 1
+    annotations:
+      argocd.argoproj.io/sync-wave: "1"
+    serviceAccount:
+      name: meticulous-nats
+    containers:
+      main:
+        image:
+          repository: docker.io/library/nats
+          tag: "2-alpine"
+          pullPolicy: IfNotPresent
+        command:
+          - nats-server
+        args:
+          - -js
+          - -sd=/data
+          - -m
+          - "8222"
+        ports:
+          - name: client
+            containerPort: 4222
+            protocol: TCP
+          - name: monitor
+            containerPort: 8222
+            protocol: TCP
+        securityContext:
+          allowPrivilegeEscalation: false
+        probes:
+          liveness:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /healthz
+                port: monitor
+              initialDelaySeconds: 10
+              periodSeconds: 10
+          readiness:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /healthz
+                port: monitor
+              initialDelaySeconds: 5
+              periodSeconds: 5
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: "1"
+            memory: 512Mi
+
+  seaweed:
+    enabled: true
+    type: statefulset
+    replicas: 1
+    annotations:
+      argocd.argoproj.io/sync-wave: "1"
+    serviceAccount:
+      name: meticulous-seaweed
+    containers:
+      main:
+        image:
+          repository: docker.io/chrislusf/seaweedfs
+          tag: "4.17"
+          pullPolicy: IfNotPresent
+        command:
+          - weed
+        args:
+          - server
+          - -s3
+          - -dir=/data
+          - -s3.port=8333
+        ports:
+          - name: s3
+            containerPort: 8333
+            protocol: TCP
+        securityContext:
+          allowPrivilegeEscalation: false
+        probes:
+          readiness:
+            enabled: true
+            custom: true
+            spec:
+              tcpSocket:
+                port: s3
+              initialDelaySeconds: 15
+              periodSeconds: 10
+          liveness:
+            enabled: true
+            custom: true
+            spec:
+              tcpSocket:
+                port: s3
+              initialDelaySeconds: 30
+              periodSeconds: 20
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: "2"
+            memory: 2Gi
+
+  api:
+    enabled: true
+    type: deployment
+    replicas: 1
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    serviceAccount:
+      name: meticulous-api
+    initContainers:
+      wait-db:
+        image:
+          repository: docker.io/library/busybox
+          tag: "1.37"
+        command:
+          - sh
+          - -c
+          - |
+            until nc -z -w 30 meticulous-db-rw 5432; do
+              echo "waiting for CNPG rw service..."
+              sleep 5
+            done
+    containers:
+      main:
+        ports:
+          - name: http
+            containerPort: &apiPort 8080
+            protocol: TCP
+        image:
+          repository: harbor.cloud.danmanners.com/library/meticulous/met-api
+          tag: latest
+          pullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+        env:
+          - name: RUST_LOG
+            value: info
+          - name: MET_API__RUN_MIGRATIONS
+            value: "true"
+          - name: MET_DATABASE__URL
+            valueFrom:
+              secretKeyRef:
+                name: meticulous-db-app
+                key: uri
+          - name: MET_NATS__URL
+            value: nats://meticulous-nats:4222
+          - name: MET_STORAGE__ENDPOINT
+            value: http://meticulous-seaweed:8333
+          - name: MET_STORAGE__BUCKET
+            value: meticulous
+          - name: MET_STORAGE__PATH_STYLE
+            value: "true"
+          - name: MET_STORAGE__ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: meticulous-runtime
+                key: s3_access_key
+          - name: MET_STORAGE__SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: meticulous-runtime
+                key: s3_secret_key
+          - name: MET_JWT__SECRET
+            valueFrom:
+              secretKeyRef:
+                name: meticulous-runtime
+                key: jwt_api_secret
+          - name: MET_HTTP__CORS_ORIGINS
+            value: https://ci.cloud.danmanners.com,http://localhost:5173
+          - name: MET_HTTP__CORS_ALLOW_ANY
+            value: "false"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: "2"
+            memory: 1Gi
+        probes:
+          liveness: &httpProbes
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /health
+                port: http
+              initialDelaySeconds: 15
+              periodSeconds: 15
+              timeoutSeconds: 5
+              failureThreshold: 3
+          readiness: *httpProbes
+
+  controller:
+    enabled: true
+    type: deployment
+    replicas: 1
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    serviceAccount:
+      name: meticulous-controller
+    initContainers:
+      wait-db:
+        image:
+          repository: docker.io/library/busybox
+          tag: "1.37"
+        command:
+          - sh
+          - -c
+          - |
+            until nc -z -w 30 meticulous-db-rw 5432; do
+              echo "waiting for CNPG rw service..."
+              sleep 5
+            done
+    containers:
+      main:
+        ports:
+          - name: grpc
+            containerPort: &grpcPort 9090
+            protocol: TCP
+        image:
+          repository: harbor.cloud.danmanners.com/library/meticulous/met-controller
+          tag: latest
+          pullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+        env:
+          - name: RUST_LOG
+            value: info
+          - name: MET_LOG_LEVEL
+            value: info
+          - name: MET_DATABASE__URL
+            valueFrom:
+              secretKeyRef:
+                name: meticulous-db-app
+                key: uri
+          - name: MET_NATS__URL
+            value: nats://meticulous-nats:4222
+          - name: MET_CONTROLLER_JWT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: meticulous-runtime
+                key: jwt_controller_secret
+          - name: MET_GRPC__ENABLE_REFLECTION
+            value: "false"
+          - name: MET_CONTROLLER_GRPC_ADDR
+            value: 0.0.0.0:9090
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: "2"
+            memory: 1Gi
+        probes:
+          liveness:
+            enabled: true
+            custom: true
+            spec:
+              tcpSocket:
+                port: grpc
+              initialDelaySeconds: 15
+              periodSeconds: 15
+          readiness:
+            enabled: true
+            custom: true
+            spec:
+              tcpSocket:
+                port: grpc
+              initialDelaySeconds: 5
+              periodSeconds: 10
+
+service:
+  api:
+    enabled: true
+    controller: api
+    primary: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        port: 80
+        targetPort: http
+        protocol: TCP
+
+  controller:
+    enabled: true
+    controller: controller
+    primary: false
+    type: ClusterIP
+    ports:
+      grpc:
+        enabled: true
+        port: 9090
+        targetPort: grpc
+        protocol: TCP
+
+  nats:
+    enabled: true
+    controller: nats
+    primary: false
+    type: ClusterIP
+    ports:
+      client:
+        enabled: true
+        port: 4222
+        targetPort: client
+        protocol: TCP
+
+  seaweed:
+    enabled: true
+    controller: seaweed
+    primary: false
+    type: ClusterIP
+    ports:
+      s3:
+        enabled: true
+        port: 8333
+        targetPort: s3
+        protocol: TCP
+
+route:
+  api:
+    enabled: true
+    kind: HTTPRoute
+    annotations:
+      external-dns.alpha.kubernetes.io/controller: "false"
+    parentRefs:
+      - kind: Gateway
+        group: gateway.networking.k8s.io
+        name: gwapi
+        namespace: default
+        sectionName: https-cloud
+    hostnames:
+      - ci.cloud.danmanners.com
+    rules:
+      - backendRefs:
+          - name: meticulous-api
+            port: 80
+            weight: 1
+        matches:
+          - path:
+              type: PathPrefix
+              value: /
+        timeouts:
+          backendRequest: 0s
+          request: 0s
+
+persistence:
+  nats-data:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-block-retain
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    retain: true
+    advancedMounts:
+      nats:
+        main:
+          - path: /data
+            readOnly: false
+  seaweed-data:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-block-retain
+    accessMode: ReadWriteOnce
+    size: 20Gi
+    retain: true
+    advancedMounts:
+      seaweed:
+        main:
+          - path: /data
+            readOnly: false
