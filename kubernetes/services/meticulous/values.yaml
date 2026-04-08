@@ -193,7 +193,7 @@ controllers:
             containerPort: &apiPort 8080
             protocol: TCP
         image:
-          repository: harbor.cloud.danmanners.com/library/meticulous/met-api
+          repository: harbor.cloud.danmanners.com/meticulous/met-api
           tag: latest
           pullPolicy: IfNotPresent
         securityContext:
@@ -324,7 +324,7 @@ controllers:
             containerPort: &grpcPort 9090
             protocol: TCP
         image:
-          repository: harbor.cloud.danmanners.com/library/meticulous/met-controller
+          repository: harbor.cloud.danmanners.com/meticulous/met-controller
           tag: latest
           pullPolicy: IfNotPresent
         securityContext:
