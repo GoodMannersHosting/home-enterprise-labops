@@ -195,7 +195,7 @@ controllers:
         image:
           repository: harbor.cloud.danmanners.com/meticulous/met-api
           tag: latest
-          pullPolicy: IfNotPresent
+          pullPolicy: Always
         securityContext:
           allowPrivilegeEscalation: false
         env:
@@ -326,7 +326,7 @@ controllers:
         image:
           repository: harbor.cloud.danmanners.com/meticulous/met-controller
           tag: latest
-          pullPolicy: IfNotPresent
+          pullPolicy: Always
         securityContext:
           allowPrivilegeEscalation: false
         env:
