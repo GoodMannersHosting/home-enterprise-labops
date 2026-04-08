@@ -86,6 +86,9 @@ if ! nsc add account -n SYS; then
 	}
 fi
 nsc add account -n APP
+# Per-account JWT limits are required for JetStream; server-level jetstream{} alone yields 503 err_code 10039.
+nsc edit account -n SYS --js-disable
+nsc edit account -n APP --js-mem-storage -1 --js-disk-storage -1 --js-streams -1 --js-consumer -1
 # Full account traffic (JetStream, met.*); tighten in production with scoped allow-lists.
 nsc add user -n controller -a APP --allow-pubsub ">"
 nsc add user -n api -a APP --allow-pubsub ">"
@@ -146,6 +149,15 @@ for name in ("operator.jwt", "sys-account.jwt", "app-account.jwt"):
 
 app_jwt = (root / "app-account.jwt").read_text().strip()
 sys_jwt = (root / "sys-account.jwt").read_text().strip()
+app_pl = json.loads(b64url_decode(app_jwt.split(".")[1]))
+lim = (app_pl.get("nats") or {}).get("limits") or {}
+if "mem_storage" not in lim or "disk_storage" not in lim:
+    print(
+        "APP account JWT missing JetStream limits (mem_storage/disk_storage). "
+        "Meticulous will fail with: JetStream not enabled for account (10039). Re-run bootstrap.",
+        file=sys.stderr,
+    )
+    sys.exit(1)
 app_sub = jwt_sub(app_jwt)
 sys_sub = jwt_sub(sys_jwt)
 
