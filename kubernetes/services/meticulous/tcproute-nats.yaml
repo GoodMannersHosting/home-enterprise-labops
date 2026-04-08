@@ -15,5 +15,8 @@ spec:
       sectionName: nats
   rules:
     - backendRefs:
-        - name: meticulous-nats
+        - group: ''	
+          kind: Service	
+          name: meticulous-nats
           port: 4222
+          weight: 1
