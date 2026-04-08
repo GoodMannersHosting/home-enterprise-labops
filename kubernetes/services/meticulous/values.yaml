@@ -206,7 +206,7 @@ controllers:
           - name: MET_DATABASE__URL
             valueFrom:
               secretKeyRef:
-                name: meticulous-db-app
+                name: meticulous-db-owner
                 key: uri
           - name: MET_NATS__URL
             value: nats://meticulous-nats:4222
@@ -337,7 +337,7 @@ controllers:
           - name: MET_DATABASE__URL
             valueFrom:
               secretKeyRef:
-                name: meticulous-db-app
+                name: meticulous-db-owner
                 key: uri
           - name: MET_NATS__URL
             value: nats://meticulous-nats:4222
