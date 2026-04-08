@@ -29,7 +29,14 @@ NS="${SEALED_SECRET_NAMESPACE:-meticulous}"
 
 meticulous_seal_kubeseal_args_fill
 
-db_pass="$(openssl rand -base64 32)"
+# If the CNPG cluster already exists, set METICULOUS_DB_OWNER_PASSWORD to the current owner password so you do not
+# rotate the DB user while re-sealing (e.g. when adding the `uri` key for the first time).
+db_pass="${METICULOUS_DB_OWNER_PASSWORD:-$(openssl rand -base64 32)}"
+# CNPG does not create `<cluster>-app` when `bootstrap.initdb.secret.name` is set; apps read `uri` from this secret.
+db_uri="$(
+	DB_PASS="${db_pass}" python3 -c \
+		'import os, urllib.parse; p=os.environ["DB_PASS"]; q=urllib.parse.quote(p, safe=""); print(f"postgres://meticulous:{q}@meticulous-db-rw:5432/meticulous")'
+)"
 jwt_api="$(openssl rand -base64 48)"
 jwt_ctrl="$(openssl rand -base64 40)"
 # Hex keys are easy to paste into Seaweed / IAM configs if you enable auth later.
@@ -40,6 +47,7 @@ kubectl create secret generic meticulous-db-owner \
 	--namespace "${NS}" \
 	--from-literal=username=meticulous \
 	--from-literal=password="${db_pass}" \
+	--from-literal=uri="${db_uri}" \
 	--dry-run=client -o yaml | meticulous_seal_annotate_wave -3 | kubeseal "${METICULOUS_SEAL_KUBESEAL_ARGS[@]}" \
 	>secret.meticulous-db-owner.yaml
 
