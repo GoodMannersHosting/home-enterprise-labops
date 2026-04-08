@@ -1,5 +1,6 @@
 # Dedicated CNPG cluster for Meticulous (not shared db-rw.database).
 # Bootstrap: create SealedSecret `meticulous-db-owner` (keys `username`, `password`) before sync; see SECRETS.md.
+# App DB URL lives in `meticulous-db-uri` (key `uri`), not in db-owner.
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:

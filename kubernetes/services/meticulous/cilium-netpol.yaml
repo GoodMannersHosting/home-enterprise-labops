@@ -32,6 +32,8 @@ metadata:
 spec:
   endpointSelector: {}
   egress:
+    # CoreDNS lives in kube-system. Without the namespace label, toEndpoints only matches
+    # destinations in this policy's namespace (meticulous), so DNS never gets allowed.
     - toEndpoints:
         - matchLabels:
             "k8s:io.kubernetes.pod.namespace": kube-system
@@ -42,8 +44,20 @@ spec:
               protocol: UDP
             - port: "53"
               protocol: TCP
+    # Installations that label CoreDNS pods without k8s-app (still in kube-system).
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            app.kubernetes.io/name: coredns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
 ---
 # CNPG instance pods must accept Postgres traffic; default-deny-ingress blocks it otherwise.
+# Operator must reach :8000 (instance manager /status); see https://cloudnative-pg.io/docs/latest/networking/
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
@@ -59,12 +73,68 @@ spec:
   ingress:
     - fromEndpoints:
         - matchExpressions:
-            - key: app.kubernetes.io/controller
+            - key: "app.kubernetes.io/controller"
               operator: In
               values: [api, controller, init-jobs]
       toPorts:
         - ports:
             - port: "5432"
+              protocol: TCP
+    # CNPG controller (Argo app `cnpg` → namespace `database` by default) → instance manager + Postgres
+    - fromEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": database
+            app.kubernetes.io/name: cloudnative-pg
+      toPorts:
+        - ports:
+            - port: "8000"
+              protocol: TCP
+            - port: "5432"
+              protocol: TCP
+    # Primary / replica coordination (same cluster)
+    - fromEndpoints:
+        - matchLabels:
+            cnpg.io/cluster: meticulous-db
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+            - port: "8000"
+              protocol: TCP
+---
+# CNPG pods (instance manager, jobs) call the Kubernetes API via the kubernetes.default ClusterIP.
+# Default-deny egress otherwise times out on 10.96.0.1:443.
+# Selector: any pod for this cluster (not only podRole=instance) so init/job pods match too.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: meticulous-db-egress
+  namespace: meticulous
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  endpointSelector:
+    matchLabels:
+      cnpg.io/cluster: meticulous-db
+  egress:
+    # Primary path: VIP / kube-proxy or socket-LB classified as apiserver.
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+    # Fallback: direct-to-node apiserver paths (6443) and datapaths that classify VIP as host/node.
+    - toEntities:
+        - host
+        - remote-node
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+            - port: "6443"
+              protocol: TCP
+            - port: "7443"
               protocol: TCP
 ---
 apiVersion: cilium.io/v2
@@ -77,7 +147,7 @@ metadata:
 spec:
   endpointSelector:
     matchLabels:
-      app.kubernetes.io/controller: api
+      "app.kubernetes.io/controller": api
   ingress:
     - fromEntities:
         - cluster
@@ -95,17 +165,51 @@ spec:
               protocol: TCP
     - toEndpoints:
         - matchLabels:
-            app.kubernetes.io/controller: nats
+            "app.kubernetes.io/controller": nats
       toPorts:
         - ports:
             - port: "4222"
               protocol: TCP
     - toEndpoints:
         - matchLabels:
-            app.kubernetes.io/controller: seaweed
+            "app.kubernetes.io/controller": seaweed
       toPorts:
         - ports:
             - port: "8333"
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: meticulous-frontend
+  namespace: meticulous
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  endpointSelector:
+    matchLabels:
+      "app.kubernetes.io/controller": frontend
+  ingress:
+    - fromEntities:
+        - cluster
+      toPorts:
+        - ports:
+            - port: "3000"
+              protocol: TCP
+  egress:
+    # SSR (hooks) uses PUBLIC_API_URL (HTTPS) today; browser calls same host.
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            "app.kubernetes.io/controller": api
+      toPorts:
+        - ports:
+            - port: "8080"
               protocol: TCP
 ---
 apiVersion: cilium.io/v2
@@ -118,7 +222,7 @@ metadata:
 spec:
   endpointSelector:
     matchLabels:
-      app.kubernetes.io/controller: controller
+      "app.kubernetes.io/controller": controller
   ingress:
     - fromEntities:
         - world
@@ -128,7 +232,7 @@ spec:
               protocol: TCP
     - fromEndpoints:
         - matchLabels:
-            app.kubernetes.io/controller: api
+            "app.kubernetes.io/controller": api
       toPorts:
         - ports:
             - port: "9090"
@@ -143,7 +247,7 @@ spec:
               protocol: TCP
     - toEndpoints:
         - matchLabels:
-            app.kubernetes.io/controller: nats
+            "app.kubernetes.io/controller": nats
       toPorts:
         - ports:
             - port: "4222"
@@ -159,7 +263,7 @@ metadata:
 spec:
   endpointSelector:
     matchLabels:
-      app.kubernetes.io/controller: nats
+      "app.kubernetes.io/controller": nats
   ingress:
     - fromEntities:
         - world
@@ -169,7 +273,7 @@ spec:
               protocol: TCP
     - fromEndpoints:
         - matchExpressions:
-            - key: app.kubernetes.io/controller
+            - key: "app.kubernetes.io/controller"
               operator: In
               values: [api, controller, init-jobs]
       toPorts:
@@ -187,7 +291,7 @@ metadata:
 spec:
   endpointSelector:
     matchLabels:
-      app.kubernetes.io/controller: init-jobs
+      "app.kubernetes.io/controller": init-jobs
   egress:
     - toEndpoints:
         - matchLabels:
@@ -198,7 +302,7 @@ spec:
               protocol: TCP
     - toEndpoints:
         - matchLabels:
-            app.kubernetes.io/controller: nats
+            "app.kubernetes.io/controller": nats
       toPorts:
         - ports:
             - port: "4222"
@@ -214,11 +318,11 @@ metadata:
 spec:
   endpointSelector:
     matchLabels:
-      app.kubernetes.io/controller: seaweed
+      "app.kubernetes.io/controller": seaweed
   ingress:
     - fromEndpoints:
         - matchExpressions:
-            - key: app.kubernetes.io/controller
+            - key: "app.kubernetes.io/controller"
               operator: In
               values: [api, controller]
       toPorts:

@@ -4,6 +4,7 @@ resources:
   - namespace.yaml
   - secret.meticulous-nats.yaml
   - secret.meticulous-db-owner.yaml
+  - secret.meticulous-db-uri.yaml
   - secret.meticulous-runtime.yaml
   - cnpg-cluster.yaml
   - db-superuser.yaml

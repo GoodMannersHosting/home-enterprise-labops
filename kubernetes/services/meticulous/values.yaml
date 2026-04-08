@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
 ---
-# Meticulous stack (met-api, met-controller, NATS, SeaweedFS). Images and secrets: see SECRETS.md.
+# Meticulous stack (frontend, met-api, met-controller, NATS, SeaweedFS). Images and secrets: see SECRETS.md.
 defaultPodOptions:
   automountServiceAccountToken: false
   enableServiceLinks: true
@@ -17,6 +17,8 @@ serviceAccount:
   nats:
     enabled: true
   seaweed:
+    enabled: true
+  frontend:
     enabled: true
 
 controllers:
@@ -206,7 +208,7 @@ controllers:
           - name: MET_DATABASE__URL
             valueFrom:
               secretKeyRef:
-                name: meticulous-db-owner
+                name: meticulous-db-uri
                 key: uri
           - name: MET_NATS__URL
             value: nats://meticulous-nats:4222
@@ -257,6 +259,60 @@ controllers:
               timeoutSeconds: 5
               failureThreshold: 3
           readiness: *httpProbes
+
+  # SvelteKit (adapter-node) UI. Build with:
+  #   docker build -f frontend/Dockerfile --build-arg PUBLIC_API_URL=https://ci.cloud.danmanners.com -t …/met-frontend:latest frontend/
+  frontend:
+    enabled: true
+    type: deployment
+    replicas: 1
+    annotations:
+      argocd.argoproj.io/sync-wave: "10"
+    serviceAccount:
+      name: frontend
+    containers:
+      main:
+        ports:
+          - name: http
+            containerPort: 3000
+            protocol: TCP
+        image:
+          repository: harbor.cloud.danmanners.com/meticulous/met-frontend
+          tag: latest
+          pullPolicy: Always
+        env:
+          - name: ORIGIN
+            value: https://ci.cloud.danmanners.com
+        securityContext:
+          allowPrivilegeEscalation: false
+        probes:
+          liveness:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /
+                port: http
+              initialDelaySeconds: 15
+              periodSeconds: 20
+              timeoutSeconds: 5
+          readiness:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /
+                port: http
+              initialDelaySeconds: 5
+              periodSeconds: 10
+              timeoutSeconds: 5
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: "1"
+            memory: 512Mi
 
   controller:
     enabled: true
@@ -337,7 +393,7 @@ controllers:
           - name: MET_DATABASE__URL
             valueFrom:
               secretKeyRef:
-                name: meticulous-db-owner
+                name: meticulous-db-uri
                 key: uri
           - name: MET_NATS__URL
             value: nats://meticulous-nats:4222
@@ -436,8 +492,20 @@ service:
         targetPort: s3
         protocol: TCP
 
+  frontend:
+    enabled: true
+    controller: frontend
+    primary: false
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        port: 80
+        targetPort: http
+        protocol: TCP
+
 route:
-  api:
+  web:
     enabled: true
     kind: HTTPRoute
     annotations:
@@ -453,6 +521,61 @@ route:
     rules:
       - backendRefs:
           - name: meticulous-api
+            port: 80
+            weight: 1
+        matches:
+          - path:
+              type: PathPrefix
+              value: /api
+        timeouts:
+          backendRequest: 0s
+          request: 0s
+      - backendRefs:
+          - name: meticulous-api
+            port: 80
+            weight: 1
+        matches:
+          - path:
+              type: PathPrefix
+              value: /auth
+        timeouts:
+          backendRequest: 0s
+          request: 0s
+      - backendRefs:
+          - name: meticulous-api
+            port: 80
+            weight: 1
+        matches:
+          - path:
+              type: PathPrefix
+              value: /admin
+        timeouts:
+          backendRequest: 0s
+          request: 0s
+      - backendRefs:
+          - name: meticulous-api
+            port: 80
+            weight: 1
+        matches:
+          - path:
+              type: PathPrefix
+              value: /docs
+        timeouts:
+          backendRequest: 0s
+          request: 0s
+      - backendRefs:
+          - name: meticulous-api
+            port: 80
+            weight: 1
+        matches:
+          - path:
+              type: PathPrefix
+              value: /health
+        timeouts:
+          backendRequest: 0s
+          request: 0s
+      - backendRefs:
+          - name: meticulous-frontend
             port: 80
             weight: 1
         matches:
