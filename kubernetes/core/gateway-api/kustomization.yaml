@@ -1,4 +1,5 @@
 resources:
   - gateway.yaml
+  - meticulous-tcp-gateway.yaml
   - cert-wildcard.yaml
   - https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.0/experimental-install.yaml

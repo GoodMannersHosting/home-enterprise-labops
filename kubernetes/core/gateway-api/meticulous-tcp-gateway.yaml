@@ -1,0 +1,31 @@
+# Dedicated LoadBalancer for Meticulous agent TCP (NATS + controller gRPC). Forward this LB IP:4222 and :9090 from edge firewall.
+# New services use 172.31.0.60–69; gwapi uses 172.31.0.10; Forgejo SSH uses 172.31.0.30.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: meticulous-tcp
+  namespace: default
+spec:
+  gatewayClassName: cilium
+  infrastructure:
+    annotations:
+      lbipam.cilium.io/ips: 172.31.0.60
+  listeners:
+    - name: nats
+      protocol: TCP
+      port: 4222
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              kubernetes.io/metadata.name: meticulous
+    - name: controller-grpc
+      protocol: TCP
+      port: 9090
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              kubernetes.io/metadata.name: meticulous
