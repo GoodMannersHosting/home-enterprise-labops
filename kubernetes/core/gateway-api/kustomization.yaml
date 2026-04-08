@@ -1,5 +1,7 @@
 resources:
   - gateway.yaml
-  - meticulous-tcp-gateway.yaml
+  # meticulous-tcp-gateway.yaml — TCP-only Gateway: Cilium reconciles with
+  # "model source can't be empty" (no TCPRoute support yet; cilium#38192, #21929).
+  # Meticulous agent TCP (4222/9090) uses shared LoadBalancer Services instead; see services/meticulous/values.yaml.
   - cert-wildcard.yaml
   - https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.0/experimental-install.yaml

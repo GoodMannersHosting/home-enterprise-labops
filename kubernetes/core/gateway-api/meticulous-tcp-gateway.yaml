@@ -1,3 +1,14 @@
+# INACTIVE — not applied (see core/gateway-api/kustomization.yaml).
+#
+# Cilium Gateway API does not reconcile Gateways whose only listeners are TCP/UDP:
+# cilium-operator logs: "model source can't be empty" (cilium#38192). TCPRoute support
+# is tracked in cilium#21929.
+#
+# Use instead: `kubernetes/services/meticulous/values.yaml` — `service.nats` and
+# `service.controller` as LoadBalancer with `lbipam.cilium.io/sharing-key` so both
+# ports share 172.31.0.60 (4222 NATS, 9090 gRPC). Forward that IP from the edge firewall.
+#
+# ---
 # Dedicated LoadBalancer for Meticulous agent TCP (NATS + controller gRPC). Forward this LB IP:4222 and :9090 from edge firewall.
 # New services use 172.31.0.60–69; gwapi uses 172.31.0.10; Forgejo SSH uses 172.31.0.30.
 apiVersion: gateway.networking.k8s.io/v1
