@@ -10,13 +10,13 @@ defaultPodOptions:
     fsGroupChangePolicy: OnRootMismatch
 
 serviceAccount:
-  meticulous-api:
+  api:
     enabled: true
-  meticulous-controller:
+  controller:
     enabled: true
-  meticulous-nats:
+  nats:
     enabled: true
-  meticulous-seaweed:
+  seaweed:
     enabled: true
 
 controllers:
@@ -28,11 +28,6 @@ controllers:
       argocd.argoproj.io/sync-wave: "1"
     serviceAccount:
       name: meticulous-nats
-    pod:
-      volumes:
-        - name: nats-jwt
-          secret:
-            secretName: meticulous-nats
     containers:
       main:
         image:
@@ -44,10 +39,6 @@ controllers:
         args:
           - -c
           - /etc/nats/jwt/nats-server.conf
-        volumeMounts:
-          - name: nats-jwt
-            mountPath: /etc/nats/jwt
-            readOnly: true
         ports:
           - name: client
             containerPort: 4222
@@ -144,15 +135,6 @@ controllers:
       argocd.argoproj.io/sync-wave: "10"
     serviceAccount:
       name: meticulous-api
-    pod:
-      volumes:
-        - name: nats-creds
-          secret:
-            secretName: meticulous-nats
-            items:
-              - key: api.creds
-                path: api.creds
-                mode: 256
     initContainers:
       wait-db:
         image:
@@ -184,11 +166,7 @@ controllers:
         image:
           repository: docker.io/natsio/nats-box
           tag: "0.19.3"
-        imagePullPolicy: IfNotPresent
-        volumeMounts:
-          - name: nats-creds
-            mountPath: /etc/nats/creds
-            readOnly: true
+          pullPolicy: IfNotPresent
         command:
           - sh
           - -c
@@ -220,10 +198,6 @@ controllers:
           pullPolicy: IfNotPresent
         securityContext:
           allowPrivilegeEscalation: false
-        volumeMounts:
-          - name: nats-creds
-            mountPath: /etc/nats/creds
-            readOnly: true
         env:
           - name: RUST_LOG
             value: info
@@ -292,15 +266,6 @@ controllers:
       argocd.argoproj.io/sync-wave: "10"
     serviceAccount:
       name: meticulous-controller
-    pod:
-      volumes:
-        - name: nats-creds
-          secret:
-            secretName: meticulous-nats
-            items:
-              - key: controller.creds
-                path: controller.creds
-                mode: 256
     initContainers:
       wait-db:
         image:
@@ -332,11 +297,7 @@ controllers:
         image:
           repository: docker.io/natsio/nats-box
           tag: "0.19.3"
-        imagePullPolicy: IfNotPresent
-        volumeMounts:
-          - name: nats-creds
-            mountPath: /etc/nats/creds
-            readOnly: true
+          pullPolicy: IfNotPresent
         command:
           - sh
           - -c
@@ -368,10 +329,6 @@ controllers:
           pullPolicy: IfNotPresent
         securityContext:
           allowPrivilegeEscalation: false
-        volumeMounts:
-          - name: nats-creds
-            mountPath: /etc/nats/creds
-            readOnly: true
         env:
           - name: RUST_LOG
             value: info
@@ -519,6 +476,31 @@ persistence:
         main:
           - path: /data
             readOnly: false
+  # Full Secret `meticulous-nats`: server JWT/config under /etc/nats/jwt; app creds under /etc/nats/creds
+  nats-jwt:
+    enabled: true
+    type: secret
+    name: meticulous-nats
+    defaultMode: 256
+    advancedMounts:
+      nats:
+        main:
+          - path: /etc/nats/jwt
+            readOnly: true
+      api:
+        main:
+          - path: /etc/nats/creds
+            readOnly: true
+        verify-nats-jwt:
+          - path: /etc/nats/creds
+            readOnly: true
+      controller:
+        main:
+          - path: /etc/nats/creds
+            readOnly: true
+        verify-nats-jwt:
+          - path: /etc/nats/creds
+            readOnly: true
   seaweed-data:
     enabled: true
     type: persistentVolumeClaim
