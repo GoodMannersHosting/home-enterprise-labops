@@ -14,5 +14,8 @@ spec:
       sectionName: controller-grpc
   rules:
     - backendRefs:
-        - name: meticulous-controller
+        - group: ''	
+          kind: Service	
+          name: meticulous-controller
           port: 9090
+          weight: 1
