@@ -126,7 +126,24 @@ def jwt_sub(jwt: str) -> str:
     payload = json.loads(b64url_decode(jwt.split(".")[1]))
     return payload["sub"]
 
+def nsc_compact_jwt(text: str, label: str) -> str:
+    """nsc 2.x `describe ... --raw` writes PEM-wrapped JWTs; nats-server expects one-line JWT."""
+    t = text.strip()
+    if t.startswith("eyJ") and t.count(".") == 2:
+        return t
+    for line in t.splitlines():
+        s = line.strip()
+        if s.startswith("eyJ") and s.count(".") == 2:
+            return s
+    print(f"could not extract compact JWT from {label}", file=sys.stderr)
+    sys.exit(1)
+
 root = pathlib.Path(sys.argv[1])
+for name in ("operator.jwt", "sys-account.jwt", "app-account.jwt"):
+    path = root / name
+    compact = nsc_compact_jwt(path.read_text(encoding="utf-8"), name)
+    path.write_text(compact + "\n", encoding="ascii")
+
 app_jwt = (root / "app-account.jwt").read_text().strip()
 sys_jwt = (root / "sys-account.jwt").read_text().strip()
 app_sub = jwt_sub(app_jwt)
@@ -145,6 +162,8 @@ seed = raw.split()[0] if raw.split() else raw
 (root / "account_issuer_pubkey.txt").write_text(app_sub, encoding="ascii")
 
 operator_name = "operator.jwt"
+# MEMORY resolver + resolver_preload (see NATS mem resolver docs). Quoted JWT strings
+# confuse the server; match `nsc generate config --mem-resolver` (bare NKey: bare JWT).
 lines = [
     "port: 4222",
     "http: 8222",
@@ -156,12 +175,14 @@ lines = [
     "",
     f"operator: /etc/nats/jwt/{operator_name}",
     "",
-    "resolver_preload: {",
-    f'  "{sys_sub}": "{sys_jwt}"',
-    f'  "{app_sub}": "{app_jwt}"',
-    "}",
-    "",
     f"system_account: {sys_sub}",
+    "",
+    "resolver: MEMORY",
+    "",
+    "resolver_preload: {",
+    f"  {sys_sub}: {sys_jwt}",
+    f"  {app_sub}: {app_jwt}",
+    "}",
     "",
 ]
 (root / "nats-server.conf").write_text("\n".join(lines) + "\n", encoding="utf-8")
