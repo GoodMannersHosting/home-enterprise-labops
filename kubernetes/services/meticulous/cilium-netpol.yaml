@@ -34,7 +34,7 @@ spec:
   egress:
     - toEndpoints:
         - matchLabels:
-            k8s:io.kubernetes.pod.namespace: kube-system
+            "k8s:io.kubernetes.pod.namespace": kube-system
             k8s-app: kube-dns
       toPorts:
         - ports:
@@ -147,7 +147,34 @@ spec:
         - matchExpressions:
             - key: app.kubernetes.io/component
               operator: In
-              values: [api, controller]
+              values: [api, controller, init-jobs]
+      toPorts:
+        - ports:
+            - port: "4222"
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: meticulous-init-jobs
+  namespace: meticulous
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/component: init-jobs
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            cnpg.io/cluster: meticulous-db
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/component: nats
       toPorts:
         - ports:
             - port: "4222"

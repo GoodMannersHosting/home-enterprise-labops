@@ -1,0 +1,4 @@
+# Cleartext or tool-decoded secrets — do not commit
+*.dec.yaml
+secret.*.clear.yaml
+nats-jwt-staging/
