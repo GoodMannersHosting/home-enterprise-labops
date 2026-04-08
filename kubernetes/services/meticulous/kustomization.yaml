@@ -10,4 +10,4 @@ resources:
   - db-superuser.yaml
   - tcproute-nats.yaml
   - tcproute-grpc.yaml
-  - cilium-netpol.yaml
+  # - cilium-netpol.yaml
