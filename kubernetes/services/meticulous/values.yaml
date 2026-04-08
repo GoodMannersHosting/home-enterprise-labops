@@ -235,10 +235,17 @@ controllers:
               secretKeyRef:
                 name: meticulous-runtime
                 key: jwt_api_secret
+          - name: MET_BUILTIN_SECRETS_MASTER_KEY
+            valueFrom:
+              secretKeyRef:
+                name: meticulous-runtime
+                key: builtin_secrets_master_key
           - name: MET_HTTP__CORS_ORIGINS
             value: https://ci.cloud.danmanners.com,http://localhost:5173
           - name: MET_HTTP__CORS_ALLOW_ANY
             value: "false"
+          - name: MET_HTTP__ENABLE_HSTS
+            value: "true"
         resources:
           requests:
             cpu: 100m
@@ -418,6 +425,11 @@ controllers:
             value: "false"
           - name: MET_CONTROLLER_GRPC_ADDR
             value: 0.0.0.0:9090
+          - name: MET_BUILTIN_SECRETS_MASTER_KEY
+            valueFrom:
+              secretKeyRef:
+                name: meticulous-runtime
+                key: builtin_secrets_master_key
         resources:
           requests:
             cpu: 100m
@@ -538,17 +550,6 @@ route:
           - path:
               type: PathPrefix
               value: /auth
-        timeouts:
-          backendRequest: 0s
-          request: 0s
-      - backendRefs:
-          - name: meticulous-api
-            port: 80
-            weight: 1
-        matches:
-          - path:
-              type: PathPrefix
-              value: /admin
         timeouts:
           backendRequest: 0s
           request: 0s
