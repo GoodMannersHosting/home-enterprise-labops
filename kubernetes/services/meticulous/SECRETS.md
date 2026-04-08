@@ -1,0 +1,122 @@
+# Meticulous namespace secrets (Sealed Secrets / External Secrets)
+
+Do not commit cleartext credentials for the **database owner** or **runtime** stack (JWT, S3). Create those with [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) or your cluster’s secret manager.
+
+## Deployment order (Argo CD sync waves)
+
+### Intended sequence
+
+1. **SealedSecrets (wave -4 … -2)** — **`secret.meticulous-nats.yaml`** (-4), **`secret.meticulous-db-owner.yaml`** (-3), **`secret.meticulous-runtime.yaml`** (-2). Create the NATS file with **`./bootstrap-meticulous-nats-jwt.sh --write-sealed`** (see §4). DB/runtime: **`./seal-meticulous-secrets.sh`**. All of these use the same **`seal-lib.sh`** options (`SEALED_SECRETS_*`, `SEALED_SECRETS_CERT_FILE`).
+2. **Infra** — CNPG `Cluster` (-1); NATS + SeaweedFS StatefulSets (Helm wave **1**); NATS reads **`/etc/nats/jwt/nats-server.conf`** from the **`meticulous-nats`** Secret (unsealed); Cilium (**3**).
+3. **Apps** — met-api, met-controller (**10**) run initContainers **`wait-db`**, **`wait-nats`**, **`verify-nats-jwt`**, mount **`meticulous-nats`** for creds and server JWT material as needed.
+
+Until **`secret.meticulous-nats.yaml`** exists, **`kubectl kustomize`** for this directory will fail with “no such file”; generate and commit that file (or add a local untracked copy) before the first sync.
+
+Pods do not become Ready until init steps succeed, so DB TCP and NATS JWT checks gate every rollout.
+
+**Break-glass:** `bootstrap-meticulous-nats-jwt.sh` with no flags prints a **cleartext** combined `Secret` manifest on stdout for manual `kubectl apply` or piping to `kubeseal`. Prefer **`--write-sealed`** for GitOps.
+
+## 1. `meticulous-db-owner` (required before CNPG can bootstrap)
+
+Referenced by the `Cluster` CR (`spec.bootstrap.initdb.secret`). Must exist **before** the `meticulous-db` cluster reconciles.
+
+| Key        | Description                                              |
+| ---------- | -------------------------------------------------------- |
+| `username` | Must match `spec.bootstrap.initdb.owner` (`meticulous`). |
+| `password` | Strong password for the application database owner.      |
+
+## 2. `meticulous-db-app` (operator-managed)
+
+CloudNative PG creates this secret when the cluster is ready. It includes a PostgreSQL URI with TLS/credentials appropriate for in-cluster use.
+
+| Key   | Used by                                                                                                           |
+| ----- | ----------------------------------------------------------------------------------------------------------------- |
+| `uri` | `MET_DATABASE__URL` on `met-api` and `met-controller`; migrations use the same URL via `MET_API__RUN_MIGRATIONS`. |
+
+You do not seal this secret yourself; wait for the operator. If pods fail before it exists, let the cluster finish reconciling or restart the deployment.
+
+## 3. `meticulous-runtime` (required for app workloads)
+
+| Key                     | Description                                                                                      |
+| ----------------------- | ------------------------------------------------------------------------------------------------ |
+| `jwt_api_secret`        | HS256 secret for the HTTP API (`MET_JWT__SECRET`). Use a long random string (32+ bytes).         |
+| `jwt_controller_secret` | `MET_CONTROLLER_JWT_SECRET` (must be **32+ characters** per controller binary).                  |
+| `s3_access_key`         | S3 access key for SeaweedFS / other S3 endpoint (must match how you configure the object store). |
+| `s3_secret_key`         | Matching secret key.                                                                             |
+
+Optional: add `builtin_secrets_master_key` and wire it through `MET_BUILTIN_SECRETS_MASTER_KEY` in `values.yaml` if you use built-in stored secret encryption.
+
+## Generating sealed manifests for DB owner + runtime
+
+Committed sealed YAML: **`meticulous-db-owner`**, **`meticulous-runtime`**. **`meticulous-db-app`** is created by CloudNative-PG and must not be hand-generated.
+
+From this directory, with `kubectl` pointed at the cluster where Sealed Secrets is installed and `kubeseal` on your `PATH`:
+
+```bash
+cd kubernetes/services/meticulous
+./seal-meticulous-secrets.sh
+```
+
+Optional fifth key for built-in stored secret encryption:
+
+```bash
+INCLUDE_BUILTIN_MASTER=1 ./seal-meticulous-secrets.sh
+```
+
+Air-gapped (controller public cert PEM on disk):
+
+```bash
+kubeseal --fetch-cert \
+  --controller-name sealed-secrets-controller \
+  --controller-namespace kube-system > /tmp/sealed-secrets.pem
+SEALED_SECRETS_CERT_FILE=/tmp/sealed-secrets.pem ./seal-meticulous-secrets.sh
+```
+
+Override controller name or namespace if your install differs:
+
+```bash
+SEALED_SECRETS_CONTROLLER_NAMESPACE=sealed-secrets \
+  SEALED_SECRETS_CONTROLLER_NAME=sealed-secrets-controller \
+  ./seal-meticulous-secrets.sh
+```
+
+After sealing, keep **`kustomization.yaml`** resources in order: **`secret.meticulous-nats.yaml`** (-4), **`secret.meticulous-db-owner.yaml`** (-3), **`secret.meticulous-runtime.yaml`** (-2), then **`cnpg-cluster.yaml`**. Commit only sealed YAML (never cleartext `Secret` objects).
+
+Shared options (same as **`seal-meticulous-secrets.sh`**, implemented in **`seal-lib.sh`**):
+
+- **`SEALED_SECRETS_CERT_FILE`** — PEM path for offline `kubeseal` (no live cluster needed for sealing).
+- **`SEALED_SECRETS_CONTROLLER_NAME`** / **`SEALED_SECRETS_CONTROLLER_NAMESPACE`** — defaults `sealed-secrets` / `sealed-secrets`.
+- **`SEALED_SECRET_NAMESPACE`** — target namespace for the plaintext `Secret` before sealing (default **`meticulous`**).
+
+## 4. NATS (`secret.meticulous-nats.yaml`)
+
+One Bitnami **SealedSecret** decrypts to **`Secret/meticulous-nats`** (sync wave **-4**). Generate it from a trusted host with **`nsc`** or Docker + **`natsio/nats-box`**, plus **`kubectl`**, **`kubeseal`**, and **`python3`**:
+
+```bash
+cd kubernetes/services/meticulous
+./bootstrap-meticulous-nats-jwt.sh --write-sealed
+# Optional: also write cleartext copies under nats/ for local inspection (do not commit if you only want sealed)
+./bootstrap-meticulous-nats-jwt.sh --write-sealed --write-kustomize
+```
+
+Then commit **`secret.meticulous-nats.yaml`**. Rotate NATS JWTs by re-running **`--write-sealed`** and replacing that file.
+
+| Secret key | Purpose |
+| --- | --- |
+| `nats-server.conf` | NATS server config (`resolver_preload`, JetStream, etc.). |
+| `operator.jwt` | Operator JWT. |
+| `sys-account.jwt`, `app-account.jwt` | Account JWTs (for debugging / tooling; server uses preload in `nats-server.conf`). |
+| `api.creds` | **met-api** — `MET_NATS__CREDENTIALS_FILE`; **verify-nats-jwt** on the api Deployment. |
+| `controller.creds` | **met-controller** — `MET_NATS_CREDS_PATH`; **verify-nats-jwt** on the controller Deployment. |
+| `account_signing_seed` | **`MET_NATS_ACCOUNT_SIGNING_SEED`**. |
+| `account_issuer_pubkey` | **`MET_NATS_ACCOUNT_ISSUER_PUBKEY`**. |
+
+NATS StatefulSet and app pods mount **`meticulous-nats`** at **`/etc/nats/jwt`** (or a creds subpath) per **`values.yaml`**.
+
+**Hardening:** restrict who can reach NATS port **4222** (NetworkPolicy).
+
+## Migrations
+
+Database schema is applied by **`met-api` when `MET_API__RUN_MIGRATIONS=true`** (see `values.yaml`), using embedded sqlx migrations from the `met-store` crate. That avoids a separate Job that must mount `meticulous-db-app` before the secret exists.
+
+For manual one-off runs (break-glass), build and use the optional image from the Meticulous repo `Dockerfile.sqlx-migrate` with `DATABASE_URL` set to the same `uri` as the CNPG app secret.

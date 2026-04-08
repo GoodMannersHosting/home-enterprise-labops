@@ -1,0 +1,12 @@
+# NATS: run ./bootstrap-meticulous-nats-jwt.sh --write-sealed to create secret.meticulous-nats.yaml.
+namespace: meticulous
+resources:
+  - namespace.yaml
+  - secret.meticulous-nats.yaml
+  - secret.meticulous-db-owner.yaml
+  - secret.meticulous-runtime.yaml
+  - cnpg-cluster.yaml
+  - db-superuser.yaml
+  - tcproute-nats.yaml
+  - tcproute-grpc.yaml
+  - cilium-netpol.yaml

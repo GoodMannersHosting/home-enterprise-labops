@@ -1,0 +1,33 @@
+# Dedicated CNPG cluster for Meticulous (not shared db-rw.database).
+# Bootstrap: create SealedSecret `meticulous-db-owner` (keys `username`, `password`) before sync; see SECRETS.md.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: meticulous-db
+  namespace: meticulous
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.3-system-trixie
+  primaryUpdateStrategy: unsupervised
+  storage:
+    size: 10Gi
+    storageClass: ceph-block-retain
+  enableSuperuserAccess: false
+  bootstrap:
+    initdb:
+      database: meticulous
+      owner: meticulous
+      secret:
+        name: meticulous-db-owner
+  postgresql:
+    parameters:
+      max_connections: "200"
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 100m
+    limits:
+      memory: 3Gi
+      cpu: "2"

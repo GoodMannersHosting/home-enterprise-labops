@@ -1,0 +1,203 @@
+# Default deny + scoped allows. Tune after deploy using Hubble (Gateway → backend paths vary by Cilium version).
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: meticulous-default-deny-ingress
+  namespace: meticulous
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  endpointSelector: {}
+  ingress: []
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: meticulous-default-deny-egress
+  namespace: meticulous
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  endpointSelector: {}
+  egress: []
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: meticulous-allow-dns
+  namespace: meticulous
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  endpointSelector: {}
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            "k8s:io.kubernetes.pod.namespace": kube-system
+            k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: meticulous-api
+  namespace: meticulous
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/component: api
+  ingress:
+    - fromEntities:
+        - cluster
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            cnpg.io/cluster: meticulous-db
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/component: nats
+      toPorts:
+        - ports:
+            - port: "4222"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/component: seaweed
+      toPorts:
+        - ports:
+            - port: "8333"
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: meticulous-controller
+  namespace: meticulous
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/component: controller
+  ingress:
+    - fromEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "9090"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/component: api
+      toPorts:
+        - ports:
+            - port: "9090"
+              protocol: TCP
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            cnpg.io/cluster: meticulous-db
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/component: nats
+      toPorts:
+        - ports:
+            - port: "4222"
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: meticulous-nats
+  namespace: meticulous
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/component: nats
+  ingress:
+    - fromEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "4222"
+              protocol: TCP
+    - fromEndpoints:
+        - matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values: [api, controller, init-jobs]
+      toPorts:
+        - ports:
+            - port: "4222"
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: meticulous-init-jobs
+  namespace: meticulous
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/component: init-jobs
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            cnpg.io/cluster: meticulous-db
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/component: nats
+      toPorts:
+        - ports:
+            - port: "4222"
+              protocol: TCP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: meticulous-seaweed
+  namespace: meticulous
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/component: seaweed
+  ingress:
+    - fromEndpoints:
+        - matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values: [api, controller]
+      toPorts:
+        - ports:
+            - port: "8333"
+              protocol: TCP

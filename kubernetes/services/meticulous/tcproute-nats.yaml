@@ -1,0 +1,19 @@
+# TCP exposure for NATS via Gateway API (parent: meticulous-tcp in default).
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TCPRoute
+metadata:
+  name: meticulous-nats
+  namespace: meticulous
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: meticulous-tcp
+      namespace: default
+      sectionName: nats
+  rules:
+    - backendRefs:
+        - name: meticulous-nats
+          port: 4222
