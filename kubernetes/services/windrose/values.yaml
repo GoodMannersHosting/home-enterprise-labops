@@ -51,7 +51,7 @@ controllers:
           - name: MAX_PLAYERS
             value: "10"
           - name: USER_SELECTED_REGION
-            value: "US"
+            value: "EU"
           - name: SERVER_PASSWORD
             valueFrom:
               secretKeyRef:
