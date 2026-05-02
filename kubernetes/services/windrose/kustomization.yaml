@@ -1,3 +1,11 @@
 namespace: gaming
 resources:
 - secret.windrose.yaml
+
+configMapGenerator:
+  - name: windrose-configmap
+    files:
+      - config.json=./config.json
+
+generatorOptions:
+  disableNameSuffixHash: true
