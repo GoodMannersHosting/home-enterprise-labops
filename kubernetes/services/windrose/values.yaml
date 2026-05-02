@@ -114,3 +114,13 @@ persistence:
         main:
           - path: /home/steam/server-files
             readOnly: false
+  world-config:
+    enabled: true
+    type: configMap
+    name: windrose-configmap
+    advancedMounts:
+      main:
+        main:
+          - path: /home/steam/server-files/R5/Saved/SaveProfiles/Default/RocksDB/0.10.0/Worlds/E26150BE4D644A69B4BF0C154721B2D8/WorldDescription.json
+            subPath: config.json
+            readOnly: false
