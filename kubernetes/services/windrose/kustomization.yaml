@@ -6,6 +6,7 @@ configMapGenerator:
   - name: windrose-configmap
     files:
       - config.json=./config.json
+      - ServerDescription.json=./ServerDescription.json
 
 generatorOptions:
   disableNameSuffixHash: true
