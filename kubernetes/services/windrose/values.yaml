@@ -27,8 +27,9 @@ controllers:
           - /bin/sh
           - -c
           - |
-            mkdir -p /server-files/R5/Saved/SaveProfiles/Default/RocksDB/0.10.0/Worlds/AF6C4C0DDDD7458CEA8AC5814CA7C3FC
-            cp /config/config.json /server-files/R5/Saved/SaveProfiles/Default/RocksDB/0.10.0/Worlds/AF6C4C0DDDD7458CEA8AC5814CA7C3FC/WorldDescription.json
+            mkdir -p /server-files/R5/Saved/SaveProfiles/Default/RocksDB/0.10.0/Worlds/E26150BE4D644A69B4BF0C154721B2D8
+            cp /config/config.json /server-files/R5/Saved/SaveProfiles/Default/RocksDB/0.10.0/Worlds/E26150BE4D644A69B4BF0C154721B2D8/WorldDescription.json
+            cp /config/ServerDescription.json /server-files/R5/ServerDescription.json
     containers:
       main:
         ports:
