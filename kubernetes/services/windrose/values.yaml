@@ -52,6 +52,8 @@ controllers:
             value: "10"
           - name: USER_SELECTED_REGION
             value: "EU"
+          - name: GENERATE_SETTINGS
+            value: "false"
           - name: SERVER_PASSWORD
             valueFrom:
               secretKeyRef:
@@ -123,4 +125,14 @@ persistence:
         main:
           - path: /home/steam/server-files/R5/Saved/SaveProfiles/Default/RocksDB/0.10.0/Worlds/E26150BE4D644A69B4BF0C154721B2D8/WorldDescription.json
             subPath: config.json
-            readOnly: false
+            readOnly: true
+  server-description:
+    enabled: true
+    type: configMap
+    name: windrose-configmap
+    advancedMounts:
+      main:
+        main:
+          - path: /home/steam/server-files/R5/Saved/SaveProfiles/Default/RocksDB/0.10.0/Worlds/E26150BE4D644A69B4BF0C154721B2D8/ServerDescription.json
+            subPath: ServerDescription.json
+            readOnly: true
