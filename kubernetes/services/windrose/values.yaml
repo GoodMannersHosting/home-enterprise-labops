@@ -18,6 +18,18 @@ controllers:
       hostPID: false
       hostIPC: false
       dnsPolicy: ClusterFirst
+    initContainers:
+      copy-world-config:
+        image:
+          repository: busybox
+          tag: latest
+        command:
+          - /bin/sh
+          - -c
+          - |
+            mkdir -p /server-files/R5/Saved/SaveProfiles/Default/RocksDB/0.10.0/Worlds/E26150BE4D644A69B4BF0C154721B2D8
+            cp /config/config.json /server-files/R5/Saved/SaveProfiles/Default/RocksDB/0.10.0/Worlds/E26150BE4D644A69B4BF0C154721B2D8/WorldDescription.json
+            cp /config/ServerDescription.json /server-files/R5/Saved/SaveProfiles/Default/RocksDB/0.10.0/Worlds/E26150BE4D644A69B4BF0C154721B2D8/ServerDescription.json
     containers:
       main:
         ports:
@@ -116,23 +128,15 @@ persistence:
         main:
           - path: /home/steam/server-files
             readOnly: false
+        copy-world-config:
+          - path: /server-files
+            readOnly: false
   world-config:
     enabled: true
     type: configMap
     name: windrose-configmap
     advancedMounts:
       main:
-        main:
-          - path: /home/steam/server-files/R5/Saved/SaveProfiles/Default/RocksDB/0.10.0/Worlds/E26150BE4D644A69B4BF0C154721B2D8/WorldDescription.json
-            subPath: config.json
-            readOnly: false
-  server-description:
-    enabled: true
-    type: configMap
-    name: windrose-configmap
-    advancedMounts:
-      main:
-        main:
-          - path: /home/steam/server-files/R5/Saved/SaveProfiles/Default/RocksDB/0.10.0/Worlds/E26150BE4D644A69B4BF0C154721B2D8/ServerDescription.json
-            subPath: ServerDescription.json
-            readOnly: false
+        copy-world-config:
+          - path: /config
+            readOnly: true
