@@ -1,0 +1,142 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+defaultPodOptions:
+  automountServiceAccountToken: false
+  enableServiceLinks: false
+  restartPolicy: Always
+  nodeSelector:
+    cpu-feature.node.kubevirt.io/avx2: "true"
+
+controllers:
+  main:
+    enabled: true
+    type: statefulset
+    replicas: 1
+    revisionHistoryLimit: 2
+    pod:
+      hostNetwork: false
+      hostPID: false
+      hostIPC: false
+      dnsPolicy: ClusterFirst
+    initContainers:
+      copy-world-config:
+        image:
+          repository: busybox
+          tag: latest
+        command:
+          - /bin/sh
+          - -c
+          - |
+            mkdir -p /server-files/R5/Saved/SaveProfiles/Default/RocksDB/0.10.0/Worlds/53AF1964ACF540A917BCD1FC79B1F859
+            cp /config/config.json /server-files/R5/Saved/SaveProfiles/Default/RocksDB/0.10.0/Worlds/53AF1964ACF540A917BCD1FC79B1F859/WorldDescription.json
+            cp /config/ServerDescription.json /server-files/R5/ServerDescription.json
+    containers:
+      main:
+        ports:
+          - name: game
+            containerPort: 7778
+            protocol: TCP
+          - name: game-udp
+            containerPort: 7778
+            protocol: UDP
+        image:
+          repository: indifferentbroccoli/windrose-server-docker
+          tag: "latest"
+          pullPolicy: "Always"
+        securityContext:
+          allowPrivilegeEscalation: false
+        env:
+          - name: PUID
+            value: "1000"
+          - name: PGID
+            value: "1000"
+          - name: TZ
+            value: "UTC"
+          - name: UPDATE_ON_START
+            value: "true"
+          - name: USE_DIRECT_CONNECTION
+            value: "true"
+          - name: SERVER_PORT
+            value: "7778"
+          - name: SERVER_NAME
+            value: "Tig Ole Biddy Isles"
+          - name: MAX_PLAYERS
+            value: "8"
+          - name: USER_SELECTED_REGION
+            value: "EU"
+          - name: GENERATE_SETTINGS
+            value: "false"
+          - name: SERVER_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: 9a-windrose-secrets
+                key: SERVER_PASSWORD
+          - name: INVITE_CODE
+            valueFrom:
+              secretKeyRef:
+                name: 9a-windrose-secrets
+                key: INVITE_CODE
+        resources:
+          limits:
+            cpu: 4000m
+            memory: 12Gi
+          requests:
+            cpu: 2000m
+            memory: 12Gi
+        lifecycle: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+
+service:
+  main:
+    enabled: true
+    controller: main
+    primary: true
+    type: LoadBalancer
+    loadBalancerIP: 172.31.0.34
+    ports:
+      game:
+        enabled: true
+        port: 7778
+        targetPort: game
+        protocol: TCP
+      game-udp:
+        enabled: true
+        port: 7778
+        targetPort: game-udp
+        protocol: UDP
+  extname:
+    enabled: true
+    primary: false
+    controller: main
+    type: ExternalName
+    externalName: unifi-home.homelab.danmanners.com
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: 9a-windrose.cloud.danmanners.com
+      external-dns.alpha.kubernetes.io/ttl: "300"
+
+persistence:
+  server-files:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-block-retain
+    accessMode: ReadWriteOnce
+    size: 40Gi
+    retain: true
+    advancedMounts:
+      main:
+        main:
+          - path: /home/steam/server-files
+            readOnly: false
+        copy-world-config:
+          - path: /server-files
+            readOnly: false
+  world-config:
+    enabled: true
+    type: secret
+    name: 9a-windrose-secrets
+    advancedMounts:
+      main:
+        copy-world-config:
+          - path: /config
+            readOnly: true
