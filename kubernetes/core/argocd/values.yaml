@@ -39,6 +39,7 @@ configs:
   rbac:
     policy.default: role:readonly
     policy.csv: |
+      # Argo Actions
       p, role:org-admin, applications, create, */*, allow
       p, role:org-admin, applications, update, */*, allow
       p, role:org-admin, applications, delete, */*, allow
@@ -66,6 +67,14 @@ configs:
       p, role:org-admin, gpgkeys, delete, *, allow
       p, role:org-admin, exec, create, */*, allow
       g, ArgoCDAdmins, role:org-admin
+      # Gaming
+      p, role:gamers, applications, get, */*, allow
+      p, role:gamers, applications, sync, */*, allow
+      p, role:gamers, clusters, get, *, allow
+      p, role:gamers, logs, get, default/windrose-9a, allow
+      p, role:gamers, applications, action/apps/StatefulSet/restart, default/windrose-9a, allow
+      p, role:gamers, applications, action/apps/Deployment/restart, default/windrose-9a, allow
+      g, gamers, role:gamers
       # Octopus Deploy
       p, octopus, applications, get, *, allow
       p, octopus, applications, sync, *, allow
