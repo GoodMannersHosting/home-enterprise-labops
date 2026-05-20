@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/budimanjojo/talhelper/master/pkg/config/schemas/talconfig.json
 clusterName: helo
-talosVersion: v1.12.1
+talosVersion: v1.13.0
 kubernetesVersion: 1.35.0
 endpoint: "https://k8s.homelab.danmanners.com:6443"
 allowSchedulingOnControlPlanes: true
@@ -145,6 +145,37 @@ nodes:
       - deviceSelector:
           hardwareAddr: "a8:a1:59:f9:12:c9"
         dhcp: false
+  # R26 Worker Node
+  - hostname: intellectual.homelab.danmanners.com
+    controlPlane: false
+    installDiskSelector:
+      wwid: eui.00a07501e9caa18f
+    machineSpec:
+      useUKI: true
+      secureboot: true
+    schematic:
+      customization:
+        systemExtensions:
+          officialExtensions:
+            - siderolabs/binfmt-misc
+            - siderolabs/i915
+            - siderolabs/intel-ice-firmware
+            - siderolabs/intel-ucode
+            - siderolabs/mei
+            - siderolabs/nvme-cli
+            - siderolabs/wasmedge
+            - siderolabs/xe
+    ipAddress: 172.21.0.19
+    disableSearchDomain: true
+    nameservers: *nameservers
+    networkInterfaces:
+      - deviceSelector:
+          hardwareAddr: "b8:fb:b3:09:45:28"
+        dhcp: false
+        mtu: 9000
+        addresses:
+          - 172.21.0.19/20
+        routes: *mgmt_routes
   # R12 Worker Node
   - hostname: rampage.homelab.danmanners.com
     controlPlane: true
