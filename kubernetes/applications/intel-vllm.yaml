@@ -1,0 +1,32 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: intel-vllm
+  namespace: argocd
+  labels:
+    chartVersion: &chartVersion 4.1.2
+spec:
+  destination:
+    namespace: aiml
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+    - repoURL: &url https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: &branch main
+      path: kubernetes/services/intel-vllm
+    - repoURL: *url
+      targetRevision: *branch
+      ref: values
+    - repoURL: https://bjw-s-labs.github.io/helm-charts
+      chart: app-template
+      targetRevision: *chartVersion
+      helm:
+        valueFiles:
+          - $values/kubernetes/services/intel-vllm/values.yaml
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
