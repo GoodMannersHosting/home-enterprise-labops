@@ -27,21 +27,22 @@ controllers:
             protocol: TCP
         image:
           repository: ghcr.io/ggml-org/llama.cpp
-          # SYCL / Level Zero on Arc B70. Roll back to server-vulkan if warmup crashes (see README).
-          tag: server-intel
+          # Back on Vulkan: server-intel (SYCL) crashes silently during warmup on Qwen3.6 hybrid GDN
+          # (ggml-org/llama.cpp#21474). Qwen3-Coder-30B-A3B is a standard MoE transformer, no SSM/GDN.
+          tag: server-vulkan
           pullPolicy: Always
         # Image ENTRYPOINT is /app/llama-server; do not override command with sh.
         args:
+          # Qwen3-Coder-30B-A3B: MoE, ~3B active params per token → fast generation on B70 Vulkan.
+          # Standard transformer (no GDN/SSM), so SYCL-only Qwen3.6 warmup bug doesn't apply.
           - --hf-repo
-          - unsloth/Qwen3.6-27B-GGUF
-          # Minimum weight quant Q6_K (do not go below Q6_K / Q6_0 class for now).
+          - unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF
+          # Quality floor: Q6_K. Switch to UD-Q6_K_XL for Unsloth Dynamic if quality matters more than size.
           - --hf-file
-          - Qwen3.6-27B-Q6_K.gguf
-          # Text-only Open WebUI: -hf auto-downloads mmproj (~1.2GiB) and costs VRAM + tok/s without --no-mmproj.
-          - --no-mmproj
-          # 8192 tokens per slot (not "8192 MB" GPU). Lower than 32k to fit KV on 32GB VRAM.
+          - Qwen3-Coder-30B-A3B-Instruct-Q6_K.gguf
+          # 32k ctx fits comfortably: Q6_K model ~25 GiB + q8_0 KV @32k ~1.6 GiB on 32 GiB Arc B70.
           - --ctx-size
-          - "8192"
+          - "32768"
           - --gpu-layers
           - "99"
           - --flash-attn
@@ -51,13 +52,7 @@ controllers:
           - q8_0
           - --cache-type-v
           - q8_0
-          # Qwen3.6 hybrid (GDN): full SWA cache; avoids pathological partial-cache behavior.
-          - --swa-full
-          # Context checkpoints break on hybrid models (full re-process each turn) and cost
-          # ~150MiB per checkpoint during TG — disable until server image includes PR #22929-class fix.
-          - --ctx-checkpoints
-          - "0"
-          # Default n_parallel=4 → four 8k slots reserve KV; use 1 for single-user chat.
+          # Default n_parallel=4 → four KV slots reserve VRAM; use 1 for single-user chat.
           - --parallel
           - "1"
           # Prompt cache default is 8192 MiB RAM (log line "limits: 8192.000 MiB") — disable for clarity/less overhead.
@@ -77,22 +72,13 @@ controllers:
             value: "0.0.0.0"
           - name: LLAMA_ARG_PORT
             value: "8080"
-          # NOTE: do not set LD_LIBRARY_PATH here. The SYCL image (intel/deep-learning-essentials base)
-          # already sets it to include oneAPI runtime dirs containing libsvml.so / libimf.so / libintlc.so.
-          # The llama-server binary finds /app/libllama*.so via baked-in RPATH=$ORIGIN.
-          # Overriding LD_LIBRARY_PATH=/app removes the oneAPI paths and breaks startup with:
-          #   error while loading shared libraries: libsvml.so: cannot open shared object file
-          # If you switch back to server-vulkan, re-add: { name: LD_LIBRARY_PATH, value: /app }.
-          # SYCL / Level Zero (Arc via gpu.intel.com/xe + CDI). Vulkan-only vars removed.
-          - name: ONEAPI_DEVICE_SELECTOR
-            value: "level_zero:0"
-          - name: GGML_SYCL_DEVICE
-            value: "0"
-          - name: SYCL_CACHE_PERSISTENT
-            value: "1"
-          - name: ZES_ENABLE_SYSMAN
-            value: "1"
-          - name: SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS
+          # server-vulkan ships .so files in /app; without this, ld.so can't find libllama-common.so.0.
+          # If we ever switch back to server-intel (SYCL), REMOVE this entry — the SYCL base image's
+          # own LD_LIBRARY_PATH must remain intact for libsvml.so/libimf.so/libintlc.so to resolve.
+          - name: LD_LIBRARY_PATH
+            value: /app
+          # Vulkan MMVQ shared-memory staging: cuts host<->device copies on Arc Xe2; safe to leave on.
+          - name: GGML_VK_MMVQ_SHMEM_STAGING
             value: "1"
           - name: LLAMA_ARG_THREADS
             value: "16"
