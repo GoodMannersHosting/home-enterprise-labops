@@ -195,4 +195,5 @@ Compare before/after each change; aim for stable tok/s in logs or wall time for 
 - **SYCL warmup crash:** Try `server-intel-b8477` or revert to `server-vulkan` (see §4b).
 - **SYCL vs Vulkan:** Dense Q6_K on B70 may be faster on either backend — measure `tg` in logs after restart.
 - **`llama-server: not found`:** The server image sets `ENTRYPOINT` to `/app/llama-server`. Do not wrap with `/bin/sh` unless you call `/app/llama-server` explicitly.
-- **`libllama-common.so.0: cannot open shared object file`:** Vulkan/server images ship `.so` files in `/app`; set `LD_LIBRARY_PATH=/app` (the Dockerfile `WORKDIR` alone is not enough for the dynamic linker).
+- **`libllama-common.so.0: cannot open shared object file`** (Vulkan image): Vulkan `server` ships `.so` files in `/app`; set `LD_LIBRARY_PATH=/app` (the Dockerfile `WORKDIR` alone is not enough for the dynamic linker).
+- **`libsvml.so: cannot open shared object file`** (SYCL image): caused by setting `LD_LIBRARY_PATH=/app`. The SYCL base image (`intel/deep-learning-essentials`) defines `LD_LIBRARY_PATH` with the oneAPI compiler runtime; overriding it removes those paths. **Do not set `LD_LIBRARY_PATH` on the SYCL image** — the `llama-server` binary finds `/app/lib*.so` via its baked-in `RPATH=$ORIGIN`.
