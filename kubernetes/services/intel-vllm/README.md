@@ -11,10 +11,10 @@ The Argo app / Helm release is named **`intel-vllm`** from the homelab plan (dir
 | Item | Value |
 |------|--------|
 | Hugging Face repo | `unsloth/Qwen3.6-27B-GGUF` |
-| GGUF file | `Qwen3.6-27B-Q4_K_M.gguf` (text-only; `--no-mmproj`) |
+| GGUF file | `Qwen3.6-27B-Q6_K.gguf` (text-only; `--no-mmproj`; min weight quant Q6_K) |
 | Context | `8192` default (was `32768` — that reserved enormous KV and slowed generation) |
-| Image | `ghcr.io/ggml-org/llama.cpp:server-vulkan` |
-| Tunables | Flash attention on, KV cache `q8_0`, `GGML_VK_MMVQ_SHMEM_STAGING=1` |
+| Image | `ghcr.io/ggml-org/llama.cpp:server-intel` (SYCL / Level Zero) |
+| Tunables | Flash attention on, KV cache `q8_0`, SYCL env vars in values |
 
 Weights are pulled on first start into the `cache` PVC (`HF_HOME=/cache/huggingface`).
 
@@ -102,21 +102,36 @@ Need long documents? Raise `--ctx-size` in [`values.yaml`](values.yaml) graduall
 
 Default `n_parallel=4` creates **four** slots each with full `n_ctx` KV — heavy on 32GB VRAM. Values use `--parallel 1` for Open WebUI.
 
-### 4. Quantization
+### 4. Quantization (weights)
+
+**Policy:** stay at **Q6_K** or higher for weight files (no Q4_K_M / Q4_0 class for now). KV cache types (`q8_0`) are separate and may still be tuned.
 
 | GGUF | Tradeoff |
 |------|----------|
-| `Qwen3.6-27B-Q4_K_M.gguf` (default) | ~16.8GB, best interactive speed on Arc |
-| `Qwen3.6-27B-Q6_K.gguf` | Better quality, slower |
-| `Qwen3.6-27B-Q8_0.gguf` | Middle ground |
+| `Qwen3.6-27B-Q6_K.gguf` (default) | Quality floor; ~22.5GB weights |
+| `Qwen3.6-27B-Q8_0.gguf` | Heavier, slightly higher quality |
 
-When switching `--hf-file`, remove the old snapshot under the cache PVC or use a fresh path so the pod does not keep loading Q6_K from disk.
+When switching `--hf-file`, remove the old snapshot under the cache PVC or use a fresh path so the pod does not keep loading the previous quant from disk.
 
-### 5. llama.cpp / Vulkan on Xe2 (already in values)
+### 4b. SYCL vs Vulkan (backend A/B)
+
+Current image: **`server-intel`** (SYCL). Previous: **`server-vulkan`**.
+
+After sync, confirm startup logs show **SYCL0** (not only `Vulkan0`), e.g. layers offloaded `on SYCL0`.
+
+| If SYCL… | Action |
+|----------|--------|
+| **Works + higher `tg`** | Keep `server-intel` |
+| **Crashes on warmup** | Pin `server-intel-b8477` or revert `tag: server-vulkan` and restore `GGML_VK_MMVQ_SHMEM_STAGING=1` |
+| **Slower than Vulkan** | Revert to Vulkan; SYCL wins on some B70 dense models, not all |
+
+SYCL env in values: `ONEAPI_DEVICE_SELECTOR=level_zero:0`, `GGML_SYCL_DEVICE=0`, `ZES_ENABLE_SYSMAN=1`, `SYCL_CACHE_PERSISTENT=1`.
+
+### 5. llama.cpp backends (already in values)
 
 - `--flash-attn on`
 - `--cache-type-k q8_0 --cache-type-v q8_0`
-- `GGML_VK_MMVQ_SHMEM_STAGING=1` (Intel Arc B-Series MMVQ path; needs a **recent** `server-vulkan` image — `pullPolicy: Always` on restart)
+- **Vulkan only:** `GGML_VK_MMVQ_SHMEM_STAGING=1` when using `server-vulkan`
 
 Restart the pod after changing the image tag or env so the binary and shaders refresh.
 
@@ -134,13 +149,41 @@ For **many concurrent** OpenAI clients or higher batch throughput, `llama-server
 - Disable unnecessarily large **context window** / **full chat history** features for the Intel model.
 - RAG embeddings are separate; slow **chat** is almost always inference flags/ctx/GPU, not Postgres.
 
+### You're at ~14 t/s — what about ~40 t/s?
+
+**Token generation (`tg` in logs)** and **chat responsiveness** are different problems.
+
+| Metric | Your logs | Notes |
+|--------|-----------|--------|
+| **TG (decode)** | ~13.5 t/s | Already ~2.4× up from ~5.6 t/s after `--no-mmproj` + Q4_K_M |
+| **Prefill** | ~396 t/s | Good; not the bottleneck for “feels slow” |
+| **Multi-turn** | `forcing full prompt re-processing` | Qwen3.6 **hybrid** architecture + broken context checkpoints in current `server-vulkan` |
+
+**Realistic TG targets on Arc B70 + Vulkan for Qwen3.6-27B Q4_K_M:** roughly **15–25 t/s** on a well-tuned stack. **~40 t/s** on the same 27B dense model usually needs one or more of:
+
+1. **Smaller model on the same GPU** — e.g. Qwen3.5-9B / 14B MLX-class GGUF often lands **30–50+ t/s** on Arc.
+2. **More aggressive quant** — `Q4_K_S`, `IQ4_XS`, or MXFP4 where supported (quality tradeoff).
+3. **`server-intel` (SYCL)** — some B70 setups beat Vulkan on dense Q4; worth an A/B Deployment (separate release).
+4. **Host Mesa 26+** on `intellectual` — Vulkan BF16/integer-dot paths; Talos extension age matters.
+5. **Newer llama.cpp** — upstream fixes for hybrid checkpoint restore ([PR #22929](https://github.com/ggml-org/llama.cpp/pull/22929) area) improve **turn-to-turn** latency, not always peak TG.
+6. **Intel vLLM XPU** — throughput-oriented; different ops profile than llama-server.
+
+**Values just added for another TG bump:**
+
+- `--ctx-checkpoints 0` — stops mid-generation “checkpoint 1 of 32” work (~150 MiB each in your logs).
+- `--swa-full` — hybrid-model KV behavior per [llama.cpp #13194](https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055).
+- KV cache `q4_0` (was `q8_0`).
+- `LLAMA_ARG_THREADS=16` (logs showed `n_threads = 8` on a 28-thread host).
+
+**Open WebUI:** shorten chat history / context limit so turns do not re-send 700–1000 tokens every message until checkpoint fix is in your image.
+
 ### Quick benchmark (from LAN)
 
 ```bash
 time curl -s http://intel-llm.cloud.danmanners.com/v1/chat/completions \
   -H "Authorization: Bearer $INTEL_LLM_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"model":"Qwen3.6-27B-Q4_K_M.gguf","messages":[{"role":"user","content":"Count from 1 to 20."}],"max_tokens":128,"stream":false}'
+  -d '{"model":"Qwen3.6-27B-Q6_K.gguf","messages":[{"role":"user","content":"Count from 1 to 20."}],"max_tokens":128,"stream":false}'
 ```
 
 Compare before/after each change; aim for stable tok/s in logs or wall time for 128 tokens.
@@ -149,6 +192,7 @@ Compare before/after each change; aim for stable tok/s in logs or wall time for 
 
 - **Scheduling:** Pod must land on node `intellectual` (`kubernetes.io/hostname=intellectual`, not the Talos FQDN) with `gpu.intel.com/xe` allocatable.
 - **CDI / GPU:** Values start without `privileged` or host `/dev/dri` mounts; if the pod fails to use the GPU, add privileged + `/dev/dri` hostPath per cluster notes.
-- **SYCL image:** Prefer `server-vulkan` on Arc; `server-intel` (SYCL) has known regressions on some Arc iGPUs.
+- **SYCL warmup crash:** Try `server-intel-b8477` or revert to `server-vulkan` (see §4b).
+- **SYCL vs Vulkan:** Dense Q6_K on B70 may be faster on either backend — measure `tg` in logs after restart.
 - **`llama-server: not found`:** The server image sets `ENTRYPOINT` to `/app/llama-server`. Do not wrap with `/bin/sh` unless you call `/app/llama-server` explicitly.
 - **`libllama-common.so.0: cannot open shared object file`:** Vulkan/server images ship `.so` files in `/app`; set `LD_LIBRARY_PATH=/app` (the Dockerfile `WORKDIR` alone is not enough for the dynamic linker).
