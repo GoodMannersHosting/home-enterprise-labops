@@ -27,25 +27,54 @@ controllers:
             protocol: TCP
         image:
           repository: ghcr.io/ggml-org/llama.cpp
+          # Floating tag; restart pod after sync to pick up Vulkan/Xe2 fixes. Pin to a dated tag if regressions occur.
           tag: server-vulkan
-          pullPolicy: IfNotPresent
+          pullPolicy: Always
         # Image ENTRYPOINT is /app/llama-server; do not override command with sh.
         args:
-          - --host
-          - "0.0.0.0"
-          - --port
-          - "8080"
           - --hf-repo
           - unsloth/Qwen3.6-27B-GGUF
+          # Q4_K_M: best interactive speed on Arc; Q6_K is slower (change --hf-file + clear cache PVC dir if switching).
           - --hf-file
-          - Qwen3.6-27B-Q6_K.gguf
+          - Qwen3.6-27B-Q4_K_M.gguf
+          # Text-only Open WebUI: -hf auto-downloads mmproj (~1.2GiB) and costs VRAM + tok/s without --no-mmproj.
+          - --no-mmproj
+          # 8192 tokens per slot (not "8192 MB" GPU). Lower than 32k to fit KV on 32GB VRAM.
           - --ctx-size
-          - "32768"
+          - "8192"
           - --gpu-layers
           - "99"
+          - --flash-attn
+          - "on"
+          - --cache-type-k
+          - q8_0
+          - --cache-type-v
+          - q8_0
+          # Default n_parallel=4 → four 8k slots reserve KV; use 1 for single-user chat.
+          - --parallel
+          - "1"
+          # Prompt cache default is 8192 MiB RAM (log line "limits: 8192.000 MiB") — disable for clarity/less overhead.
+          - --cache-ram
+          - "0"
+          # Text chat: disable thinking/reasoning (replaces deprecated --chat-template-kwargs enable_thinking).
+          - --reasoning
+          - "off"
+          # Avoid per-token checkpoint work during generation (see logs: "checkpoint 1 of 32").
+          - --checkpoint-every-n-tokens
+          - "-1"
+          - --ubatch-size
+          - "512"
         env:
+          # Bind via env only — image sets LLAMA_ARG_HOST; duplicating --host triggers a startup warning.
+          - name: LLAMA_ARG_HOST
+            value: "0.0.0.0"
+          - name: LLAMA_ARG_PORT
+            value: "8080"
           - name: LD_LIBRARY_PATH
             value: /app
+          # Intel Xe2 (Arc B-Series): shared-memory MMVQ path (major TG uplift on recent llama.cpp builds).
+          - name: GGML_VK_MMVQ_SHMEM_STAGING
+            value: "1"
           - name: LLAMA_API_KEY
             valueFrom:
               secretKeyRef:
