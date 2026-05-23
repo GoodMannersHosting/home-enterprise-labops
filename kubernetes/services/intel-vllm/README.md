@@ -10,13 +10,17 @@ The Argo app / Helm release is named **`intel-vllm`** from the homelab plan (dir
 
 | Item | Value |
 |------|--------|
-| Hugging Face repo | `unsloth/Qwen3.6-27B-GGUF` |
-| GGUF file | `Qwen3.6-27B-Q6_K.gguf` (text-only; `--no-mmproj`; min weight quant Q6_K) |
-| Context | `8192` default (was `32768` — that reserved enormous KV and slowed generation) |
-| Image | `ghcr.io/ggml-org/llama.cpp:server-intel` (SYCL / Level Zero) |
-| Tunables | Flash attention on, KV cache `q8_0`, SYCL env vars in values |
+| Hugging Face repo | `unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF` |
+| GGUF file | `Qwen3-Coder-30B-A3B-Instruct-Q6_K.gguf` (MoE, ~3B active params; min weight quant Q6_K) |
+| Context | `32768` (q8_0 KV ≈ 1.6 GiB; model ≈ 25 GiB; comfortably fits on 32 GiB B70) |
+| Image | `ghcr.io/ggml-org/llama.cpp:server-vulkan` (Vulkan; SYCL blocked by upstream bug — see §4b) |
+| Tunables | Flash attention on, KV cache `q8_0`, `GGML_VK_MMVQ_SHMEM_STAGING=1` |
 
 Weights are pulled on first start into the `cache` PVC (`HF_HOME=/cache/huggingface`).
+
+### Why this model
+
+Qwen3-Coder-30B-A3B is a **standard transformer MoE** (no Gated DeltaNet / SSM blocks), so it dodges the SYCL Qwen3.6 warmup crash and also benefits from MoE sparsity: only ~3B params are active per token. On Arc B70 + Vulkan + Q6_K this should sit well above the 13–15 t/s ceiling we hit with the dense Qwen3.6-27B model, and it's purpose-built for coding/agent workflows. If you later want a multimodal model on this box, run it as a **second** Deployment rather than swapping this one out.
 
 ## Endpoints
 
@@ -73,9 +77,9 @@ Two different `8192` values show up in logs:
 
 We set `--cache-ram 0` to disable that cache. Kubernetes still gives the pod **28Gi**; the GPU reports **~32GiB** (`Vulkan0: Intel BMG G31`).
 
-### Multimodal (mmproj) was likely your biggest bug
+### Multimodal (mmproj) — N/A for current model
 
-If logs show `loaded multimodal model, ... mmproj-BF16.gguf`, the server auto-pulled the **vision projector** (~1.2GiB+) even for text-only chat. That steals VRAM and slows token generation. Use **`--no-mmproj`** (now in values). You must **restart** after sync; confirm logs say **no** mmproj load.
+Qwen3-Coder-30B-A3B is text-only; the GGUF repo ships no `mmproj-*.gguf`, so there is nothing for `-hf` to auto-load. If you later switch back to a multimodal model (Qwen3.6, Qwen-VL, etc.), re-add `--no-mmproj` unless you actually want vision.
 
 If generation feels slow, work through these in order.
 
@@ -92,11 +96,16 @@ If layers run on CPU, fix CDI/`/dev/dri` (see Troubleshooting) before tuning fla
 
 ### 2. Context length (largest lever in this deployment)
 
-`--ctx-size 32768` on a **27B** model pre-allocates a very large KV cache on **32GB** VRAM and destroys token/s even when chats are short.
+KV cache scales linearly with `--ctx-size` × `--parallel`. With Qwen3-Coder-30B-A3B's GQA layout (4 KV heads, head_dim 128, 48 layers) and `--cache-type-k/v q8_0`, KV is roughly **~50 KiB per token**, so:
 
-Current default: **`8192`**. In **Open WebUI**, cap the model/context (Advanced parameters) to match — do not send 32k if the server is at 8k.
+| `--ctx-size` | KV @ q8_0, parallel=1 |
+|--------------|------------------------|
+| 8 192 | ~0.4 GiB |
+| 32 768 | ~1.6 GiB |
+| 65 536 | ~3.2 GiB |
+| 131 072 | ~6.4 GiB |
 
-Need long documents? Raise `--ctx-size` in [`values.yaml`](values.yaml) gradually (e.g. 16384) and watch VRAM; prefer `--cache-type-k q4_0 --cache-type-v q4_0` for extreme context.
+Default is **`32768`**, comfortably under the ~7 GiB headroom we have after Q6_K weights (~25 GiB). If you need very long context (codebase RAG, large patches) bump to 65 536 or 131 072 — but keep `--parallel 1` unless you actually need concurrent slots.
 
 ### 3. Parallel slots
 
@@ -108,24 +117,24 @@ Default `n_parallel=4` creates **four** slots each with full `n_ctx` KV — heav
 
 | GGUF | Tradeoff |
 |------|----------|
-| `Qwen3.6-27B-Q6_K.gguf` (default) | Quality floor; ~22.5GB weights |
-| `Qwen3.6-27B-Q8_0.gguf` | Heavier, slightly higher quality |
+| `Qwen3-Coder-30B-A3B-Instruct-Q6_K.gguf` (default) | Quality floor; ~25 GiB weights |
+| `Qwen3-Coder-30B-A3B-Instruct-UD-Q6_K_XL.gguf` | Unsloth Dynamic Q6 — same class, mixed precision per-tensor; slightly larger, often a hair better quality |
+| `Qwen3-Coder-30B-A3B-Instruct-Q8_0.gguf` | Heavier (~32 GiB), tightest quality but eats nearly all VRAM |
 
 When switching `--hf-file`, remove the old snapshot under the cache PVC or use a fresh path so the pod does not keep loading the previous quant from disk.
 
 ### 4b. SYCL vs Vulkan (backend A/B)
 
-Current image: **`server-intel`** (SYCL). Previous: **`server-vulkan`**.
+Current image: **`server-vulkan`**. SYCL (`server-intel`) is **temporarily blocked** by an upstream bug:
 
-After sync, confirm startup logs show **SYCL0** (not only `Vulkan0`), e.g. layers offloaded `on SYCL0`.
+> [ggml-org/llama.cpp#21474](https://github.com/ggml-org/llama.cpp/issues/21474) — `server-intel:latest` crashes silently during warmup on hybrid SSM/GDN architectures (e.g. Qwen3.6). The pod dies right after `warming up the model with an empty run` with no error.
 
-| If SYCL… | Action |
-|----------|--------|
-| **Works + higher `tg`** | Keep `server-intel` |
-| **Crashes on warmup** | Pin `server-intel-b8477` or revert `tag: server-vulkan` and restore `GGML_VK_MMVQ_SHMEM_STAGING=1` |
-| **Slower than Vulkan** | Revert to Vulkan; SYCL wins on some B70 dense models, not all |
+Qwen3-Coder-30B-A3B is **not** hybrid (standard transformer MoE), so the warmup itself succeeds, but the underlying SYCL kernel regressions in `latest` still apply broadly. Workaround tags like `server-intel-b8477` predate Qwen3 family support, so they're not useful for us. We'll revisit SYCL when upstream cuts a fixed build; until then, Vulkan is the production backend.
 
-SYCL env in values: `ONEAPI_DEVICE_SELECTOR=level_zero:0`, `GGML_SYCL_DEVICE=0`, `ZES_ENABLE_SYSMAN=1`, `SYCL_CACHE_PERSISTENT=1`.
+| If you re-test SYCL later… | Action |
+|----------------------------|--------|
+| Works + higher `tg` | Switch back to `tag: server-intel`, **remove `LD_LIBRARY_PATH=/app` env**, add SYCL env (`ONEAPI_DEVICE_SELECTOR=level_zero:0`, etc.) |
+| Crashes on warmup | Stay on `server-vulkan`, watch issue #21474 |
 
 ### 5. llama.cpp backends (already in values)
 
@@ -149,33 +158,18 @@ For **many concurrent** OpenAI clients or higher batch throughput, `llama-server
 - Disable unnecessarily large **context window** / **full chat history** features for the Intel model.
 - RAG embeddings are separate; slow **chat** is almost always inference flags/ctx/GPU, not Postgres.
 
-### You're at ~14 t/s — what about ~40 t/s?
+### Breaking ~40 t/s
 
-**Token generation (`tg` in logs)** and **chat responsiveness** are different problems.
+We swapped models specifically because dense Qwen3.6-27B was capped at ~13–15 t/s on B70 + Vulkan + Q6_K. **Qwen3-Coder-30B-A3B is MoE with ~3B active params per token**, which is the single biggest lever for TG on this hardware — expected ballpark is roughly **40–70 t/s** depending on context length and prefill mix.
 
-| Metric | Your logs | Notes |
-|--------|-----------|--------|
-| **TG (decode)** | ~13.5 t/s | Already ~2.4× up from ~5.6 t/s after `--no-mmproj` + Q4_K_M |
-| **Prefill** | ~396 t/s | Good; not the bottleneck for “feels slow” |
-| **Multi-turn** | `forcing full prompt re-processing` | Qwen3.6 **hybrid** architecture + broken context checkpoints in current `server-vulkan` |
+If TG is still under ~30 t/s after warm-up, check in order:
 
-**Realistic TG targets on Arc B70 + Vulkan for Qwen3.6-27B Q4_K_M:** roughly **15–25 t/s** on a well-tuned stack. **~40 t/s** on the same 27B dense model usually needs one or more of:
-
-1. **Smaller model on the same GPU** — e.g. Qwen3.5-9B / 14B MLX-class GGUF often lands **30–50+ t/s** on Arc.
-2. **More aggressive quant** — `Q4_K_S`, `IQ4_XS`, or MXFP4 where supported (quality tradeoff).
-3. **`server-intel` (SYCL)** — some B70 setups beat Vulkan on dense Q4; worth an A/B Deployment (separate release).
-4. **Host Mesa 26+** on `intellectual` — Vulkan BF16/integer-dot paths; Talos extension age matters.
-5. **Newer llama.cpp** — upstream fixes for hybrid checkpoint restore ([PR #22929](https://github.com/ggml-org/llama.cpp/pull/22929) area) improve **turn-to-turn** latency, not always peak TG.
-6. **Intel vLLM XPU** — throughput-oriented; different ops profile than llama-server.
-
-**Values just added for another TG bump:**
-
-- `--ctx-checkpoints 0` — stops mid-generation “checkpoint 1 of 32” work (~150 MiB each in your logs).
-- `--swa-full` — hybrid-model KV behavior per [llama.cpp #13194](https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055).
-- KV cache `q4_0` (was `q8_0`).
-- `LLAMA_ARG_THREADS=16` (logs showed `n_threads = 8` on a 28-thread host).
-
-**Open WebUI:** shorten chat history / context limit so turns do not re-send 700–1000 tokens every message until checkpoint fix is in your image.
+1. **Vulkan offload** — logs should show 49/49 layers on `Vulkan0`. Any CPU fallback = CDI / `/dev/dri` regression.
+2. **Active experts** — MoE perf depends on expert dispatch hitting cache. Run a warm-up prompt (8–16 tokens) before benchmarking; first request includes JIT compile.
+3. **Context length re-check** — `--ctx-size 32768` is fine; do not let Open WebUI send 65k+ unless you raise it server-side.
+4. **Host Mesa 26+** on `intellectual` — Vulkan BF16/integer-dot paths matter most for MoE gating ops.
+5. **Newer llama.cpp** — `pullPolicy: Always` already gets the latest `server-vulkan`; restart the pod to refresh shaders.
+6. **Intel vLLM XPU (phase 2)** — for many concurrent agents, vLLM XPU with continuous batching beats `llama-server`. Run as a separate Deployment.
 
 ### Quick benchmark (from LAN)
 
@@ -183,7 +177,7 @@ For **many concurrent** OpenAI clients or higher batch throughput, `llama-server
 time curl -s http://intel-llm.cloud.danmanners.com/v1/chat/completions \
   -H "Authorization: Bearer $INTEL_LLM_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"model":"Qwen3.6-27B-Q6_K.gguf","messages":[{"role":"user","content":"Count from 1 to 20."}],"max_tokens":128,"stream":false}'
+  -d '{"model":"Qwen3-Coder-30B-A3B-Instruct-Q6_K.gguf","messages":[{"role":"user","content":"Write a Python function that reverses a linked list."}],"max_tokens":256,"stream":false}'
 ```
 
 Compare before/after each change; aim for stable tok/s in logs or wall time for 128 tokens.
@@ -192,8 +186,8 @@ Compare before/after each change; aim for stable tok/s in logs or wall time for 
 
 - **Scheduling:** Pod must land on node `intellectual` (`kubernetes.io/hostname=intellectual`, not the Talos FQDN) with `gpu.intel.com/xe` allocatable.
 - **CDI / GPU:** Values start without `privileged` or host `/dev/dri` mounts; if the pod fails to use the GPU, add privileged + `/dev/dri` hostPath per cluster notes.
-- **SYCL warmup crash:** Try `server-intel-b8477` or revert to `server-vulkan` (see §4b).
-- **SYCL vs Vulkan:** Dense Q6_K on B70 may be faster on either backend — measure `tg` in logs after restart.
+- **SYCL warmup crash (silent exit after `warming up the model with an empty run`):** Upstream regression ([ggml-org/llama.cpp#21474](https://github.com/ggml-org/llama.cpp/issues/21474)) in `server-intel:latest`. Stay on `server-vulkan` until a fixed SYCL build lands; pre-Qwen3 tags (`server-intel-b8477`) are too old to load this family.
+- **SYCL vs Vulkan:** Measure `tg` in logs after restart; current production backend is Vulkan (see §4b).
 - **`llama-server: not found`:** The server image sets `ENTRYPOINT` to `/app/llama-server`. Do not wrap with `/bin/sh` unless you call `/app/llama-server` explicitly.
 - **`libllama-common.so.0: cannot open shared object file`** (Vulkan image): Vulkan `server` ships `.so` files in `/app`; set `LD_LIBRARY_PATH=/app` (the Dockerfile `WORKDIR` alone is not enough for the dynamic linker).
 - **`libsvml.so: cannot open shared object file`** (SYCL image): caused by setting `LD_LIBRARY_PATH=/app`. The SYCL base image (`intel/deep-learning-essentials`) defines `LD_LIBRARY_PATH` with the oneAPI compiler runtime; overriding it removes those paths. **Do not set `LD_LIBRARY_PATH` on the SYCL image** — the `llama-server` binary finds `/app/lib*.so` via its baked-in `RPATH=$ORIGIN`.
