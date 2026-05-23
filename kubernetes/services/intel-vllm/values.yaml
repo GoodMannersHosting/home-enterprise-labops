@@ -77,8 +77,12 @@ controllers:
             value: "0.0.0.0"
           - name: LLAMA_ARG_PORT
             value: "8080"
-          - name: LD_LIBRARY_PATH
-            value: /app
+          # NOTE: do not set LD_LIBRARY_PATH here. The SYCL image (intel/deep-learning-essentials base)
+          # already sets it to include oneAPI runtime dirs containing libsvml.so / libimf.so / libintlc.so.
+          # The llama-server binary finds /app/libllama*.so via baked-in RPATH=$ORIGIN.
+          # Overriding LD_LIBRARY_PATH=/app removes the oneAPI paths and breaks startup with:
+          #   error while loading shared libraries: libsvml.so: cannot open shared object file
+          # If you switch back to server-vulkan, re-add: { name: LD_LIBRARY_PATH, value: /app }.
           # SYCL / Level Zero (Arc via gpu.intel.com/xe + CDI). Vulkan-only vars removed.
           - name: ONEAPI_DEVICE_SELECTOR
             value: "level_zero:0"
