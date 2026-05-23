@@ -114,7 +114,7 @@ enableOpenaiApi: true
 #   - "keycloak.cloud.danmanners.com"
 
 sso:
-  enabled: false
+  enabled: true
 
 extraResources:
   # Create the public Ollama Web UI service
@@ -197,3 +197,25 @@ extraEnvVars:
     value: "postgresql://ollama:$(POSTGRES_USER_PASSWORD)@db-rw.database.svc:5432/open-webui" #trufflehog:ignore
   - name: "ENABLE_API_KEYS"
     value: "true"
+  # OIDC / Keycloak SSO
+  - name: "ENABLE_OAUTH_SIGNUP"
+    value: "true"
+  - name: "ENABLE_OAUTH_PERSISTENT_CONFIG"
+    value: "false"
+  - name: "OAUTH_MERGE_ACCOUNTS_BY_EMAIL"
+    value: "true"
+  - name: "OAUTH_PROVIDER_NAME"
+    value: "Keycloak"
+  - name: "OAUTH_CLIENT_ID"
+    value: "openwebui"
+  - name: "OAUTH_CLIENT_SECRET"
+    valueFrom:
+      secretKeyRef:
+        name: open-webui-oidc-secret
+        key: clientSecret
+  - name: "OPENID_PROVIDER_URL"
+    value: "https://keycloak.cloud.danmanners.com/realms/gmh/.well-known/openid-configuration"
+  - name: "OPENID_REDIRECT_URI"
+    value: "https://ollama.cloud.danmanners.com/oauth/oidc/callback"
+  - name: "WEBUI_URL"
+    value: "https://ollama.cloud.danmanners.com"
