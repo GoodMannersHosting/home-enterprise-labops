@@ -5,7 +5,7 @@ metadata:
   name: kro
   namespace: argocd
   labels:
-    chartVersion: &chartVersion 0.7.1
+    chartVersion: &chartVersion 0.9.2
 spec:
   destination:
     namespace: kro-system

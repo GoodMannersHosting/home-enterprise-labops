@@ -92,7 +92,7 @@ controllers:
             protocol: TCP
         image:
           repository: quay.io/keycloak/keycloak
-          tag: "26.2.4"
+          tag: "26.6.2"
           pullPolicy: "IfNotPresent"
         args:
           - start

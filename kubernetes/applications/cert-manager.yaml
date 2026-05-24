@@ -5,8 +5,8 @@ metadata:
   name: cert-manager
   namespace: argocd
   labels:
-    mainChartVersion: &mainChartVersion v1.17.2
-    webhookChartVersion: &webhookChartVersion 3.2.3
+    mainChartVersion: &mainChartVersion v1.20.2
+    webhookChartVersion: &webhookChartVersion 3.2.5
 spec:
   destination:
     namespace: cert-manager

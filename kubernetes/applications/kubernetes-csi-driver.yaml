@@ -5,7 +5,7 @@ metadata:
   name: csi-driver-nfs
   namespace: argocd
   labels:
-    chartVersion: &chartVersion 4.13.1
+    chartVersion: &chartVersion 4.13.2
 spec:
   destination:
     namespace: kube-system

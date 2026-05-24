@@ -92,7 +92,7 @@ controllers:
             protocol: TCP
         image:
           repository: docker.io/powerdns/pdns-auth-49
-          tag: "4.9.8"
+          tag: "4.9.15"
           pullPolicy: "IfNotPresent"
         args:
           - --no-config
