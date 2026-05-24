@@ -72,6 +72,47 @@ controllers:
             # Final verification
             echo "Final /data directory structure:"
             ls -la /data || true
+
+            # Scan workspace for Grype/Trivy artifact extraction
+            mkdir -p /data/scan-workspace /data/.cache/grype
+            chown -R "$TARGET_UID:$TARGET_GID" /data/scan-workspace /data/.cache/grype
+      setup-grype-cache:
+        image:
+          repository: ghcr.io/artifact-keeper/artifact-keeper-backend
+          tag: "dev"
+          pullPolicy: "IfNotPresent"
+        securityContext:
+          runAsUser: 0
+          runAsNonRoot: false
+        env:
+          - name: GRYPE_DB_CACHE_DIR
+            value: "/data/.cache/grype"
+          - name: GRYPE_DB_AUTO_UPDATE
+            value: "true"
+          - name: GRYPE_DB_VALIDATE_AGE
+            value: "false"
+          - name: GRYPE_CHECK_FOR_APP_UPDATE
+            value: "false"
+        command:
+          - sh
+          - -c
+          - |
+            TARGET_UID="${ARTIFACT_KEEPER_USER_ID:-999}"
+            TARGET_GID="${ARTIFACT_KEEPER_GROUP_ID:-999}"
+            mkdir -p /data/.cache/grype /data/scan-workspace
+            if [ -d /home/artifact/.cache/grype ]; then
+              echo "Copying pre-seeded Grype vulnerability DB..."
+              cp -a /home/artifact/.cache/grype/. /data/.cache/grype/ || true
+            fi
+            if ! find /data/.cache/grype -name vulnerability.db 2>/dev/null | grep -q .; then
+              echo "Downloading Grype vulnerability DB..."
+              grype db update || {
+                echo "WARNING: Grype DB update failed"
+                exit 0
+              }
+            fi
+            chown -R "$TARGET_UID:$TARGET_GID" /data/.cache/grype /data/scan-workspace
+            echo "Grype cache ready"
       wait-for-db:
         image:
           repository: docker.io/library/busybox
@@ -195,10 +236,20 @@ controllers:
           - name: OPENSEARCH_ALLOW_INVALID_CERTS
             value: "true"
           # Security Scanning
+          - name: TRIVY_ENABLED
+            value: "true"
           - name: TRIVY_URL
             value: "http://artifact-keeper-trivy:8090"
           - name: SCAN_WORKSPACE_PATH
             value: "/data/scan-workspace"
+          - name: GRYPE_DB_CACHE_DIR
+            value: "/data/.cache/grype"
+          - name: GRYPE_DB_AUTO_UPDATE
+            value: "true"
+          - name: GRYPE_DB_VALIDATE_AGE
+            value: "false"
+          - name: GRYPE_CHECK_FOR_APP_UPDATE
+            value: "false"
           # Dependency-Track SBOM analysis
           - name: DEPENDENCY_TRACK_URL
             value: "http://artifact-keeper-dependency-track:8080"
@@ -691,6 +742,9 @@ persistence:
           - path: /data
             readOnly: false
         create-storage-dirs:
+          - path: /data
+            readOnly: false
+        setup-grype-cache:
           - path: /data
             readOnly: false
 
