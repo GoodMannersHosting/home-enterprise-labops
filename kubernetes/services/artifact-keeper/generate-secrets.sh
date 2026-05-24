@@ -24,10 +24,5 @@ ADMIN_PASS=$(openssl rand -base64 32)
 echo "$ADMIN_PASS"
 echo ""
 
-echo "Meilisearch Master Key:"
-MEILI_KEY=$(openssl rand -base64 32)
-echo "$MEILI_KEY"
-echo ""
-
 echo "=== Copy these values into your secret files ==="
 
