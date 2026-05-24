@@ -17,7 +17,7 @@ controllers:
       wait-for-db:
         image:
           repository: docker.io/library/busybox
-          tag: "1.37"
+          tag: "1.38"
         command:
           - sh
           - -c
@@ -62,8 +62,8 @@ controllers:
             containerPort: &apiSshPort 222
             protocol: TCP
         image:
-          repository: harbor.cloud.danmanners.com/library/forgejo/forgejo
-          tag: "13.0.1"
+          repository: codeberg.org/forgejo/forgejo
+          tag: "14.0.5"
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: false
@@ -181,7 +181,7 @@ controllers:
             protocol: TCP
         image:
           repository: getmeili/meilisearch
-          tag: "v1.12.3"
+          tag: "v1.44.0"
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: false
@@ -207,7 +207,7 @@ controllers:
       main:
         image:
           repository: docker.io/valkey/valkey
-          tag: "alpine3.22"
+          tag: "9-alpine3.22"
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: false

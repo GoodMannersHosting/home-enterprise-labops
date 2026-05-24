@@ -2,28 +2,29 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: cilium
+  name: argocd
   namespace: argocd
   labels:
-    chartVersion: &chartVersion 1.19.4
+    chartVersion: &chartVersion "9.5.15"
 spec:
   destination:
-    namespace: kube-system
+    namespace: argocd
     server: https://kubernetes.default.svc
   project: default
   sources:
-    - repoURL: &url https://github.com/GoodMannersHosting/home-enterprise-labops.git
-      targetRevision: main
-      path: kubernetes/core/kube-system/cilium/bgp
-    - repoURL: *url
+    - repoURL: &repo https://github.com/GoodMannersHosting/home-enterprise-labops.git
       targetRevision: main
       ref: values
-    - repoURL: https://helm.cilium.io/
-      chart: cilium
+    - repoURL: *repo
+      targetRevision: main
+      path: kubernetes/core/argocd
+    - repoURL: https://argoproj.github.io/argo-helm
+      chart: argo-cd
       targetRevision: *chartVersion
       helm:
+        skipCrds: true
         valueFiles:
-          - $values/kubernetes/core/kube-system/cilium/values.yaml
+          - $values/kubernetes/core/argocd/values.yaml
   syncPolicy:
     automated:
       prune: true

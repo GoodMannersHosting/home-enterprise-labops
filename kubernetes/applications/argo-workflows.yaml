@@ -5,7 +5,7 @@ metadata:
   name: argo-workflows
   namespace: argocd
   labels:
-    chartVersion: &chartVersion "0.47.4"
+    chartVersion: &chartVersion "1.0.14"
 spec:
   destination:
     namespace: argo

@@ -5,7 +5,7 @@ metadata:
   name: harbor
   namespace: argocd
   labels:
-    chartVersion: &chartVersion 1.18.2
+    chartVersion: &chartVersion 1.19.0
 spec:
   destination:
     namespace: harbor
