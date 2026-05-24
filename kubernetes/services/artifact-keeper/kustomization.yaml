@@ -3,5 +3,6 @@ resources:
   - namespace.yaml
   - db-superuser.yaml
   - secret.artifact-keeper.yaml
+  - secret.dependency-track.yaml
   - httproute.yaml
 

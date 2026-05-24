@@ -110,6 +110,24 @@ controllers:
               secretKeyRef:
                 name: artifact-keeper-database-credentials
                 key: password
+      bootstrap-dtrack:
+        image:
+          repository: docker.io/library/alpine
+          tag: "3.20"
+        env:
+          - name: DEPENDENCY_TRACK_URL
+            value: http://artifact-keeper-dependency-track:8080
+          - name: DEPENDENCY_TRACK_ADMIN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: artifact-keeper-dependency-track-credentials
+                key: admin-password
+        command:
+          - /bin/sh
+          - -c
+          - |
+            apk add --no-cache curl jq >/dev/null 2>&1
+            /bin/sh /scripts/init-dtrack.sh
     containers:
       main:
         ports:
@@ -124,6 +142,15 @@ controllers:
           allowPrivilegeEscalation: false
           runAsUser: &id 999
           runAsGroup: *id
+        command:
+          - /bin/sh
+          - -c
+        args:
+          - |
+            if [ -f /shared/dtrack-api-key ] && [ -s /shared/dtrack-api-key ]; then
+              export DEPENDENCY_TRACK_API_KEY="$(cat /shared/dtrack-api-key)"
+            fi
+            exec /usr/local/bin/artifact-keeper
         env:
           # Database Configuration
           - name: ARTIFACT_KEEPER_DB_USER
@@ -172,6 +199,13 @@ controllers:
             value: "http://artifact-keeper-trivy:8090"
           - name: SCAN_WORKSPACE_PATH
             value: "/data/scan-workspace"
+          # Dependency-Track SBOM analysis
+          - name: DEPENDENCY_TRACK_URL
+            value: "http://artifact-keeper-dependency-track:8080"
+          - name: DEPENDENCY_TRACK_ENABLED
+            value: "true"
+          - name: ALLOW_HTTP_INTEGRATIONS
+            value: "true"
           # Logging
           - name: RUST_LOG
             value: "info,artifact_keeper=debug"
@@ -368,6 +402,136 @@ controllers:
               failureThreshold: 3
           readiness: *trivyProbes
 
+  dependency-track:
+    enabled: true
+    type: deployment
+    replicas: 1
+    strategy: Recreate
+    revisionHistoryLimit: 2
+    annotations:
+      argocd.argoproj.io/sync-wave: "1"
+    pod:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+    initContainers:
+      wait-for-db:
+        image:
+          repository: docker.io/library/busybox
+          tag: "1.37"
+        command:
+          - sh
+          - -c
+          - |
+            until nc -z -v -w30 db-rw.database.svc.cluster.local 5432
+            do
+              echo "Waiting for database connection..."
+              sleep 5
+            done
+      init-db:
+        image:
+          repository: ghcr.io/home-operations/postgres-init
+          tag: "17.6"
+        env:
+          - name: INIT_POSTGRES_DBNAME
+            value: dependency_track
+          - name: INIT_POSTGRES_HOST
+            value: db-rw.database.svc.cluster.local
+          - name: INIT_POSTGRES_SUPER_PASS
+            valueFrom:
+              secretKeyRef:
+                name: db-superuser
+                key: password
+          - name: INIT_POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: artifact-keeper-database-credentials
+                key: username
+          - name: INIT_POSTGRES_PASS
+            valueFrom:
+              secretKeyRef:
+                name: artifact-keeper-database-credentials
+                key: password
+    containers:
+      main:
+        ports:
+          - name: http
+            containerPort: 8080
+            protocol: TCP
+        image:
+          repository: dependencytrack/apiserver
+          tag: "4.11.4"
+          pullPolicy: "IfNotPresent"
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+        env:
+          - name: ALPINE_DATABASE_MODE
+            value: external
+          - name: ALPINE_DATABASE_URL
+            value: "jdbc:postgresql://db-rw.database.svc.cluster.local:5432/dependency_track"
+          - name: ALPINE_DATABASE_DRIVER
+            value: org.postgresql.Driver
+          - name: ALPINE_DATABASE_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: artifact-keeper-database-credentials
+                key: username
+          - name: ALPINE_DATABASE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: artifact-keeper-database-credentials
+                key: password
+          - name: ALPINE_DATA_DIRECTORY
+            value: /data
+          - name: ALPINE_ENFORCE_AUTHENTICATION
+            value: "true"
+          - name: ALPINE_CORS_ENABLED
+            value: "true"
+          - name: ALPINE_CORS_ALLOW_ORIGIN
+            value: "*"
+          - name: JAVA_OPTIONS
+            value: "-Xmx4g"
+        resources:
+          limits:
+            cpu: 2
+            memory: 6Gi
+          requests:
+            cpu: 500m
+            memory: 4Gi
+        probes:
+          liveness: &dtrackProbes
+            enabled: true
+            custom: true
+            spec:
+              exec:
+                command:
+                  - wget
+                  - -q
+                  - --spider
+                  - http://localhost:8080/api/version
+              initialDelaySeconds: 90
+              periodSeconds: 30
+              timeoutSeconds: 10
+              failureThreshold: 5
+          readiness:
+            enabled: true
+            custom: true
+            spec:
+              exec:
+                command:
+                  - wget
+                  - -q
+                  - --spider
+                  - http://localhost:8080/api/version
+              initialDelaySeconds: 60
+              periodSeconds: 30
+              timeoutSeconds: 10
+              failureThreshold: 5
+
 service:
   backend:
     enabled: true
@@ -417,6 +581,18 @@ service:
         targetPort: http
         protocol: TCP
 
+  dependency-track:
+    enabled: true
+    controller: dependency-track
+    primary: false
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        port: 8080
+        targetPort: http
+        protocol: TCP
+
   extname:
     enabled: true
     primary: false
@@ -452,6 +628,55 @@ route:
   web:
     enabled: false
 
+configMaps:
+  dtrack-init:
+    enabled: true
+    data:
+      init-dtrack.sh: |
+        #!/bin/sh
+        set -e
+        DT_URL="${DEPENDENCY_TRACK_URL:-http://artifact-keeper-dependency-track:8080}"
+        DT_ADMIN_USER="admin"
+        DT_DEFAULT_PASS="admin"
+        DT_NEW_PASS="${DEPENDENCY_TRACK_ADMIN_PASSWORD}"
+        API_KEY_FILE="/shared/dtrack-api-key"
+
+        echo "[dtrack-init] Waiting for Dependency-Track at $DT_URL ..."
+        for i in $(seq 1 60); do
+          if curl -sf "$DT_URL/api/version" > /dev/null 2>&1; then break; fi
+          if [ "$i" -eq 60 ]; then echo "[dtrack-init] ERROR: timeout"; exit 1; fi
+          sleep 5
+        done
+
+        if [ -f "$API_KEY_FILE" ] && [ -s "$API_KEY_FILE" ]; then
+          echo "[dtrack-init] API key already provisioned -- skipping"
+          exit 0
+        fi
+
+        TOKEN=$(curl -sf -X POST "$DT_URL/api/v1/user/login" \
+          -H "Content-Type: application/x-www-form-urlencoded" \
+          -d "username=${DT_ADMIN_USER}&password=${DT_NEW_PASS}" 2>/dev/null || true)
+
+        if [ -z "$TOKEN" ] || echo "$TOKEN" | grep -qi "FORCE_PASSWORD_CHANGE"; then
+          curl -sf -o /dev/null -X POST "$DT_URL/api/v1/user/forceChangePassword" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "username=${DT_ADMIN_USER}&password=${DT_DEFAULT_PASS}&newPassword=${DT_NEW_PASS}&confirmPassword=${DT_NEW_PASS}"
+          TOKEN=$(curl -sf -X POST "$DT_URL/api/v1/user/login" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "username=${DT_ADMIN_USER}&password=${DT_NEW_PASS}" 2>/dev/null || true)
+        fi
+
+        if [ -z "$TOKEN" ]; then echo "[dtrack-init] ERROR: auth failed"; exit 1; fi
+
+        API_KEY=$(curl -sf "$DT_URL/api/v1/team" \
+          -H "Authorization: Bearer $TOKEN" | \
+          jq -r '.[] | select(.name == "Automation") | .apiKeys[0].key // empty')
+
+        if [ -z "$API_KEY" ]; then echo "[dtrack-init] ERROR: no API key"; exit 1; fi
+
+        echo "$API_KEY" > "$API_KEY_FILE"
+        echo "[dtrack-init] Done"
+
 persistence:
   artifacts:
     enabled: true
@@ -467,6 +692,52 @@ persistence:
             readOnly: false
         create-storage-dirs:
           - path: /data
+            readOnly: false
+
+  dtrack-shared:
+    enabled: true
+    type: emptyDir
+    advancedMounts:
+      backend:
+        bootstrap-dtrack:
+          - path: /shared
+            readOnly: false
+        main:
+          - path: /shared
+            readOnly: true
+
+  dtrack-init-scripts:
+    enabled: true
+    type: configMap
+    name: artifact-keeper
+    defaultMode: 0755
+    advancedMounts:
+      backend:
+        bootstrap-dtrack:
+          - path: /scripts
+            readOnly: true
+
+  dependency-track-data:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-block-retain
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    retain: true
+    advancedMounts:
+      dependency-track:
+        main:
+          - path: /data
+            readOnly: false
+
+  dtrack-tmp:
+    enabled: true
+    type: emptyDir
+    sizeLimit: 256Mi
+    advancedMounts:
+      dependency-track:
+        main:
+          - path: /tmp
             readOnly: false
 
   opensearch-data:

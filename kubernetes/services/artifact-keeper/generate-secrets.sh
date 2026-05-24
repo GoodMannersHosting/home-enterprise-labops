@@ -24,5 +24,10 @@ ADMIN_PASS=$(openssl rand -base64 32)
 echo "$ADMIN_PASS"
 echo ""
 
+echo "Dependency-Track Admin Password:"
+DT_ADMIN_PASS=$(openssl rand -base64 24)
+echo "$DT_ADMIN_PASS"
+echo ""
+
 echo "=== Copy these values into your secret files ==="
 
