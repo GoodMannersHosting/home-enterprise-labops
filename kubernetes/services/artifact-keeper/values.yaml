@@ -8,6 +8,11 @@ defaultPodOptions:
 
 controllers:
   backend:
+    pod:
+      hostAliases:
+        - ip: "172.31.0.10"
+          hostnames:
+            - "keycloak.cloud.danmanners.com"
     enabled: true
     type: statefulset
     replicas: 1
@@ -113,8 +118,8 @@ controllers:
             protocol: TCP
         image:
           repository: &akb "ghcr.io/artifact-keeper/artifact-keeper-backend"
-          tag: &akbTag "latest"
-          pullPolicy: "IfNotPresent"
+          tag: &akbTag "dev"
+          pullPolicy: "Always"
         securityContext:
           allowPrivilegeEscalation: false
           runAsUser: &id 999
@@ -154,22 +159,19 @@ controllers:
           - name: STORAGE_BACKEND
             value: "filesystem"
           - name: STORAGE_PATH
-            value: "/data/storage/artifacts"
+            value: "/data/storage"
           - name: PLUGINS_DIR
-            value: "/data/storage/plugins"
-          # Search Integration
-          - name: MEILISEARCH_URL
-            value: "http://artifact-keeper-meilisearch:7700"
-          - name: MEILISEARCH_API_KEY
-            valueFrom:
-              secretKeyRef:
-                name: artifact-keeper-meilisearch-credentials
-                key: masterkey
+            value: "/data/plugins"
+          # Search (OpenSearch replaced Meilisearch in Artifact Keeper 1.2+)
+          - name: OPENSEARCH_URL
+            value: "http://artifact-keeper-opensearch:9200"
+          - name: OPENSEARCH_ALLOW_INVALID_CERTS
+            value: "true"
           # Security Scanning
           - name: TRIVY_URL
             value: "http://artifact-keeper-trivy:8090"
           - name: SCAN_WORKSPACE_PATH
-            value: "/data/storage/scan-workspace"
+            value: "/data/scan-workspace"
           # Logging
           - name: RUST_LOG
             value: "info,artifact_keeper=debug"
@@ -207,8 +209,8 @@ controllers:
             protocol: TCP
         image:
           repository: ghcr.io/artifact-keeper/artifact-keeper-web
-          tag: "latest"
-          pullPolicy: "IfNotPresent"
+          tag: "dev"
+          pullPolicy: "Always"
         securityContext:
           allowPrivilegeEscalation: false
         env:
@@ -237,53 +239,94 @@ controllers:
               failureThreshold: 3
           readiness: *webProbes
 
-  meilisearch:
+  opensearch:
     enabled: true
     type: deployment
     replicas: 1
+    strategy: Recreate
+    revisionHistoryLimit: 2
+    pod:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+    initContainers:
+      fix-ownership:
+        image:
+          repository: docker.io/library/busybox
+          tag: "1.37"
+        securityContext:
+          runAsUser: 0
+          runAsNonRoot: false
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+        command:
+          - sh
+          - -c
+          - chown -R 1000:1000 /usr/share/opensearch/data
     containers:
       main:
         ports:
           - name: http
-            containerPort: 7700
+            containerPort: 9200
             protocol: TCP
         image:
-          repository: getmeili/meilisearch
-          tag: "v1.12"
+          repository: opensearchproject/opensearch
+          tag: "2.19.1"
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: false
         env:
-          - name: MEILI_MASTER_KEY
-            valueFrom:
-              secretKeyRef:
-                name: artifact-keeper-meilisearch-credentials
-                key: masterkey
+          - name: cluster.name
+            value: artifact-keeper
+          - name: discovery.type
+            value: single-node
+          - name: bootstrap.memory_lock
+            value: "false"
+          - name: OPENSEARCH_JAVA_OPTS
+            value: "-Xms512m -Xmx512m"
+          - name: DISABLE_INSTALL_DEMO_CONFIG
+            value: "true"
+          - name: DISABLE_SECURITY_PLUGIN
+            value: "true"
         resources:
           limits:
-            cpu: 1
+            cpu: 2
             memory: 2Gi
           requests:
             cpu: 250m
-            memory: 512Mi
+            memory: 1Gi
         probes:
-          liveness: &meilisearchProbes
+          liveness: &opensearchProbes
+            enabled: true
+            custom: true
+            spec:
+              tcpSocket:
+                port: http
+              initialDelaySeconds: 60
+              periodSeconds: 20
+              timeoutSeconds: 5
+              failureThreshold: 5
+          readiness: &opensearchReadiness
             enabled: true
             custom: true
             spec:
               httpGet:
-                path: /health
+                path: /_cluster/health?local=true
                 port: http
-              initialDelaySeconds: 10
+              initialDelaySeconds: 20
               periodSeconds: 10
               timeoutSeconds: 5
-              failureThreshold: 3
-          readiness: *meilisearchProbes
+              failureThreshold: 10
 
   trivy:
     enabled: true
     type: deployment
     replicas: 1
+    strategy: Recreate
+    revisionHistoryLimit: 2
     containers:
       main:
         ports:
@@ -292,7 +335,7 @@ controllers:
             protocol: TCP
         image:
           repository: aquasec/trivy
-          tag: "latest"
+          tag: "0.62.1"
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: false
@@ -303,7 +346,7 @@ controllers:
           - --listen
           - 0.0.0.0:8090
           - --cache-dir
-          - /data/.cache/trivy
+          - /root/.cache/trivy
         resources:
           limits:
             cpu: 1
@@ -350,15 +393,15 @@ service:
         targetPort: http
         protocol: TCP
 
-  meilisearch:
+  opensearch:
     enabled: true
-    controller: meilisearch
+    controller: opensearch
     primary: false
     type: ClusterIP
     ports:
       http:
         enabled: true
-        port: 7700
+        port: 9200
         targetPort: http
         protocol: TCP
 
@@ -407,48 +450,7 @@ rawResources:
 
 route:
   web:
-    enabled: true
-    kind: HTTPRoute
-    annotations:
-      external-dns.alpha.kubernetes.io/controller: "false"
-      gatus.home-operations.com/enabled: "false"
-      gatus.home-operations.com/endpoint: |-
-        name: Artifact Keeper
-        conditions:
-          - "[STATUS] == 200"
-        url: https://registry.cloud.danmanners.com/
-        method: HEAD
-    parentRefs:
-      - kind: Gateway
-        group: gateway.networking.k8s.io
-        name: gwapi
-        namespace: default
-        sectionName: https-cloud
-    hostnames:
-      - registry.cloud.danmanners.com
-    rules:
-      - backendRefs:
-          - name: artifact-keeper-backend
-            port: 80
-            weight: 1
-        matches:
-          - path:
-              type: PathPrefix
-              value: /api
-        timeouts:
-          backendRequest: 0s
-          request: 0s
-      - backendRefs:
-          - name: artifact-keeper-web
-            port: 80
-            weight: 1
-        matches:
-          - path:
-              type: PathPrefix
-              value: /
-        timeouts:
-          backendRequest: 0s
-          request: 0s
+    enabled: false
 
 persistence:
   artifacts:
@@ -467,7 +469,7 @@ persistence:
           - path: /data
             readOnly: false
 
-  meilisearch-data:
+  opensearch-data:
     enabled: true
     type: persistentVolumeClaim
     storageClass: ceph-block-retain
@@ -475,9 +477,12 @@ persistence:
     size: 20Gi
     retain: true
     advancedMounts:
-      meilisearch:
+      opensearch:
+        fix-ownership:
+          - path: /usr/share/opensearch/data
+            readOnly: false
         main:
-          - path: /meili_data
+          - path: /usr/share/opensearch/data
             readOnly: false
 
   trivy-cache:
