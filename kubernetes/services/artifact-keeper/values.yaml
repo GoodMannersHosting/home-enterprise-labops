@@ -74,8 +74,8 @@ controllers:
             ls -la /data || true
 
             # Scan workspace for Grype/Trivy artifact extraction
-            mkdir -p /data/scan-workspace /data/.cache/grype
-            chown -R "$TARGET_UID:$TARGET_GID" /data/scan-workspace /data/.cache/grype
+            mkdir -p /data/scan-workspace /data/.cache/grype /data/.docker-config /data/bin
+            chown -R "$TARGET_UID:$TARGET_GID" /data/scan-workspace /data/.cache/grype /data/.docker-config /data/bin
       setup-grype-cache:
         image:
           repository: ghcr.io/artifact-keeper/artifact-keeper-backend
@@ -113,6 +113,55 @@ controllers:
             fi
             chown -R "$TARGET_UID:$TARGET_GID" /data/.cache/grype /data/scan-workspace
             echo "Grype cache ready"
+      setup-grype-wrapper:
+        image:
+          repository: ghcr.io/artifact-keeper/artifact-keeper-backend
+          tag: "dev"
+          pullPolicy: "IfNotPresent"
+        securityContext:
+          runAsUser: 0
+          runAsNonRoot: false
+        command:
+          - sh
+          - -c
+          - |
+            TARGET_UID="${ARTIFACT_KEEPER_USER_ID:-999}"
+            TARGET_GID="${ARTIFACT_KEEPER_GROUP_ID:-999}"
+            mkdir -p /data/bin
+            # Grype 0.112+ emits artifact.licenses as string[]; Artifact Keeper's
+            # parser expects {value, spdxExpression} objects. Wrapper lives on the
+            # shared PVC because init-container FS changes don't carry over.
+            cat > /data/bin/grype << 'EOF'
+            #!/bin/sh
+            set -e
+            case "$1" in
+              version|--version|-v|db) exec /usr/local/bin/grype "$@" ;;
+            esac
+            out=$(mktemp)
+            trap 'rm -f "$out"' EXIT INT TERM
+            set +e
+            /usr/local/bin/grype "$@" > "$out"
+            status=$?
+            set -e
+            if [ "$status" -ne 0 ]; then
+              cat "$out" >&2
+              exit "$status"
+            fi
+            if grep -q '"licenses"' "$out"; then
+              jq '.matches |= map(
+                if .artifact.licenses then
+                  .artifact.licenses |= map(
+                    if type == "string" then {value: ., spdxExpression: .} else . end
+                  )
+                else . end
+              )' "$out"
+            else
+              cat "$out"
+            fi
+            EOF
+            chmod +x /data/bin/grype
+            chown -R "$TARGET_UID:$TARGET_GID" /data/bin
+            echo "Grype wrapper installed at /data/bin/grype"
       wait-for-db:
         image:
           repository: docker.io/library/busybox
@@ -151,6 +200,43 @@ controllers:
               secretKeyRef:
                 name: artifact-keeper-database-credentials
                 key: password
+      fix-oci-paths:
+        image:
+          repository: docker.io/library/postgres
+          tag: "17-alpine"
+        env:
+          - name: PGUSER
+            valueFrom:
+              secretKeyRef:
+                name: artifact-keeper-database-credentials
+                key: username
+          - name: PGPASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: artifact-keeper-database-credentials
+                key: password
+        command:
+          - sh
+          - -c
+          - |
+            # Artifact Keeper stores OCI paths as v2/<image>/manifests/<tag> but
+            # serves them at v2/<repo-key>/<image>/manifests/<tag>. Grype registry
+            # mode needs the served path; prefix repo key when missing (#1160).
+            psql -h db-rw.database.svc.cluster.local -d artifact_registry -v ON_ERROR_STOP=1 <<'EOSQL'
+            UPDATE artifacts a
+            SET path = format(
+                  'v2/%s/%s/manifests/%s',
+                  r.key,
+                  split_part(substring(a.path from 4), '/', 1),
+                  split_part(a.path, '/manifests/', 2)
+                ),
+                updated_at = NOW()
+            FROM repositories r
+            WHERE a.repository_id = r.id
+              AND a.path LIKE 'v2/%/manifests/%'
+              AND a.path NOT LIKE 'v2/' || r.key || '/%';
+            EOSQL
+            echo "OCI artifact paths reconciled"
       bootstrap-dtrack:
         image:
           repository: docker.io/library/alpine
@@ -188,8 +274,17 @@ controllers:
           - -c
         args:
           - |
+            export PATH="/data/bin:$PATH"
             if [ -f /shared/dtrack-api-key ] && [ -s /shared/dtrack-api-key ]; then
               export DEPENDENCY_TRACK_API_KEY="$(cat /shared/dtrack-api-key)"
+            fi
+            # Grype reads registry credentials from DOCKER_CONFIG, not the URL.
+            export DOCKER_CONFIG=/data/.docker-config
+            mkdir -p "$DOCKER_CONFIG"
+            if [ -n "${ADMIN_PASSWORD:-}" ]; then
+              AUTH="$(printf 'admin:%s' "$ADMIN_PASSWORD" | base64 -w0 2>/dev/null || printf 'admin:%s' "$ADMIN_PASSWORD" | base64)"
+              printf '{"auths":{"localhost:8080":{"auth":"%s"}}}\n' "$AUTH" \
+                > "$DOCKER_CONFIG/config.json"
             fi
             exec /usr/local/bin/artifact-keeper
         env:
@@ -250,6 +345,10 @@ controllers:
             value: "false"
           - name: GRYPE_CHECK_FOR_APP_UPDATE
             value: "false"
+          - name: AK_GRYPE_REGISTRY_HOST
+            value: "localhost:8080"
+          - name: DOCKER_CONFIG
+            value: "/data/.docker-config"
           # Dependency-Track SBOM analysis
           - name: DEPENDENCY_TRACK_URL
             value: "http://artifact-keeper-dependency-track:8080"
@@ -699,11 +798,6 @@ configMaps:
           sleep 5
         done
 
-        if [ -f "$API_KEY_FILE" ] && [ -s "$API_KEY_FILE" ]; then
-          echo "[dtrack-init] API key already provisioned -- skipping"
-          exit 0
-        fi
-
         TOKEN=$(curl -sf -X POST "$DT_URL/api/v1/user/login" \
           -H "Content-Type: application/x-www-form-urlencoded" \
           -d "username=${DT_ADMIN_USER}&password=${DT_NEW_PASS}" 2>/dev/null || true)
@@ -719,9 +813,28 @@ configMaps:
 
         if [ -z "$TOKEN" ]; then echo "[dtrack-init] ERROR: auth failed"; exit 1; fi
 
-        API_KEY=$(curl -sf "$DT_URL/api/v1/team" \
+        AUTOMATION_UUID=$(curl -sf "$DT_URL/api/v1/team" \
           -H "Authorization: Bearer $TOKEN" | \
-          jq -r '.[] | select(.name == "Automation") | .apiKeys[0].key // empty')
+          jq -r '.[] | select(.name == "Automation") | .uuid // empty')
+        if [ -z "$AUTOMATION_UUID" ]; then echo "[dtrack-init] ERROR: Automation team not found"; exit 1; fi
+
+        # Automation team needs project-creation and read rights; DT ships with BOM_UPLOAD only.
+        for perm in PORTFOLIO_MANAGEMENT PROJECT_CREATION_UPLOAD BOM_UPLOAD VIEW_PORTFOLIO VIEW_POLICY_VIOLATION VIEW_VULNERABILITY; do
+          curl -sf -o /dev/null -X POST "$DT_URL/api/v1/permission/${perm}/team/${AUTOMATION_UUID}" \
+            -H "Authorization: Bearer $TOKEN" || true
+        done
+
+        if [ -f "$API_KEY_FILE" ] && [ -s "$API_KEY_FILE" ]; then
+          if curl -sf -H "X-Api-Key: $(cat "$API_KEY_FILE")" "$DT_URL/api/v1/project" >/dev/null 2>&1; then
+            echo "[dtrack-init] API key valid -- done"
+            exit 0
+          fi
+          echo "[dtrack-init] Stored API key rejected -- regenerating"
+        fi
+
+        API_KEY=$(curl -sf -X PUT "$DT_URL/api/v1/team/${AUTOMATION_UUID}/key" \
+          -H "Authorization: Bearer $TOKEN" \
+          -H "Content-Type: application/json" | jq -r '.key // empty')
 
         if [ -z "$API_KEY" ]; then echo "[dtrack-init] ERROR: no API key"; exit 1; fi
 
@@ -745,6 +858,9 @@ persistence:
           - path: /data
             readOnly: false
         setup-grype-cache:
+          - path: /data
+            readOnly: false
+        setup-grype-wrapper:
           - path: /data
             readOnly: false
 
