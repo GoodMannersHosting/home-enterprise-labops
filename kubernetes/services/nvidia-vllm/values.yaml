@@ -1,0 +1,158 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+---
+defaultPodOptions:
+  automountServiceAccountToken: false
+  enableServiceLinks: false
+  restartPolicy: Always
+  dnsPolicy: ClusterFirst
+  runtimeClassName: nvidia
+  securityContext:
+    fsGroup: 1000
+    fsGroupChangePolicy: OnRootMismatch
+
+controllers:
+  main:
+    enabled: true
+    type: deployment
+    replicas: 1
+    revisionHistoryLimit: 2
+    containers:
+      core:
+        ports:
+          - name: http
+            containerPort: &port 8080
+            protocol: TCP
+        image:
+          repository: ghcr.io/ggml-org/llama.cpp
+          tag: server
+          pullPolicy: Always
+        args:
+          - --hf-repo
+          - unsloth/Qwen3.6-35B-A3B-GGUF
+          - --hf-file
+          - Qwen3.6-35B-A3B-UD-Q6_K_XL.gguf
+          - --ctx-size
+          - "131072"
+          - --flash-attn
+          - "on"
+          - --cache-type-k
+          - q8_0
+          - --cache-type-v
+          - q8_0
+          - --parallel
+          - "1"
+          - --cache-ram
+          - "0"
+          - --reasoning
+          - "on"
+          - --ubatch-size
+          - "512"
+          - --threads
+          - "16"
+        env:
+          - name: LLAMA_ARG_HOST
+            value: "0.0.0.0"
+          - name: LLAMA_ARG_PORT
+            value: "8080"
+          - name: LD_LIBRARY_PATH
+            value: /app
+          - name: LLAMA_ARG_THREADS
+            value: "16"
+          - name: LLAMA_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: nvidia-llm-api-key
+                key: api-key
+          - name: HF_HOME
+            value: /cache/huggingface
+        securityContext:
+          allowPrivilegeEscalation: false
+        probes:
+          startup:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /health
+                port: http
+              initialDelaySeconds: 60
+              periodSeconds: 30
+              failureThreshold: 40
+          readiness:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /health
+                port: http
+              initialDelaySeconds: 10
+              periodSeconds: 15
+          liveness:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /health
+                port: http
+              initialDelaySeconds: 30
+              periodSeconds: 30
+        resources:
+          limits:
+            nvidia.com/gpu: "1"
+            memory: 28Gi
+          requests:
+            nvidia.com/gpu: "1"
+            memory: 28Gi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+
+service:
+  core:
+    enabled: true
+    controller: main
+    primary: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        port: *port
+        targetPort: http
+        protocol: TCP
+  public:
+    enabled: true
+    controller: main
+    primary: false
+    type: LoadBalancer
+    externalTrafficPolicy: Cluster
+    annotations:
+      lbipam.cilium.io/ips: "172.31.0.36"
+    ports:
+      http:
+        enabled: true
+        port: *port
+        targetPort: http
+        protocol: TCP
+
+persistence:
+  cache:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-block-retain
+    accessMode: ReadWriteOnce
+    size: 100Gi
+    retain: true
+    advancedMounts:
+      main:
+        core:
+          - path: /cache/huggingface
+            readOnly: false
+  shm:
+    enabled: true
+    type: emptyDir
+    medium: Memory
+    sizeLimit: 16Gi
+    advancedMounts:
+      main:
+        core:
+          - path: /dev/shm
+            readOnly: false
