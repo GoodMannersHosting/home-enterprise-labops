@@ -75,9 +75,9 @@ controllers:
           - "128"
           - --threads
           - "16"
-          # Enable Tooling - EARLY ACCESS, leave disabled for now
-          # - --tools
-          # - "all"
+          # Enable Tooling
+          - --tools
+          - "all"
           # Tunings
           - --temperature
           - "0.6"
