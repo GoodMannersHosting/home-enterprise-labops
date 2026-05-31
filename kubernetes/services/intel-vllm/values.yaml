@@ -33,14 +33,14 @@ controllers:
           pullPolicy: Always
         # Image ENTRYPOINT is /app/llama-server; do not override command with sh.
         args:
-          # Qwen3-Coder-30B-A3B: MoE, ~3B active params per token → fast generation on B70 Vulkan.
+          # Gemma-4 26B A4B IT: Transformer, ~26B params per token → fast generation on B70 Vulkan.
           # Standard transformer (no GDN/SSM), so SYCL-only Qwen3.6 warmup bug doesn't apply.
           - --hf-repo
-          - unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF
-          # Quality floor: Q6_K. Switch to UD-Q6_K_XL for Unsloth Dynamic if quality matters more than size.
+          - unsloth/gemma-4-26B-A4B-it-GGUF
+          # Unsloth Dynamic Q4_K_M: Balanced quality and size for Gemma-4.
           - --hf-file
-          - Qwen3-Coder-30B-A3B-Instruct-Q6_K.gguf
-          # 32k ctx fits comfortably: Q6_K model ~25 GiB + q8_0 KV @32k ~1.6 GiB on 32 GiB Arc B70.
+          - gemma-4-26B-A4B-it-UD-Q4_K_M.gguf
+          # 32k ctx fits comfortably: Q4_K_M model ~15–20 GiB + q8_0 KV @32k ~2.5 GiB on 32 GiB Arc B70.
           - --ctx-size
           - "32768"
           - --gpu-layers
@@ -61,9 +61,6 @@ controllers:
           # Text chat: disable thinking/reasoning (replaces deprecated --chat-template-kwargs enable_thinking).
           - --reasoning
           - "off"
-          # Avoid per-token checkpoint work during generation (see logs: "checkpoint 1 of 32").
-          - --checkpoint-every-n-tokens
-          - "-1"
           - --ubatch-size
           - "512"
         env:
