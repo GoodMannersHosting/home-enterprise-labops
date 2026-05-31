@@ -31,18 +31,36 @@ controllers:
           - unsloth/Qwen3.6-35B-A3B-GGUF
           - --hf-file
           - Qwen3.6-35B-A3B-UD-Q6_K_XL.gguf
-          - --n-cpu-moe
-          - "99"
-          - --gpu-layers
-          - "99"
+          # Spec Settings
+          - --spec-type
+          - "ngram-map-k"
+          - --spec-draft-n-max
+          - "48"
+          - --spec-draft-n-min
+          - "1"
+          - --spec-ngram-simple-size-n
+          - "16"
+          - --spec-ngram-simple-size-m
+          - "48"
+          # Performance Settings
+          - --fit
+          - "on"
+          # - --n-cpu-moe # disabling in favor of `--fit on`
+          # - "99"
+          # - --gpu-layers  # disabling in favor of `--fit on`
+          # - "99"
           - --ctx-size
           - "131072"
+          - --ctx-checkpoints
+          - "16"
           - --flash-attn
           - "on"
           - --cache-type-k
           - q8_0
           - --cache-type-v
           - q8_0
+          - --cpu-strict
+          - "1"
           - --parallel
           - "1"
           - --cache-ram
@@ -54,14 +72,30 @@ controllers:
           - --batch-size
           - "2048"
           - --ubatch-size
-          - "2048"
+          - "128"
           - --threads
           - "16"
-          - --tools
-          - "all"
+          # Enable Tooling - EARLY ACCESS, leave disabled for now
+          # - --tools
+          # - "all"
+          # Tunings
+          - --temperature
+          - "0.6"
+          - --top-k
+          - "20"
+          - --top-p
+          - "0.95"
+          - --min-p
+          - "0.00"
+          - --presence-penalty
+          - "1.5"
+          - --repeat-penalty
+          - "1.0"
+          # Enable Specific Settings
           - --no-mmap
           - --mlock
           - --jinja
+          - --direct-io
         env:
           - name: LLAMA_ARG_HOST
             value: "0.0.0.0"
