@@ -10,9 +10,9 @@ The Argo app / Helm release is named **`intel-vllm`** from the homelab plan (dir
 
 | Item | Value |
 |------|--------|
-| Hugging Face repo | `unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF` |
-| GGUF file | `Qwen3-Coder-30B-A3B-Instruct-Q6_K.gguf` (MoE, ~3B active params; min weight quant Q6_K) |
-| Context | `32768` (q8_0 KV ≈ 1.6 GiB; model ≈ 25 GiB; comfortably fits on 32 GiB B70) |
+| Hugging Face repo | `unsloth/gemma-4-26B-A4B-it-GGUF` |
+| GGUF file | `gemma-4-26B-A4B-it-UD-Q4_K_M.gguf` (Transformer, ~26B params; Unsloth Dynamic Q4) |
+| Context | `32768` (q8_0 KV ≈ 1.6 GiB; model ≈ 15–20 GiB; comfortably fits on 32 GiB B70) |
 | Image | `ghcr.io/ggml-org/llama.cpp:server-vulkan` (Vulkan; SYCL blocked by upstream bug — see §4b) |
 | Tunables | Flash attention on, KV cache `q8_0`, `GGML_VK_MMVQ_SHMEM_STAGING=1` |
 
@@ -20,7 +20,7 @@ Weights are pulled on first start into the `cache` PVC (`HF_HOME=/cache/huggingf
 
 ### Why this model
 
-Qwen3-Coder-30B-A3B is a **standard transformer MoE** (no Gated DeltaNet / SSM blocks), so it dodges the SYCL Qwen3.6 warmup crash and also benefits from MoE sparsity: only ~3B params are active per token. On Arc B70 + Vulkan + Q6_K this should sit well above the 13–15 t/s ceiling we hit with the dense Qwen3.6-27B model, and it's purpose-built for coding/agent workflows. If you later want a multimodal model on this box, run it as a **second** Deployment rather than swapping this one out.
+Gemma-4-26B-A4B IT is a **standard transformer dense** (no GDN/SSM blocks), so it dodges the SYCL Qwen3.6 warmup crash and benefits from full 26B active params per token. On Arc B70 + Vulkan + Q4_K_M this should sit well above the 13–15 t/s ceiling we hit with the dense Qwen3.6-27B model, and it's purpose-built for coding/agent workflows. If you later want a multimodal model on this box, run it as a **second** Deployment rather than swapping this one out.
 
 ## Endpoints
 
@@ -79,7 +79,7 @@ We set `--cache-ram 0` to disable that cache. Kubernetes still gives the pod **2
 
 ### Multimodal (mmproj) — N/A for current model
 
-Qwen3-Coder-30B-A3B is text-only; the GGUF repo ships no `mmproj-*.gguf`, so there is nothing for `-hf` to auto-load. If you later switch back to a multimodal model (Qwen3.6, Qwen-VL, etc.), re-add `--no-mmproj` unless you actually want vision.
+Gemma-4-26B-A4B IT is text-only; the GGUF repo ships no `mmproj-*.gguf`, so there is nothing for `-hf` to auto-load. If you later switch back to a multimodal model (Qwen3.6, Qwen-VL, etc.), re-add `--no-mmproj` unless you actually want vision.
 
 If generation feels slow, work through these in order.
 
@@ -96,16 +96,16 @@ If layers run on CPU, fix CDI/`/dev/dri` (see Troubleshooting) before tuning fla
 
 ### 2. Context length (largest lever in this deployment)
 
-KV cache scales linearly with `--ctx-size` × `--parallel`. With Qwen3-Coder-30B-A3B's GQA layout (4 KV heads, head_dim 128, 48 layers) and `--cache-type-k/v q8_0`, KV is roughly **~50 KiB per token**, so:
+KV cache scales linearly with `--ctx-size` × `--parallel`. With Gemma-4-26B-A4B IT's GQA layout (8 KV heads, head_dim 256, 44 layers) and `--cache-type-k/v q8_0`, KV is roughly **~80 KiB per token**, so:
 
 | `--ctx-size` | KV @ q8_0, parallel=1 |
 |--------------|------------------------|
-| 8 192 | ~0.4 GiB |
-| 32 768 | ~1.6 GiB |
-| 65 536 | ~3.2 GiB |
-| 131 072 | ~6.4 GiB |
+| 8 192 | ~0.6 GiB |
+| 32 768 | ~2.5 GiB |
+| 65 536 | ~5.0 GiB |
+| 131 072 | ~10.0 GiB |
 
-Default is **`32768`**, comfortably under the ~7 GiB headroom we have after Q6_K weights (~25 GiB). If you need very long context (codebase RAG, large patches) bump to 65 536 or 131 072 — but keep `--parallel 1` unless you actually need concurrent slots.
+Default is **`32768`**, comfortably under the ~12 GiB headroom we have after Q4_K_M weights (~15–20 GiB). If you need very long context (codebase RAG, large patches) bump to 65 536 or 131 072 — but keep `--parallel 1` unless you actually need concurrent slots.
 
 ### 3. Parallel slots
 
@@ -113,13 +113,13 @@ Default `n_parallel=4` creates **four** slots each with full `n_ctx` KV — heav
 
 ### 4. Quantization (weights)
 
-**Policy:** stay at **Q6_K** or higher for weight files (no Q4_K_M / Q4_0 class for now). KV cache types (`q8_0`) are separate and may still be tuned.
+**Policy:** stay at **Q4_K_M** or higher for weight files. KV cache types (`q8_0`) are separate and may still be tuned.
 
 | GGUF | Tradeoff |
 |------|----------|
-| `Qwen3-Coder-30B-A3B-Instruct-Q6_K.gguf` (default) | Quality floor; ~25 GiB weights |
-| `Qwen3-Coder-30B-A3B-Instruct-UD-Q6_K_XL.gguf` | Unsloth Dynamic Q6 — same class, mixed precision per-tensor; slightly larger, often a hair better quality |
-| `Qwen3-Coder-30B-A3B-Instruct-Q8_0.gguf` | Heavier (~32 GiB), tightest quality but eats nearly all VRAM |
+| `gemma-4-26B-A4B-it-UD-Q4_K_M.gguf` (default) | Unsloth Dynamic Q4 — balanced quality and size; ~15–20 GiB weights |
+| `gemma-4-26B-A4B-it-Q6_K.gguf` | Higher quality; ~25 GiB weights, tight on 32 GiB VRAM |
+| `gemma-4-26B-A4B-it-Q8_0.gguf` | Heaviest (~32 GiB), tightest quality but nearly fills all VRAM |
 
 When switching `--hf-file`, remove the old snapshot under the cache PVC or use a fresh path so the pod does not keep loading the previous quant from disk.
 
@@ -160,9 +160,9 @@ For **many concurrent** OpenAI clients or higher batch throughput, `llama-server
 
 ### Breaking ~40 t/s
 
-We swapped models specifically because dense Qwen3.6-27B was capped at ~13–15 t/s on B70 + Vulkan + Q6_K. **Qwen3-Coder-30B-A3B is MoE with ~3B active params per token**, which is the single biggest lever for TG on this hardware — expected ballpark is roughly **40–70 t/s** depending on context length and prefill mix.
+We swapped models specifically because dense Qwen3.6-27B was capped at ~13–15 t/s on B70 + Vulkan + Q6_K. **Gemma-4-26B-A4B IT is dense with ~26B params per token**, which should provide strong quality and reasonable speed on Arc B70 + Vulkan + Q4_K_M — expected ballpark is roughly **20–40 t/s** depending on context length and prefill mix.
 
-If TG is still under ~30 t/s after warm-up, check in order:
+If TG is still under ~15 t/s after warm-up, check in order:
 
 1. **Vulkan offload** — logs should show 49/49 layers on `Vulkan0`. Any CPU fallback = CDI / `/dev/dri` regression.
 2. **Active experts** — MoE perf depends on expert dispatch hitting cache. Run a warm-up prompt (8–16 tokens) before benchmarking; first request includes JIT compile.
@@ -177,7 +177,7 @@ If TG is still under ~30 t/s after warm-up, check in order:
 time curl -s http://intel-llm.cloud.danmanners.com/v1/chat/completions \
   -H "Authorization: Bearer $INTEL_LLM_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"model":"Qwen3-Coder-30B-A3B-Instruct-Q6_K.gguf","messages":[{"role":"user","content":"Write a Python function that reverses a linked list."}],"max_tokens":256,"stream":false}'
+  -d '{"model":"gemma-4-26B-A4B-it-UD-Q4_K_M.gguf","messages":[{"role":"user","content":"Write a Python function that reverses a linked list."}],"max_tokens":256,"stream":false}'
 ```
 
 Compare before/after each change; aim for stable tok/s in logs or wall time for 128 tokens.
