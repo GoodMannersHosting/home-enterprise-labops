@@ -24,13 +24,17 @@ controllers:
             protocol: TCP
         image:
           repository: ghcr.io/ggml-org/llama.cpp
-          tag: server
+          tag: server-cuda12
           pullPolicy: Always
         args:
           - --hf-repo
           - unsloth/Qwen3.6-35B-A3B-GGUF
           - --hf-file
           - Qwen3.6-35B-A3B-UD-Q6_K_XL.gguf
+          - --n-cpu-moe
+          - "99"
+          - --gpu-layers
+          - "99"
           - --ctx-size
           - "131072"
           - --flash-attn
@@ -45,19 +49,28 @@ controllers:
           - "0"
           - --reasoning
           - "on"
+          - --reasoning-budget
+          - "-1"
+          - --batch-size
+          - "2048"
           - --ubatch-size
-          - "512"
+          - "2048"
           - --threads
           - "16"
+          - --tools
+          - "all"
+          - --no-mmap
+          - --mlock
+          - --jinja
         env:
           - name: LLAMA_ARG_HOST
             value: "0.0.0.0"
           - name: LLAMA_ARG_PORT
             value: "8080"
+          - name: "LLAMA_ARG_UI"
+            value: "off"
           - name: LD_LIBRARY_PATH
             value: /app
-          - name: LLAMA_ARG_THREADS
-            value: "16"
           - name: LLAMA_API_KEY
             valueFrom:
               secretKeyRef:
@@ -99,10 +112,10 @@ controllers:
         resources:
           limits:
             nvidia.com/gpu: "1"
-            memory: 28Gi
+            memory: 48Gi
           requests:
             nvidia.com/gpu: "1"
-            memory: 28Gi
+            memory: 48Gi
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
 

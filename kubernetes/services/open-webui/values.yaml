@@ -3,6 +3,7 @@ namespaceOverride: ""
 ollama:
   name: "ollama"
   enabled: true
+  replicaCount: 0
   fullnameOverride: ""
   resources:
     requests:
