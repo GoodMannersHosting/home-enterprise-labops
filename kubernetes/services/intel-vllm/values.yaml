@@ -29,7 +29,8 @@ controllers:
           repository: ghcr.io/ggml-org/llama.cpp
           # Back on Vulkan: server-intel (SYCL) crashes silently during warmup on Qwen3.6 hybrid GDN
           # (ggml-org/llama.cpp#21474). Qwen3-Coder-30B-A3B is a standard MoE transformer, no SSM/GDN.
-          tag: server-vulkan
+          # Pinned to b4735 — b4740 has Vulkan GPU detection regression (no usable GPU found).
+          tag: server-vulkan-b4735
           pullPolicy: Always
         # Image ENTRYPOINT is /app/llama-server; do not override command with sh.
         args:
