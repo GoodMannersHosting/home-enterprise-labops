@@ -1,6 +1,8 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
 ---
 # llama-server on Intel Arc B70 (intellectual). OpenAI-compatible API; not vLLM despite the service name.
+# GPU acceleration not yet working: Mesa 24.2.8 doesn't support Battlemage PCI ID 0xe223.
+# llama.cpp builds b4735-b4740 don't support qwen35/gemma4 architectures.
 defaultPodOptions:
   automountServiceAccountToken: false
   enableServiceLinks: false
@@ -27,31 +29,28 @@ controllers:
             protocol: TCP
         image:
           repository: ghcr.io/ggml-org/llama.cpp
-          # Pinned to b4740 — supports Gemma-4 architecture.
-          # GPU acceleration not working on Intel Arc B70 (Battlemage/Xe2):
-          #   Vulkan: missing IGC/GmmLib for Xe2 shader compilation
-          #   SYCL: Level Zero only sees integrated UHD 770, not Arc B70
-          tag: server-vulkan-b4740
+          # b4735 supports qwen3coder architecture; b4740 doesn't support qwen35 or gemma4
+          tag: server-vulkan-b4735
           pullPolicy: Always
         # Image ENTRYPOINT is /app/llama-server; do not override command with sh.
         args:
-          # Qwen3.6-27B: MoE transformer, already cached. Gemma-4 not yet supported by llama.cpp builds.
+          # Qwen3-Coder-30B-A3B: MoE transformer, already cached.
           - --model
-          - /cache/huggingface/hub/models--unsloth--Qwen3.6-27B-GGUF/snapshots/82d411acf4a06cfb8d9b073a5211bf410bfc29bf/Qwen3.6-27B-Q4_K_M.gguf
-          # 32k ctx: Q4_K_M model ~16 GiB + q8_0 KV @32k ~2.5 GiB.
+          - /cache/huggingface/hub/models--unsloth--Qwen3-Coder-30B-A3B-Instruct-GGUF/snapshots/b17cb02dd882d5b6ab62fc777ad2995f19668350/Qwen3-Coder-30B-A3B-Instruct-Q6_K.gguf
+          # 8k ctx: Q6_K model ~27 GiB — fits in 32 GiB Arc B70 VRAM (for when GPU works).
           - --ctx-size
-          - "32768"
+          - "8192"
           - --gpu-layers
-          - "99"
-          # KV cache quant (separate from weight quant); q8_0 is fine while weights stay Q6_K.
+          - "0"
+          # KV cache quant; q8_0 is fine.
           - --cache-type-k
           - q8_0
           - --cache-type-v
           - q8_0
-          # Default n_parallel=4 → four KV slots reserve VRAM; use 1 for single-user chat.
+          # Single-user chat.
           - --parallel
           - "1"
-          # Text chat: disable reasoning/thought tags output.
+          # Disable reasoning/thought tags.
           - --reasoning-format
           - none
           - --ubatch-size
