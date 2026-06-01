@@ -35,11 +35,10 @@ controllers:
           pullPolicy: Always
         # Image ENTRYPOINT is /app/llama-server; do not override command with sh.
         args:
-          # Gemma-4 26B A4B IT: Transformer, ~26B params per token.
-          # Using local cached model path instead of --hf-repo (download hangs).
+          # Qwen3.6-27B: MoE transformer, already cached. Gemma-4 not yet supported by llama.cpp builds.
           - --model
-          - /cache/huggingface/hub/models--unsloth--gemma-4-26B-A4B-it-GGUF/snapshots/3365c68df1a83799b846d05324ebfadbb8cc70b3/gemma-4-26B-A4B-it-UD-Q4_K_M.gguf
-          # 32k ctx: Q4_K_M model ~15–20 GiB + q8_0 KV @32k ~2.5 GiB.
+          - /cache/huggingface/hub/models--unsloth--Qwen3.6-27B-GGUF/snapshots/82d411acf4a06cfb8d9b073a5211bf410bfc29bf/Qwen3.6-27B-Q4_K_M.gguf
+          # 32k ctx: Q4_K_M model ~16 GiB + q8_0 KV @32k ~2.5 GiB.
           - --ctx-size
           - "32768"
           - --gpu-layers
