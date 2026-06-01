@@ -36,14 +36,11 @@ controllers:
           pullPolicy: Always
         # Image ENTRYPOINT is /app/llama-server; do not override command with sh.
         args:
-          # Gemma-4 26B A4B IT: Transformer, ~26B params per token → fast generation on B70 Vulkan.
-          # Standard transformer (no GDN/SSM), so SYCL-only Qwen3.6 warmup bug doesn't apply.
-          - --hf-repo
-          - unsloth/gemma-4-26B-A4B-it-GGUF
-          # Unsloth Dynamic Q4_K_M: Balanced quality and size for Gemma-4.
-          - --hf-file
-          - gemma-4-26B-A4B-it-UD-Q4_K_M.gguf
-          # 32k ctx fits comfortably: Q4_K_M model ~15–20 GiB + q8_0 KV @32k ~2.5 GiB on 32 GiB Arc B70.
+          # Gemma-4 26B A4B IT: Transformer, ~26B params per token.
+          # Using local cached model path instead of --hf-repo (download hangs).
+          - --model
+          - /cache/huggingface/hub/models--unsloth--gemma-4-26B-A4B-it-GGUF/snapshots/3365c68df1a83799b846d05324ebfadbb8cc70b3/gemma-4-26B-A4B-it-UD-Q4_K_M.gguf
+          # 32k ctx: Q4_K_M model ~15–20 GiB + q8_0 KV @32k ~2.5 GiB.
           - --ctx-size
           - "32768"
           - --gpu-layers
