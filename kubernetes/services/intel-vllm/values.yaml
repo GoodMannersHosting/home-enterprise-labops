@@ -175,6 +175,15 @@ persistence:
         core:
           - path: /cache/huggingface
             readOnly: false
+  dri:
+    enabled: true
+    type: hostPath
+    hostPath: /dev/dri
+    advancedMounts:
+      main:
+        core:
+          - path: /dev/dri
+            readOnly: false
   shm:
     enabled: true
     type: emptyDir
