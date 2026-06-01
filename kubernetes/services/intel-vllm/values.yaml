@@ -27,9 +27,11 @@ controllers:
             protocol: TCP
         image:
           repository: ghcr.io/ggml-org/llama.cpp
-          # Back on Vulkan: server-intel (SYCL) crashes silently during warmup on Qwen3.6 hybrid GDN
-          # (ggml-org/llama.cpp#21474). Qwen3-Coder-30B-A3B is a standard MoE transformer, no SSM/GDN.
-          # Pinned to b4735 — b4740 has Vulkan GPU detection regression (no usable GPU found).
+          # Pinned to b4735 — b4740 has Vulkan GPU detection regression.
+          # GPU acceleration not yet working on Intel Arc B70 (Battlemage/Xe2):
+          #   Vulkan: missing IGC/GmmLib for Xe2 shader compilation
+          #   SYCL: Level Zero only sees integrated UHD 770, not Arc B70
+          # See: https://github.com/ggml-org/llama.cpp/issues/23943
           tag: server-vulkan-b4735
           pullPolicy: Always
         # Image ENTRYPOINT is /app/llama-server; do not override command with sh.
@@ -54,9 +56,6 @@ controllers:
           # Default n_parallel=4 → four KV slots reserve VRAM; use 1 for single-user chat.
           - --parallel
           - "1"
-          # Prompt cache default is 8192 MiB RAM (log line "limits: 8192.000 MiB") — disable for clarity/less overhead.
-          - --cache-ram
-          - "0"
           # Text chat: disable thinking/reasoning (replaces deprecated --chat-template-kwargs enable_thinking).
           - --reasoning
           - "off"
@@ -69,15 +68,7 @@ controllers:
           - name: LLAMA_ARG_PORT
             value: "8080"
           # server-vulkan ships .so files in /app; without this, ld.so can't find libllama-common.so.0.
-          # If we ever switch back to server-intel (SYCL), REMOVE this entry — the SYCL base image's
-          # own LD_LIBRARY_PATH must remain intact for libsvml.so/libimf.so/libintlc.so to resolve.
-          - name: LD_LIBRARY_PATH
-            value: /app
-          # Vulkan ICD path for Intel GPU
-          - name: VK_ICD_FILENAMES
-            value: /usr/share/vulkan/icd.d/intel_icd.json
-        securityContext:
-          privileged: true
+        securityContext: {}
 
 service:
   core:
@@ -120,15 +111,6 @@ persistence:
       main:
         core:
           - path: /cache/huggingface
-            readOnly: false
-  dri:
-    enabled: true
-    type: hostPath
-    hostPath: /dev/dri
-    advancedMounts:
-      main:
-        core:
-          - path: /dev/dri
             readOnly: false
   shm:
     enabled: true
