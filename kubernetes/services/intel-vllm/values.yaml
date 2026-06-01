@@ -37,9 +37,9 @@ controllers:
           # Qwen3-Coder-30B-A3B: MoE transformer, already cached.
           - --model
           - /cache/huggingface/hub/models--unsloth--Qwen3-Coder-30B-A3B-Instruct-GGUF/snapshots/b17cb02dd882d5b6ab62fc777ad2995f19668350/Qwen3-Coder-30B-A3B-Instruct-Q6_K.gguf
-          # 8k ctx: Q6_K model ~27 GiB — fits in 32 GiB Arc B70 VRAM (for when GPU works).
+          # 4k ctx to stay within memory limits (Q6_K model ~23 GiB + KV cache).
           - --ctx-size
-          - "8192"
+          - "4096"
           - --gpu-layers
           - "0"
           # KV cache quant; q8_0 is fine.
