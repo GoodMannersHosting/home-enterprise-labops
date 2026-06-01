@@ -74,6 +74,9 @@ controllers:
           # own LD_LIBRARY_PATH must remain intact for libsvml.so/libimf.so/libintlc.so to resolve.
           - name: LD_LIBRARY_PATH
             value: /app
+          # Vulkan ICD path for Intel GPU
+          - name: VK_ICD_FILENAMES
+            value: /usr/share/vulkan/icd.d/intel_icd.json
         securityContext:
           privileged: true
 
@@ -118,6 +121,15 @@ persistence:
       main:
         core:
           - path: /cache/huggingface
+            readOnly: false
+  dri:
+    enabled: true
+    type: hostPath
+    hostPath: /dev/dri
+    advancedMounts:
+      main:
+        core:
+          - path: /dev/dri
             readOnly: false
   shm:
     enabled: true
