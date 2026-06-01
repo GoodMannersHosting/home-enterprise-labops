@@ -40,6 +40,8 @@ controllers:
           # Unsloth Dynamic Q4_K_M: Balanced quality and size for Gemma-4.
           - --hf-file
           - gemma-4-26B-A4B-it-UD-Q4_K_M.gguf
+          # Verbose logging for GPU debugging
+          - --verbose
           # 32k ctx fits comfortably: Q4_K_M model ~15–20 GiB + q8_0 KV @32k ~2.5 GiB on 32 GiB Arc B70.
           - --ctx-size
           - "32768"
@@ -77,6 +79,11 @@ controllers:
           # Vulkan MMVQ shared-memory staging: cuts host<->device copies on Arc Xe2; safe to leave on.
           - name: GGML_VK_MMVQ_SHMEM_STAGING
             value: "1"
+          # Vulkan loader debugging to diagnose GPU detection issues
+          - name: VK_LOADER_DEBUG
+            value: all
+          - name: VK_ICD_FILENAMES
+            value: /usr/share/vulkan/icd.d/intel_icd.json
           - name: LLAMA_ARG_THREADS
             value: "16"
           - name: LLAMA_API_KEY
