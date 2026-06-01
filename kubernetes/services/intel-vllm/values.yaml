@@ -34,11 +34,9 @@ controllers:
           pullPolicy: Always
         # Image ENTRYPOINT is /app/llama-server; do not override command with sh.
         args:
-          # Llama-3.1-8B-Instruct: smaller, well-supported architecture (llama). Using HF repo since no local cache.
-          - --hf-repo
-          - bartowski/Meta-Llama-3.1-8B-Instruct-GGUF
-          - --hf-file
-          - Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf
+          # Meta-Llama-3.1-8B-Instruct-Q4_K_M: 4.6GB, well-supported llama architecture.
+          - --model
+          - /cache/huggingface/Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf
           # 8k ctx for 8B model.
           - --ctx-size
           - "8192"
