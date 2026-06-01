@@ -27,12 +27,11 @@ controllers:
             protocol: TCP
         image:
           repository: ghcr.io/ggml-org/llama.cpp
-          # Pinned to b4735 — b4740 has Vulkan GPU detection regression.
-          # GPU acceleration not yet working on Intel Arc B70 (Battlemage/Xe2):
+          # Pinned to b4740 — supports Gemma-4 architecture.
+          # GPU acceleration not working on Intel Arc B70 (Battlemage/Xe2):
           #   Vulkan: missing IGC/GmmLib for Xe2 shader compilation
           #   SYCL: Level Zero only sees integrated UHD 770, not Arc B70
-          # See: https://github.com/ggml-org/llama.cpp/issues/23943
-          tag: server-vulkan-b4735
+          tag: server-vulkan-b4740
           pullPolicy: Always
         # Image ENTRYPOINT is /app/llama-server; do not override command with sh.
         args:
