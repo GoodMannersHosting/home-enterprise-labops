@@ -12,7 +12,6 @@ defaultPodOptions:
   securityContext:
     fsGroup: 1000
     fsGroupChangePolicy: OnRootMismatch
-    privileged: true
 
 controllers:
   main:
@@ -75,6 +74,8 @@ controllers:
           # own LD_LIBRARY_PATH must remain intact for libsvml.so/libimf.so/libintlc.so to resolve.
           - name: LD_LIBRARY_PATH
             value: /app
+        securityContext:
+          privileged: true
 persistence:
   cache:
     enabled: true
