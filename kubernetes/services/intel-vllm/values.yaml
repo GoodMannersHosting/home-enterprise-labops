@@ -80,6 +80,9 @@ controllers:
           # Vulkan ICD path for Intel GPU
           - name: VK_ICD_FILENAMES
             value: /usr/share/vulkan/icd.d/intel_icd.json
+          # Vulkan loader debugging
+          - name: VK_LOADER_DEBUG
+            value: all
           - name: LLAMA_ARG_THREADS
             value: "16"
           - name: LLAMA_API_KEY
