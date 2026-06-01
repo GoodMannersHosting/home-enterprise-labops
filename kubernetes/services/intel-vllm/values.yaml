@@ -47,7 +47,7 @@ controllers:
           - --gpu-layers
           - "99"
           - --flash-attn
-          - "on"
+          - "1"
           # KV cache quant (separate from weight quant); q8_0 is fine while weights stay Q6_K.
           - --cache-type-k
           - q8_0
