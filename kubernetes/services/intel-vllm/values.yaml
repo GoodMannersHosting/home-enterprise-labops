@@ -34,14 +34,14 @@ controllers:
           pullPolicy: Always
         # Image ENTRYPOINT is /app/llama-server; do not override command with sh.
         args:
-          # Qwen3-Coder-30B-A3B: MoE transformer, using HF repo (not Unsloth — their GGUF uses qwen3moe arch not supported by b4735).
+          # Llama-3.1-8B-Instruct: smaller, well-supported architecture (llama). Using HF repo since no local cache.
           - --hf-repo
-          - Qwen/Qwen3-Coder-30B-A3B-Instruct
+          - bartowski/Meta-Llama-3.1-8B-Instruct-GGUF
           - --hf-file
-          - Qwen3-Coder-30B-A3B-Instruct-Q6_K.gguf
-          # 4k ctx to stay within memory limits.
+          - Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf
+          # 8k ctx for 8B model.
           - --ctx-size
-          - "4096"
+          - "8192"
           - --gpu-layers
           - "0"
           # KV cache quant; q8_0 is fine.
