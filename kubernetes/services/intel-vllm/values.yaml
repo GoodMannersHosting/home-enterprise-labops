@@ -42,11 +42,6 @@ controllers:
           - "8192"
           - --gpu-layers
           - "0"
-          # KV cache quant; q8_0 is fine.
-          - --cache-type-k
-          - q8_0
-          - --cache-type-v
-          - q8_0
           # Single-user chat.
           - --parallel
           - "1"
