@@ -76,6 +76,36 @@ controllers:
             value: /app
         securityContext:
           privileged: true
+
+service:
+  core:
+    enabled: true
+    controller: main
+    primary: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        port: *port
+        targetPort: http
+        protocol: TCP
+  public:
+    enabled: true
+    controller: main
+    primary: false
+    type: LoadBalancer
+    externalTrafficPolicy: Cluster
+    annotations:
+      lbipam.cilium.io/ips: "172.31.0.35"
+      external-dns.alpha.kubernetes.io/hostname: intel-llm.cloud.danmanners.com
+      external-dns.alpha.kubernetes.io/ttl: "300"
+    ports:
+      http:
+        enabled: true
+        port: *port
+        targetPort: http
+        protocol: TCP
+
 persistence:
   cache:
     enabled: true
@@ -88,15 +118,6 @@ persistence:
       main:
         core:
           - path: /cache/huggingface
-            readOnly: false
-  dri:
-    enabled: true
-    type: hostPath
-    hostPath: /dev/dri
-    advancedMounts:
-      main:
-        core:
-          - path: /dev/dri
             readOnly: false
   shm:
     enabled: true
