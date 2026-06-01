@@ -83,6 +83,9 @@ controllers:
           # Vulkan loader debugging
           - name: VK_LOADER_DEBUG
             value: all
+          # llama.cpp Vulkan debugging
+          - name: GGML_VK_DEBUG
+            value: all
           - name: LLAMA_ARG_THREADS
             value: "16"
           - name: LLAMA_API_KEY
