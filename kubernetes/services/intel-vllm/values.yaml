@@ -56,9 +56,9 @@ controllers:
           # Default n_parallel=4 → four KV slots reserve VRAM; use 1 for single-user chat.
           - --parallel
           - "1"
-          # Text chat: disable thinking/reasoning (replaces deprecated --chat-template-kwargs enable_thinking).
-          - --reasoning
-          - "off"
+          # Text chat: disable reasoning/thought tags output.
+          - --reasoning-format
+          - none
           - --ubatch-size
           - "512"
         env:
