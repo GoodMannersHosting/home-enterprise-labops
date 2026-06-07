@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/budimanjojo/talhelper/master/pkg/config/schemas/talconfig.json
 clusterName: helo
-talosVersion: v1.13.0
-kubernetesVersion: 1.36.0
+talosVersion: v1.13.2
+kubernetesVersion: 1.36.1
 endpoint: "https://k8s.homelab.danmanners.com:6443"
 allowSchedulingOnControlPlanes: true
 cniConfig:
@@ -312,6 +312,36 @@ nodes:
         dhcp: false
       - deviceSelector:
           hardwareAddr: "e4:3a:6e:5b:a9:be"
+        dhcp: false
+  - hostname: armstrong.homelab.danmanners.com # Minisforum MS-R1
+    controlPlane: false
+    installDiskSelector:
+      wwid: eui.e8238fa6bf530001001b448b4e4fc122
+    # machineSpec: # Disabling SecureBoot
+    #   useUKI: true
+    #   secureboot: true
+    schematic:
+      customization:
+        systemExtensions:
+          officialExtensions:
+            - siderolabs/binfmt-misc
+            - siderolabs/nvme-cli
+            - siderolabs/panfrost
+            - siderolabs/util-linux-tools
+            - siderolabs/wasmedge
+    ipAddress: 172.21.0.21
+    disableSearchDomain: true
+    nameservers: *nameservers
+    networkInterfaces:
+      - deviceSelector:
+          hardwareAddr: "38:05:25:33:e3:8d"
+        dhcp: false
+        mtu: 1500
+        addresses:
+          - 172.21.0.21/20
+        routes: *mgmt_routes
+      - deviceSelector:
+          hardwareAddr: "38:05:25:33:e3:8e"
         dhcp: false
 
 controlPlane:
