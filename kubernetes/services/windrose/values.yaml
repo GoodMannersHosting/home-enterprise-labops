@@ -6,6 +6,7 @@ defaultPodOptions:
   restartPolicy: Always
   nodeSelector:
     cpu-feature.node.kubevirt.io/avx2: "true"
+    kubernetes.io/arch: amd64
 
 controllers:
   main:

@@ -4,6 +4,9 @@ defaultPodOptions:
   automountServiceAccountToken: false
   enableServiceLinks: false
   restartPolicy: Always
+  nodeSelector:
+    kubernetes.io/arch: amd64
+
   securityContext:
     fsGroup: 953
     fsGroupChangePolicy: OnRootMismatch
