@@ -4,6 +4,8 @@ defaultPodOptions:
   automountServiceAccountToken: false
   enableServiceLinks: false
   restartPolicy: Always
+  nodeSelector:
+    kubernetes.io/arch: amd64
 
 controllers:
   main:
