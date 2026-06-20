@@ -30,26 +30,46 @@ controllers:
         image:
           repository: ghcr.io/ggml-org/llama.cpp
           # b4735 supports qwen3coder architecture; b4740 doesn't support qwen35 or gemma4
-          tag: server-vulkan-b4735
+          tag: server-intel
           pullPolicy: Always
         # Image ENTRYPOINT is /app/llama-server; do not override command with sh.
         args:
+          - --hf-repo
+          - unsloth/Qwen3.6-27B-MTP-GGUF
+          - --hf-file
+          - Qwen3.6-27B-Q6_K.gguf
           # Meta-Llama-3.1-8B-Instruct-Q4_K_M: 4.6GB, well-supported llama architecture.
-          - --model
-          - /cache/huggingface/Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf
+          # - --model
+          # - /cache/huggingface/Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf
           # 8k ctx for 8B model.
           - --ctx-size
-          - "8192"
+          - "524288"
           - --gpu-layers
           - "0"
           # Single-user chat.
           - --parallel
-          - "1"
-          # Disable reasoning/thought tags.
-          - --reasoning-format
-          - none
+          - "2"
+          - --reasoning-budget
+          - "-1"
+          - --batch-size
+          - "2048"
           - --ubatch-size
-          - "512"
+          - "128"
+          - --threads
+          - "16"
+          # Tunings
+          - --temperature
+          - "0.6"
+          - --top-k
+          - "20"
+          - --top-p
+          - "0.95"
+          - --min-p
+          - "0.00"
+          - --presence-penalty
+          - "1.5"
+          - --repeat-penalty
+          - "1.0"
         env:
           # Bind via env only — image sets LLAMA_ARG_HOST; duplicating --host triggers a startup warning.
           - name: LLAMA_ARG_HOST
