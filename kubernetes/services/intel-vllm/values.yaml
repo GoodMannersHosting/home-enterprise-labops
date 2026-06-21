@@ -30,24 +30,27 @@ controllers:
         image:
           repository: ghcr.io/ggml-org/llama.cpp
           # b4735 supports qwen3coder architecture; b4740 doesn't support qwen35 or gemma4
-          tag: server-intel
+          tag: server-vulkan
+          # tag: server-intel
           pullPolicy: Always
         # Image ENTRYPOINT is /app/llama-server; do not override command with sh.
         args:
           - --hf-repo
-          - unsloth/gemma-4-31B-it-GGUF
+          - HauhauCS/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive
           # - unsloth/Qwen3.6-27B-MTP-GGUF
           - --hf-file
-          - gemma-4-31B-it-Q4_K_M.gguf
+          - Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf
+          - --alias
+          - "(Intel) Qwen3.6 35B A3B Uncensored HauhauCS Aggressive"
           # - Qwen3.6-27B-Q6_K.gguf
           # Meta-Llama-3.1-8B-Instruct-Q4_K_M: 4.6GB, well-supported llama architecture.
           # - --model
           # - /cache/huggingface/Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf
           # 8k ctx for 8B model.
           - --ctx-size
-          - "65536"
+          - "131072"
           - --gpu-layers
-          - "0"
+          - "99"
           # Single-user chat.
           - --parallel
           - "1"
@@ -61,7 +64,7 @@ controllers:
           - "8"
           # Tunings
           - --temperature
-          - "0.6"
+          - "1.0"
           - --top-k
           - "20"
           - --top-p
@@ -72,7 +75,7 @@ controllers:
           - "1.5"
           - --repeat-penalty
           - "1.0"
-          - --no-mmproj
+          - --jinja
         env:
           # Bind via env only — image sets LLAMA_ARG_HOST; duplicating --host triggers a startup warning.
           - name: LLAMA_ARG_HOST
@@ -81,8 +84,10 @@ controllers:
             value: "8080"
           - name: ONEAPI_DEVICE_SELECTOR
             value: "level_zero:0"
-          - name: GGML_SYCL_ENABLE_LEVEL_ZERO
-            value: "1"
+          - name: LLAMA_ARG_MODELS_DIR
+            value: "/cache/huggingface"
+          # - name: GGML_SYCL_ENABLE_LEVEL_ZERO
+          #   value: "1"
         securityContext: {}
         resources:
           requests:
