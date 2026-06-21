@@ -42,21 +42,21 @@ controllers:
           # - --model
           # - /cache/huggingface/Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf
           # 8k ctx for 8B model.
-          - --ctx-size
-          - "524288"
+          # - --ctx-size
+          # - "32768"
           - --gpu-layers
           - "0"
           # Single-user chat.
           - --parallel
-          - "2"
+          - "1"
           - --reasoning-budget
           - "-1"
           - --batch-size
-          - "2048"
+          - "1024"
           - --ubatch-size
           - "128"
           - --threads
-          - "16"
+          - "10"
           # Tunings
           - --temperature
           - "0.6"
