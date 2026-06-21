@@ -85,7 +85,7 @@ controllers:
           - name: ONEAPI_DEVICE_SELECTOR
             value: "level_zero:0"
           - name: LLAMA_ARG_MODELS_DIR
-            value: "/cache/huggingface"
+            value: "/root/.cache/huggingface"
           # - name: GGML_SYCL_ENABLE_LEVEL_ZERO
           #   value: "1"
         securityContext: {}
@@ -139,7 +139,7 @@ persistence:
     advancedMounts:
       main:
         core:
-          - path: /cache/huggingface
+          - path: /root/.cache/huggingface
             readOnly: false
   shm:
     enabled: true
