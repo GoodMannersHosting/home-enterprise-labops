@@ -35,15 +35,17 @@ controllers:
         # Image ENTRYPOINT is /app/llama-server; do not override command with sh.
         args:
           - --hf-repo
-          - unsloth/Qwen3.6-27B-MTP-GGUF
+          - unsloth/gemma-4-31B-it-GGUF
+          # - unsloth/Qwen3.6-27B-MTP-GGUF
           - --hf-file
-          - Qwen3.6-27B-Q6_K.gguf
+          - gemma-4-31B-it-Q4_K_M.gguf
+          # - Qwen3.6-27B-Q6_K.gguf
           # Meta-Llama-3.1-8B-Instruct-Q4_K_M: 4.6GB, well-supported llama architecture.
           # - --model
           # - /cache/huggingface/Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf
           # 8k ctx for 8B model.
-          # - --ctx-size
-          # - "32768"
+          - --ctx-size
+          - "65536"
           - --gpu-layers
           - "0"
           # Single-user chat.
@@ -56,7 +58,7 @@ controllers:
           - --ubatch-size
           - "128"
           - --threads
-          - "10"
+          - "8"
           # Tunings
           - --temperature
           - "0.6"
