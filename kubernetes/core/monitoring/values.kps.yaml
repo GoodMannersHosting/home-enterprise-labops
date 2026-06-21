@@ -8,7 +8,7 @@ grafana:
     - GF_AUTH_GENERIC_OAUTH_API_URL: https://keycloak.cloud.danmanners.com/api/oidc/userinfo
     - GF_AUTH_GENERIC_OAUTH_AUTH_URL: https://keycloak.cloud.danmanners.com/api/oidc/authorization
     - GF_AUTH_GENERIC_OAUTH_CLIENT_ID: grafana
-    - GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET: https://keycloak.cloud.danmanners.com/api/oidc/token
+    # GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET: <set in grafana-secret via envFromSecrets>
     - GF_DATE_FORMATS_USE_BROWSER_LOCALE: true
     - GF_EXPLORE_ENABLED: true
     - GF_FEATURE_TOGGLES_ENABLE: publicDashboards

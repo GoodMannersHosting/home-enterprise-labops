@@ -9,7 +9,8 @@ env:
   GF_AUTH_GENERIC_OAUTH_API_URL: https://keycloak.cloud.danmanners.com/api/oidc/userinfo
   GF_AUTH_GENERIC_OAUTH_AUTH_URL: https://keycloak.cloud.danmanners.com/api/oidc/authorization
   GF_AUTH_GENERIC_OAUTH_CLIENT_ID: grafana
-  GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET: https://keycloak.cloud.danmanners.com/api/oidc/token
+  # Client secret is pulled from grafana-secret via envFromSecrets below
+  # GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET: <set in secret>
   GF_DATE_FORMATS_USE_BROWSER_LOCALE: true
   GF_EXPLORE_ENABLED: true
   GF_FEATURE_TOGGLES_ENABLE: publicDashboards
@@ -41,7 +42,7 @@ grafana.ini:
     auth.generic_oauth.group_mapping:
     org_id: 1
     role_attribute_path: |
-      contains(groups[*], 'helo-admins') && 'Admin' || contains(groups[*], 'helo-viewers') && 'Viewer'
+      (contains(groups[*], 'helo-admins')) ? 'Admin' : ((contains(groups[*], 'helo-viewers')) ? 'Viewer' : '')
   auth.basic:
     enabled: false
   auth.anonymous:
@@ -238,15 +239,7 @@ plugins:
 serviceMonitor:
   enabled: true
 ingress:
-  enabled: true
-  ingressClassName: external
-  annotations:
-    external-dns.alpha.kubernetes.io/target: external.${SECRET_PUBLIC_DOMAIN}
-    cert-manager.io/cluster-issuer: letsencrypt-production
-  hosts:
-    - &host grafana.${SECRET_PUBLIC_DOMAIN}
-  tls:
-    - hosts: [*host]
+  enabled: false
 persistence:
   enabled: false
 testFramework:

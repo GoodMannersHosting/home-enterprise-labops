@@ -1,8 +1,8 @@
 namespace: artifact-keeper
 resources:
-  - namespace.yaml
   - db-superuser.yaml
+  - httproute.yaml
+  - namespace.yaml
   - secret.artifact-keeper.yaml
   - secret.dependency-track.yaml
-  - httproute.yaml
-
+  - secret.jwt.yaml
