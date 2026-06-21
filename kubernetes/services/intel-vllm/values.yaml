@@ -70,6 +70,7 @@ controllers:
           - "1.5"
           - --repeat-penalty
           - "1.0"
+          - --no-mmproj
         env:
           # Bind via env only — image sets LLAMA_ARG_HOST; duplicating --host triggers a startup warning.
           - name: LLAMA_ARG_HOST
