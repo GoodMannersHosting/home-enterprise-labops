@@ -12,9 +12,12 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   sources:
-    - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
-      targetRevision: main
+    - repoURL: &repo https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: &targetRevision main
       ref: values
+    - repoURL: *repo
+      targetRevision: *targetRevision
+      path: kubernetes/core/monitoring
     - name: controller
       repoURL: ghcr.io/prometheus-community/charts
       chart: kube-prometheus-stack
