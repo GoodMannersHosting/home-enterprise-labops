@@ -5,7 +5,7 @@ metadata:
   name: ollama
   namespace: argocd
   labels:
-    chartVersion: &chartVersion 14.5.0
+    chartVersion: &chartVersion 14.8.0
 spec:
   ignoreDifferences:
       # Necessary after updating the volume name in the values.yaml file
