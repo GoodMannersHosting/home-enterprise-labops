@@ -323,7 +323,7 @@ controllers:
             protocol: TCP
         image:
           repository: docker.io/library/rabbitmq
-          tag: "4.2-management"
+          tag: "4.3-management"
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: false
