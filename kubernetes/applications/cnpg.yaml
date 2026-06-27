@@ -5,7 +5,7 @@ metadata:
   name: cnpg
   namespace: argocd
   labels:
-    chartVersion: &chartVersion 0.28.2
+    chartVersion: &chartVersion 0.28.3
 spec:
   destination:
     namespace: database
