@@ -5,7 +5,7 @@ metadata:
   name: cilium
   namespace: argocd
   labels:
-    chartVersion: &chartVersion 1.19.4
+    chartVersion: &chartVersion 1.19.5
 spec:
   destination:
     namespace: kube-system
