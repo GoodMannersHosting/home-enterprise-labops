@@ -63,7 +63,7 @@ controllers:
             protocol: TCP
         image:
           repository: codeberg.org/forgejo/forgejo
-          tag: "14.0.5"
+          tag: "15.0.3"
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: false
