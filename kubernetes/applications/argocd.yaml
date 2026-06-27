@@ -5,7 +5,7 @@ metadata:
   name: argocd
   namespace: argocd
   labels:
-    chartVersion: &chartVersion "9.5.15"
+    chartVersion: &chartVersion "9.7.1"
 spec:
   destination:
     namespace: argocd
