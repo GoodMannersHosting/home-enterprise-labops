@@ -1,6 +1,6 @@
 ---
 fullnameOverride: coredns
-replicaCount: 3
+replicaCount: 2
 k8sAppLabelOverride: kube-dns
 serviceAccount:
   create: true
@@ -52,7 +52,7 @@ tolerations:
 topologySpreadConstraints:
 - maxSkew: 1
   topologyKey: kubernetes.io/hostname
-  whenUnsatisfiable: DoNotSchedule
+  whenUnsatisfiable: ScheduleAnyway
   labelSelector:
     matchLabels:
       app.kubernetes.io/instance: coredns
