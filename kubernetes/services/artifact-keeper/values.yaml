@@ -23,7 +23,7 @@ controllers:
       create-storage-dirs:
         image:
           repository: "docker.io/library/busybox"
-          tag: "1.37"
+          tag: "1.38"
         env:
           - name: ARTIFACT_KEEPER_USER_ID
             value: "999"
@@ -167,7 +167,7 @@ controllers:
       wait-for-db:
         image:
           repository: docker.io/library/busybox
-          tag: "1.37"
+          tag: "1.38"
         command:
           - sh
           - -c
@@ -442,7 +442,7 @@ controllers:
       fix-ownership:
         image:
           repository: docker.io/library/busybox
-          tag: "1.37"
+          tag: "1.38"
         securityContext:
           runAsUser: 0
           runAsNonRoot: false
@@ -573,7 +573,7 @@ controllers:
       wait-for-db:
         image:
           repository: docker.io/library/busybox
-          tag: "1.37"
+          tag: "1.38"
         command:
           - sh
           - -c
