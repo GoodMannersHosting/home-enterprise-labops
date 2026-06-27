@@ -2,7 +2,7 @@ operatorNamespace: rook-ceph
 clusterName: capi-core
 toolbox:
   enabled: true # true
-  image: quay.io/ceph/ceph:v19.2.1
+  image: quay.io/ceph/ceph:v20.2.2
   containerSecurityContext:
     runAsNonRoot: true
     runAsUser: 2016
@@ -22,7 +22,7 @@ monitoring:
 
 cephClusterSpec:
   cephVersion:
-    image: quay.io/ceph/ceph:v19.2.1
+    image: quay.io/ceph/ceph:v20.2.2
     allowUnsupported: false
   dataDirHostPath: /var/lib/rook
   skipUpgradeChecks: false
