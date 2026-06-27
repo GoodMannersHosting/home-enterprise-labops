@@ -141,7 +141,7 @@ controllers:
       wait-db:
         image:
           repository: docker.io/library/busybox
-          tag: "1.37"
+          tag: "1.38"
         command:
           - sh
           - -c
@@ -154,7 +154,7 @@ controllers:
         dependsOn: wait-db
         image:
           repository: docker.io/library/busybox
-          tag: "1.37"
+          tag: "1.38"
         command:
           - sh
           - -c
@@ -333,7 +333,7 @@ controllers:
       wait-db:
         image:
           repository: docker.io/library/busybox
-          tag: "1.37"
+          tag: "1.38"
         command:
           - sh
           - -c
@@ -346,7 +346,7 @@ controllers:
         dependsOn: wait-db
         image:
           repository: docker.io/library/busybox
-          tag: "1.37"
+          tag: "1.38"
         command:
           - sh
           - -c
