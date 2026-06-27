@@ -27,7 +27,7 @@ jobs:
       group: nvidia
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Install Golang
         uses: actions/setup-go@v6.0.0
