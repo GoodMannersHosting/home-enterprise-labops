@@ -1,5 +1,5 @@
 x-anchors:
-  imageTag: &tagVersion v2.13.0
+  imageTag: &tagVersion v2.15.1
   storageClass: &storageClass ceph-block-retain
   storageAccessMode: &storageAccessMode ReadWriteOnce
 
