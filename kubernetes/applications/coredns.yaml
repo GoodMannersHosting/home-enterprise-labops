@@ -5,7 +5,7 @@ metadata:
   name: coredns
   namespace: argocd
   labels:
-    chartVersion: &chartVersion 1.45.2
+    chartVersion: &chartVersion 1.46.0
 spec:
   destination:
     namespace: kube-system
