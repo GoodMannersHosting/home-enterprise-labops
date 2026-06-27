@@ -59,7 +59,7 @@ controllers:
       init:
         image:
           repository: docker.io/library/alpine
-          tag: "3.22"
+          tag: "3.24"
         env: *postgres-env
         command:
           - /bin/ash

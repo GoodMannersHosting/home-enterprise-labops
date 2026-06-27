@@ -242,7 +242,7 @@ controllers:
       bootstrap-dtrack:
         image:
           repository: docker.io/library/alpine
-          tag: "3.20"
+          tag: "3.24"
         env:
           - name: DEPENDENCY_TRACK_URL
             value: http://artifact-keeper-dependency-track:8080
