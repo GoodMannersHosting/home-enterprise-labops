@@ -615,7 +615,7 @@ controllers:
             protocol: TCP
         image:
           repository: dependencytrack/apiserver
-          tag: "4.11.4"
+          tag: "4.14.2"
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: false
