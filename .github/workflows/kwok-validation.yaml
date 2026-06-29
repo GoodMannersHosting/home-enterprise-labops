@@ -40,12 +40,12 @@ jobs:
           sudo apt-get install -y wget curl jq
 
       - name: Set up kwok
-        uses: kubernetes-sigs/kwok@v0.7.0
+        uses: kubernetes-sigs/kwok@v0.8.0
         with:
           command: kwok
 
       - name: Set up kwokctl
-        uses: kubernetes-sigs/kwok@v0.7.0
+        uses: kubernetes-sigs/kwok@v0.8.0
         with:
           command: kwokctl
 
