@@ -22,7 +22,7 @@ controllers:
             protocol: TCP
         image:
           repository: ghcr.io/docling-project/docling-serve-cu128
-          tag: "v1.3.1"
+          tag: "v1.25.0"
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: false
