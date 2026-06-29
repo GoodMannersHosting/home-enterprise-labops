@@ -460,7 +460,7 @@ controllers:
             protocol: TCP
         image:
           repository: opensearchproject/opensearch
-          tag: "2.19.1"
+          tag: "2.19.5"
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: false
