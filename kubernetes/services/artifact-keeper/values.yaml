@@ -521,7 +521,7 @@ controllers:
             protocol: TCP
         image:
           repository: aquasec/trivy
-          tag: "0.71.2"
+          tag: "0.72.0"
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: false
