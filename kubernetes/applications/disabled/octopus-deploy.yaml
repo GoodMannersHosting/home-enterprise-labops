@@ -6,7 +6,7 @@ metadata:
   namespace: argocd
   labels:
     mssqlChartVersion: &mssqlChartVersion 4.4.0
-    octopusChartVersion: &octopusChartVersion 1.11.0
+    octopusChartVersion: &octopusChartVersion 1.14.1
 spec:
   destination:
     namespace: octopus
