@@ -24,3 +24,13 @@ spec:
     limits:
       memory: "4Gi"
       cpu: "2"
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                  - "amd64"
+
