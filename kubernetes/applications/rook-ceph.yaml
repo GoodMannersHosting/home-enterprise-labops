@@ -6,7 +6,7 @@ metadata:
   namespace: argocd
   labels:
     chartVersion: &chartVersion v1.20.1
-    csiChartVersion: &csiChartVersion v1.20.1
+    csiChartVersion: &csiChartVersion 1.0.3
 spec:
   destination:
     namespace: rook-ceph
@@ -36,7 +36,7 @@ spec:
     - repoURL: https://ceph.github.io/ceph-csi-operator
       chart: &rcccd ceph-csi-drivers
       name: *rcccd
-      targetRevision: *chartVersion
+      targetRevision: *csiChartVersion
       helm:
         valueFiles:
           - $values/kubernetes/core/rook-ceph/csi-drivers.values.yaml
