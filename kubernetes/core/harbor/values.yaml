@@ -190,8 +190,19 @@ database:
       repository: goharbor/harbor-db
       tag: *tagVersion
     shmSizeLimit: 512Mi
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: kubernetes.io/arch
+                  operator: In
+                  values:
+                    - "amd64"
   maxIdleConns: 100
   maxOpenConns: 900
+  affinity:
+
 
 redis:
   type: internal
