@@ -121,6 +121,15 @@ core:
   gdpr:
     deleteUser: false
     auditLogsCompliant: false
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                  - "amd64"
 
 jobservice:
   image:
@@ -139,6 +148,15 @@ jobservice:
     max_dangling_hours: 168
   existingSecret: "harbor-service-secrets"
   existingSecretKey: JOBSERVICE_SECRET
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                  - "amd64"
 
 registry:
   registry:
@@ -161,6 +179,15 @@ registry:
     age: 48h
     interval: 24h
     dryrun: false
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                  - "amd64"
 
 trivy:
   enabled: true
@@ -182,6 +209,15 @@ trivy:
   skipUpdate: false
   securityCheck: "vuln"
   timeout: 5m0s
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                  - "amd64"
 
 database:
   type: internal
@@ -213,6 +249,15 @@ redis:
     jobserviceDatabaseIndex: "1"
     registryDatabaseIndex: "2"
     trivyAdapterIndex: "5"
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: kubernetes.io/arch
+                  operator: In
+                  values:
+                    - "amd64"
 
 exporter:
   image:
