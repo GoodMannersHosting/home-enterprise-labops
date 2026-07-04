@@ -75,8 +75,6 @@ spec:
               mountPath: /home/runner/_work
             - name: dind-sock
               mountPath: /var/run
-            - name: dind-externals
-              mountPath: /home/runner/externals
       containers:
         - name: runner
           command:
