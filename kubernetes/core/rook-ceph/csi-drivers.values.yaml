@@ -1,0 +1,24 @@
+# https://raw.githubusercontent.com/rook/rook/v1.20.1/deploy/charts/ceph-csi-drivers/values.yaml
+operatorConfig:
+  namespace: rook-ceph # namespace:operator
+  driverSpecDefaults:
+    imageSet:
+      name: rook-csi-operator-image-set-configmap
+    nodePlugin:
+      priorityClassName: system-node-critical
+    controllerPlugin:
+      priorityClassName: system-cluster-critical
+
+drivers:
+  rbd:
+    enabled: true
+    name: rook-ceph.rbd.csi.ceph.com # csi-provisioner-name
+  cephfs:
+    enabled: true
+    name: rook-ceph.cephfs.csi.ceph.com # csi-provisioner-name
+  nfs:
+    enabled: false
+    name: rook-ceph.nfs.csi.ceph.com # csi-provisioner-name
+  nvmeof:
+    enabled: false
+    name: rook-ceph.nvmeof.csi.ceph.com # csi-provisioner-name
