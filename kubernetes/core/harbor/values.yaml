@@ -102,6 +102,15 @@ portal:
   automountServiceAccountToken: false
   replicas: 1
   revisionHistoryLimit: 3
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                  - "amd64"
 
 core:
   image:
