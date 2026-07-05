@@ -30,4 +30,5 @@ spec:
   sources:
     - pvc:
         name: replace-me-with-pvc-name
+      sourcePathStrategy: PvcName
   copyMethod: Snapshot
