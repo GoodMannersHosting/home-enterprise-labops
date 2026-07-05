@@ -40,6 +40,11 @@ spec:
       helm:
         valueFiles:
           - $values/kubernetes/core/rook-ceph/csi-drivers.values.yaml
+    - repoURL: https://ceph.github.io/ceph-csi-operator
+      chart: &rcco ceph-csi-operator
+      name: *rcco
+      targetRevision: *csiChartVersion
+      # No values file; intentional
   syncPolicy:
     automated:
       prune: true
