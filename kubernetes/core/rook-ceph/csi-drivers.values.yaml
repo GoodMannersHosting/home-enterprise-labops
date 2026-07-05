@@ -13,9 +13,11 @@ drivers:
   rbd:
     enabled: true
     name: rook-ceph.rbd.csi.ceph.com # csi-provisioner-name
+    deployCsiAddons: true
   cephfs:
     enabled: true
     name: rook-ceph.cephfs.csi.ceph.com # csi-provisioner-name
+    deployCsiAddons: true
   nfs:
     enabled: false
     name: rook-ceph.nfs.csi.ceph.com # csi-provisioner-name
