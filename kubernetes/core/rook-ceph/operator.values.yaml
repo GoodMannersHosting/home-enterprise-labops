@@ -17,6 +17,7 @@ toolbox:
       memory: "128Mi"
 
 csi:
+  installCsiOperator: false
   cephFSKernelMountOptions: ms_mode=prefer-crc
   enableCephfsDriver: false
   enableCephfsSnapshotter: false
@@ -30,16 +31,4 @@ image:
   repository: ghcr.io/rook/ceph
 
 monitoring:
-  enabled: false
-
-ingress:
-  dashboard: {}
-
-cephFileSystems: {}
-cephObjectStores: {}
-
-cephFileSystemVolumeSnapshotClass:
-  enabled: false
-
-cephBlockPoolsVolumeSnapshotClass:
   enabled: false
