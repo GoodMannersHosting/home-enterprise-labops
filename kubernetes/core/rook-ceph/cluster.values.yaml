@@ -107,7 +107,7 @@ cephBlockPools:
       csi.storage.k8s.io/fstype: ext4
 
 cephBlockPoolsVolumeSnapshotClass:
-  enabled: false
+  enabled: true
 
 # NOTE: After disabling the filesystem, the filesystem can be removed with the following commands:
 # ceph fs fail ceph-filesystem && ceph fs rm ceph-filesystem --yes-i-really-mean-it
