@@ -1,0 +1,23 @@
+controllerManager:
+  replicas: 1
+  manager:
+    image:
+      repository: quay.io/cephcsi/ceph-csi-operator
+    resources:
+      limits:
+        cpu: 500m
+        memory: 128Mi
+      requests:
+        cpu: 10m
+        memory: 64Mi
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+kubernetesClusterDomain: cluster.local
+
+openshift:
+  enabled: false

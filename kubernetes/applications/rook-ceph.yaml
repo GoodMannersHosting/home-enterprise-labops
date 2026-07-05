@@ -44,7 +44,9 @@ spec:
       chart: &rcco ceph-csi-operator
       name: *rcco
       targetRevision: *csiChartVersion
-      # No values file; intentional
+      helm:
+        valueFiles:
+          - $values/kubernetes/core/rook-ceph/csi-operator.values.yaml
   syncPolicy:
     automated:
       prune: true
