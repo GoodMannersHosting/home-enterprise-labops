@@ -33,6 +33,8 @@ spec:
       key: KOPIA_PASSWORD
   create:
     enabled: true
+  allowedNamespaces:
+    all: true
   credentialProjection:
     allowed: true
   identityDefaults:
