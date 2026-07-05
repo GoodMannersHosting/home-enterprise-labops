@@ -1,0 +1,27 @@
+---
+# Helm values for Kopiur operator installation.
+# installScope=cluster enables ClusterRepository support (required for shared repo pattern).
+
+fullnameOverride: kopiur
+
+installScope: cluster
+
+controller:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+
+webhook:
+  enabled: true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: "1"
+      memory: 256Mi

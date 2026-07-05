@@ -1,0 +1,30 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kopiur
+  namespace: argocd
+  labels:
+    KopiurChartVersion: &kopiurChartVersion "0.4.0"
+spec:
+  destination:
+    namespace: kopiur-system
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+    - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: main
+      ref: values
+    - repoURL: ghcr.io/home-operations/charts-mirror
+      chart: kopiur
+      targetRevision: *kopiurChartVersion
+      helm:
+        valueFiles:
+          - $values/kubernetes/core/kopiur/values.kopiur.yaml
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true
