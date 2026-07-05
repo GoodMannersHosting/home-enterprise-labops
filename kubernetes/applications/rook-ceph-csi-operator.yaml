@@ -1,0 +1,31 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ceph-csi-operator
+  namespace: argocd
+  labels:
+    csiChartVersion: &csiChartVersion 1.0.3
+spec:
+  destination:
+    namespace: ceph-csi-operator-system
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+    - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: main
+      ref: values
+    - repoURL: https://ceph.github.io/ceph-csi-operator
+      chart: &rcco ceph-csi-operator
+      name: *rcco
+      targetRevision: *csiChartVersion
+      helm:
+        valueFiles:
+          - $values/kubernetes/core/rook-ceph/csi-operator.values.yaml
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true
