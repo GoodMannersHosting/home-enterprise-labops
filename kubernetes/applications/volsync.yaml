@@ -5,8 +5,8 @@ metadata:
   name: volsync
   namespace: argocd
   labels:
-    snapshotControllerChartVersion: &snapshotControllerChartVersion 5.0.4
-    volsyncChartVersion: &volsyncChartVersion 0.17.3
+    snapshotControllerChartVersion: &snapshotControllerChartVersion 5.1.1
+    volsyncChartVersion: &volsyncChartVersion 0.18.5
 spec:
   destination:
     namespace: volsync
