@@ -1,0 +1,55 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Kopiur backup component — add to any namespace's kustomization.yaml to
+# automatically generate a SnapshotPolicy + SnapshotSchedule targeting the
+# shared ClusterRepository (s3-qnap).
+#
+# Usage in a namespace:
+#   components:
+#     - ../../core/kopiur/backup-component
+#
+# Then patch the resources to customize:
+#   - SnapshotPolicy name → your app name
+#   - SnapshotPolicy spec.sources[0].pvc.name → your PVC name
+#   - SnapshotSchedule name → <app>-nightly
+#
+# Example patches for a "valheim-world" backup:
+#   patches:
+#     - target:
+#         kind: SnapshotPolicy
+#         name: backup-target-pvc
+#       patch: |
+#         - op: replace
+#           path: /metadata/name
+#           value: valheim-world
+#         - op: replace
+#           path: /spec/sources/0/pvc/name
+#           value: valheim-world-data
+#     - target:
+#         kind: SnapshotSchedule
+#         name: backup-target-schedule
+#       patch: |
+#         - op: replace
+#           path: /metadata/name
+#           value: valheim-world-nightly
+#         - op: replace
+#           path: /spec/policyRef/name
+#           value: valheim-world
+
+resources:
+  - snapshotpolicy.yaml
+  - snapshotschedule.yaml
+
+# Default retention — override per-app by patching the SnapshotPolicy
+patches:
+  - target:
+      kind: SnapshotPolicy
+      name: backup-target-pvc
+    patch: |
+      - op: add
+        path: /spec/retention
+        value:
+          keepDaily: 7
+          keepWeekly: 4

@@ -1,0 +1,50 @@
+---
+# ClusterRepository — shared Kopia repository for all namespaces.
+# Points at QNAP S3-compatible endpoint (10.3.0.15:8010).
+#
+# After applying:
+#   1. SOPS-encrypt credentials.secret.sops.yaml and commit
+#   2. Wait for the ClusterRepository to reach Ready:
+#      kubectl wait --for=condition=Ready clusterrepository/s3-qnap --timeout=3m
+#
+# Requires: installScope=cluster (set in values.kopiur.yaml)
+
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: ClusterRepository
+metadata:
+  name: s3-qnap
+spec:
+  backend:
+    s3:
+      bucket: homelab
+      prefix: kopia/
+      endpoint: 10.3.0.15:8010
+      region: default
+      tls:
+        insecureSkipVerify: true
+      auth:
+        secretRef:
+          name: kopiur-s3-creds
+          namespace: kopiur-system
+  encryption:
+    passwordSecretRef:
+      name: kopiur-s3-creds
+      namespace: kopiur-system
+      key: KOPIA_PASSWORD
+  create:
+    enabled: true
+  credentialProjection:
+    allowed: true
+  identityDefaults:
+    hostnameExpr: "namespace"
+    usernameExpr: "namespace + '-' + policyName"
+  maintenance:
+    enabled: true
+    namespace: kopiur-system
+    schedule:
+      quick: { cron: "0 */6 * * *", jitter: 30m }
+      full: { cron: "0 3 * * *", jitter: 1h }
+  moverDefaults:
+    ttlSecondsAfterFinished: 7200
+  scheduleDefaults:
+    timezone: UTC

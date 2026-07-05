@@ -1,0 +1,26 @@
+---
+# SnapshotSchedule template — the backup cron.
+# This is consumed by the Kustomize component and patched per-app.
+#
+# The name "backup-target-schedule" is intentionally generic so it can be
+# overridden via a Kustomize patch to match your app schedule name.
+#
+# The policyRef points to the SnapshotPolicy by its patched name.
+# Override /spec/policyRef/name in your patches if you rename the policy.
+#
+# Schedule: nightly at ~2am with deterministic jitter (H = hashed minute).
+#           runOnCreate: true — backup immediately on creation.
+#
+# timezone: inherited from ClusterRepository's scheduleDefaults.timezone (UTC).
+
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotSchedule
+metadata:
+  name: backup-target-schedule
+spec:
+  policyRef:
+    name: backup-target-pvc
+  schedule:
+    cron: "H 2 * * *"
+    jitter: 30m
+    runOnCreate: true

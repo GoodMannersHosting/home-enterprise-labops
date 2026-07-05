@@ -1,0 +1,33 @@
+---
+# SnapshotPolicy template — the backup recipe.
+# This is consumed by the Kustomize component and patched per-app.
+#
+# The name "backup-target-pvc" is intentionally generic so it can be
+# overridden via a Kustomize patch to match your app name.
+#
+# Sources: single PVC by name — override spec.sources[0].pvc.name
+#         or use pvcSelector for label-based matching.
+#
+# Retention: GFS (grandfather-father-son) — the only pruning mechanism.
+#            Patch /spec/retention to change keepDaily, keepWeekly, etc.
+#
+# copyMethod: Snapshot (default) — CSI VolumeSnapshot → staged PVC → kopia read.
+#             Use "Direct" for non-CSI storage or clusters without snapshotter.
+#
+# identity: resolved from CEL expressions on the ClusterRepository by default:
+#           username = namespace + '-' + policyName
+#           hostname = namespace
+#           sourcePath = /pvc/<pvcName>
+
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotPolicy
+metadata:
+  name: backup-target-pvc
+spec:
+  repository:
+    kind: ClusterRepository
+    name: s3-qnap
+  sources:
+    - pvc:
+        name: replace-me-with-pvc-name
+  copyMethod: Snapshot

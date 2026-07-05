@@ -1,0 +1,8 @@
+---
+# Base kustomization for kopiur — namespace + ClusterRepository + credentials.
+# Managed by ArgoCD via the kopiur-backups Application.
+
+resources:
+  - namespace.yaml
+  - credentials.secret.sops.yaml
+  - cluster-repository.yaml
