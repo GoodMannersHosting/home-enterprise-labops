@@ -5,7 +5,7 @@ metadata:
   name: kopiur
   namespace: argocd
   labels:
-    KopiurChartVersion: &kopiurChartVersion "0.4.0"
+    chartVersion: &chartVersion 0.5.2
 spec:
   destination:
     namespace: kopiur-system
@@ -15,9 +15,9 @@ spec:
     - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
       targetRevision: main
       ref: values
-    - repoURL: ghcr.io/home-operations/charts-mirror
-      chart: kopiur
-      targetRevision: *kopiurChartVersion
+    - repoURL: https://github.com/home-operations/kopiur.git
+      targetRevision: *chartVersion
+      path: deploy/helm/kopiur
       helm:
         valueFiles:
           - $values/kubernetes/core/kopiur/values.kopiur.yaml
