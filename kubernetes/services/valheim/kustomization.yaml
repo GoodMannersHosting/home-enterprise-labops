@@ -3,3 +3,27 @@ resources:
 - namespace.yaml
 - secret.valheim.yaml
 
+components:
+  - ../../core/kopiur/backup-component
+
+patches:
+  - target:
+      kind: SnapshotPolicy
+      name: backup-target-pvc
+    patch: |
+      - op: replace
+        path: /metadata/name
+        value: valheim-world
+      - op: replace
+        path: /spec/sources/0/pvc/name
+        value: valheim-data
+  - target:
+      kind: SnapshotSchedule
+      name: backup-target-schedule
+    patch: |
+      - op: replace
+        path: /metadata/name
+        value: valheim-world-nightly
+      - op: replace
+        path: /spec/policyRef/name
+        value: valheim-world
