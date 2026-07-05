@@ -63,7 +63,7 @@ cephBlockPools:
   storageClass:
     enabled: true
     name: ceph-block
-    isDefault: true
+    isDefault: false
     reclaimPolicy: Delete
     allowVolumeExpansion: true
     volumeBindingMode: Immediate
@@ -130,7 +130,7 @@ cephFileSystems:
   storageClass:
     enabled: true
     name: cephfs-retain
-    isDefault: true
+    isDefault: false
     reclaimPolicy: Retain
     allowVolumeExpansion: true
     volumeBindingMode: Immediate
