@@ -6,9 +6,11 @@ metadata:
   namespace: argocd
   labels:
     csiChartVersion: &csiChartVersion 1.0.3
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
 spec:
   destination:
-    namespace: ceph-csi-operator-system
+    namespace: rook-ceph
     server: https://kubernetes.default.svc
   project: default
   sources:
@@ -28,4 +30,3 @@ spec:
       selfHeal: true
     syncOptions:
       - ServerSideApply=true
-      - CreateNamespace=true
