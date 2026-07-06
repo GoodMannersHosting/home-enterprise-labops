@@ -26,6 +26,8 @@ nodes:
     machineSpec:
       useUKI: true
       secureboot: true
+    kernelModules:
+      - name: rbd
     schematic:
       customization:
         systemExtensions:
@@ -76,6 +78,7 @@ nodes:
       - name: nvidia_uvm
       - name: nvidia_drm
       - name: nvidia_modeset
+      - name: rbd
     patches:
       - "@./patches/workers/gpu-node-machine-files.yaml"
     schematic:
@@ -117,6 +120,8 @@ nodes:
     machineSpec:
       useUKI: true
       secureboot: true
+    kernelModules:
+      - name: rbd
     schematic:
       customization:
         systemExtensions:
@@ -153,6 +158,8 @@ nodes:
     machineSpec:
       useUKI: true
       secureboot: true
+    kernelModules:
+      - name: rbd
     schematic:
       customization:
         systemExtensions:
@@ -184,6 +191,8 @@ nodes:
     machineSpec:
       useUKI: true
       secureboot: true
+    kernelModules:
+      - name: rbd
     schematic:
       customization:
         systemExtensions:
@@ -215,6 +224,8 @@ nodes:
     # machineSpec: # Disabling SecureBoot
     #   useUKI: true
     #   secureboot: true
+    kernelModules:
+      - name: rbd
     schematic:
       customization:
         systemExtensions:
@@ -283,6 +294,8 @@ nodes:
     # machineSpec: # Disabling SecureBoot
     #   useUKI: true
     #   secureboot: true
+    kernelModules:
+      - name: rbd
     schematic:
       customization:
         systemExtensions:
@@ -320,6 +333,8 @@ nodes:
     # machineSpec: # Disabling SecureBoot
     #   useUKI: true
     #   secureboot: true
+    kernelModules:
+      - name: rbd
     schematic:
       customization:
         systemExtensions:
