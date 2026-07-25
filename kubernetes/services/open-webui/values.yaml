@@ -110,7 +110,7 @@ service:
 enableOpenaiApi: true
 
 # hostAliases:
-# - ip: "172.31.0.11"
+# - ip: "5.78.90.164"
 #   hostnames:
 #   - "keycloak.cloud.danmanners.com"
 
