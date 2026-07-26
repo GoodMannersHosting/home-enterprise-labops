@@ -28,9 +28,10 @@ controllers:
           pullPolicy: Always
         args:
           - --hf-repo
-          - unsloth/Qwen3.6-35B-A3B-GGUF
+          - DavidAU/Qwen3.6-27B-Fable-Fusion-711-Uncensored-Heretic-NM-DAU-NEO-MAX-MTP-GGUF
           - --hf-file
-          - Qwen3.6-35B-A3B-UD-Q6_K_XL.gguf
+          - Qwen3.6-27B-Fable-Fus-711-UnHeretic-NM-DAU-NEO-MAX-NEO-Q4_K_M.gguf
+
           # Spec Settings
           - --spec-type
           - "ngram-map-k"
@@ -45,12 +46,14 @@ controllers:
           # Performance Settings
           - --fit
           - "on"
+          - --fit-ctx
+          - "16384"
           # - --n-cpu-moe # disabling in favor of `--fit on`
           # - "99"
           # - --gpu-layers  # disabling in favor of `--fit on`
           # - "99"
           - --ctx-size
-          - "131072"
+          - "262144"
           - --ctx-checkpoints
           - "16"
           - --flash-attn
@@ -76,11 +79,11 @@ controllers:
           - --threads
           - "16"
           # Enable Tooling
-          - --tools
-          - "all"
+          # - --tools
+          # - "all"
           # Tunings
           - --temperature
-          - "0.6"
+          - "1.0"
           - --top-k
           - "20"
           - --top-p
