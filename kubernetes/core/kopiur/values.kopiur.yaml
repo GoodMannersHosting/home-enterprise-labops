@@ -7,22 +7,14 @@ fullnameOverride: kopiur
 installScope: cluster
 
 image:
-  controller:
-    tag: &imageVersion 0.5.2
-  webhook:
-    tag: *imageVersion
-  mover:
-    tag: *imageVersion
+  repository: ghcr.io/home-operations/kopiur-controller
 
-controller:
-  replicaCount: 1
-  resources:
-    requests:
-      cpu: 100m
-      memory: 256Mi
-    limits:
-      cpu: "1"
-      memory: 512Mi
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
 
 webhook:
   enabled: true
@@ -30,6 +22,3 @@ webhook:
     requests:
       cpu: 50m
       memory: 128Mi
-    limits:
-      cpu: "1"
-      memory: 256Mi
