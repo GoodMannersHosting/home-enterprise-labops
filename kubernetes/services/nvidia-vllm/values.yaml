@@ -50,15 +50,15 @@ controllers:
           # - --gpu-layers  # disabling in favor of `--fit on`
           # - "99"
           - --ctx-size
-          - "262144"
+          - "131072"
           - --ctx-checkpoints
           - "16"
           - --flash-attn
           - "on"
           - --cache-type-k
-          - f16
+          - q8_0
           - --cache-type-v
-          - f16
+          - q8_0
           - --cpu-strict
           - "1"
           - --parallel
