@@ -3,4 +3,3 @@ kind: Kustomization
 
 resources:
 - ceph-retain-sc.yaml
-- rbd-csi-snapshotter-patch.yaml
