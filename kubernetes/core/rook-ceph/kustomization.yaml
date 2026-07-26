@@ -3,3 +3,4 @@ kind: Kustomization
 
 resources:
 - ceph-retain-sc.yaml
+- rbd-driver-snapshot-policy.yaml
