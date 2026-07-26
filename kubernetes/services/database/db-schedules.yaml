@@ -1,0 +1,32 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotSchedule
+metadata:
+  name: db-6-data-nightly
+spec:
+  policyRef:
+    name: db-6-data
+  schedule:
+    cron: H 2 * * *
+    jitter: 30m
+---
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotSchedule
+metadata:
+  name: db-7-data-nightly
+spec:
+  policyRef:
+    name: db-7-data
+  schedule:
+    cron: H 2 * * *
+    jitter: 30m
+---
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotSchedule
+metadata:
+  name: db-8-data-nightly
+spec:
+  policyRef:
+    name: db-8-data
+  schedule:
+    cron: H 2 * * *
+    jitter: 30m

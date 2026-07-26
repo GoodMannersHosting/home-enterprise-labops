@@ -1,0 +1,6 @@
+namespace: database
+resources:
+  - db-6-backup.yaml
+  - db-7-backup.yaml
+  - db-8-backup.yaml
+  - db-schedules.yaml
