@@ -8,7 +8,7 @@ spec:
   imageName: ghcr.io/cloudnative-pg/postgresql:17.10-standard-bookworm
   primaryUpdateStrategy: unsupervised
   storage:
-    size: 60Gi
+    size: 64Gi
     storageClass: ceph-block-retain
   superuserSecret:
     name: database-superuser
