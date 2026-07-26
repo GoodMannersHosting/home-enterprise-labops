@@ -31,4 +31,7 @@ spec:
     - pvc:
         name: replace-me-with-pvc-name
       sourcePathStrategy: PvcName
+      readOnly: true
   copyMethod: Snapshot
+  defaultDeletionPolicy: Delete
+  groupBy: VolumeGroupSnapshot
