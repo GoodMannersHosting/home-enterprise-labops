@@ -13,6 +13,7 @@ drivers:
   rbd:
     enabled: true
     name: rook-ceph.rbd.csi.ceph.com # csi-provisioner-name
+    snapshotPolicy: volumeSnapshot
   cephfs:
     enabled: true
     name: rook-ceph.cephfs.csi.ceph.com # csi-provisioner-name
