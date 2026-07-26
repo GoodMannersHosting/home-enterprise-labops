@@ -31,10 +31,7 @@ controllers:
           - DavidAU/Qwen3.6-27B-Fable-Fusion-711-Uncensored-Heretic-NM-DAU-NEO-MAX-MTP-GGUF
           - --hf-file
           - Qwen3.6-27B-Fable-Fus-711-UnHeretic-NM-DAU-NEO-MAX-NEO-Q4_K_M.gguf
-
           # Spec Settings
-          - --spec-type
-          - "ngram-map-k"
           - --spec-draft-n-max
           - "48"
           - --spec-draft-n-min
@@ -47,7 +44,7 @@ controllers:
           - --fit
           - "on"
           - --fit-ctx
-          - "16384"
+          - "32768"
           # - --n-cpu-moe # disabling in favor of `--fit on`
           # - "99"
           # - --gpu-layers  # disabling in favor of `--fit on`
@@ -59,9 +56,9 @@ controllers:
           - --flash-attn
           - "on"
           - --cache-type-k
-          - q8_0
+          - f16
           - --cache-type-v
-          - q8_0
+          - f16
           - --cpu-strict
           - "1"
           - --parallel
@@ -77,7 +74,7 @@ controllers:
           - --ubatch-size
           - "128"
           - --threads
-          - "16"
+          - "8"
           # Enable Tooling
           # - --tools
           # - "all"
@@ -95,7 +92,8 @@ controllers:
           - --repeat-penalty
           - "1.0"
           # Enable Specific Settings
-          - --no-mmap
+          - --load-mode
+          - none
           - --mlock
           - --jinja
           - --direct-io
