@@ -1,7 +1,0 @@
-apiVersion: csi.ceph.io/v1
-kind: Driver
-metadata:
-  name: rook-ceph.rbd.csi.ceph.com
-  namespace: rook-ceph
-spec:
-  snapshotPolicy: volumeSnapshot
