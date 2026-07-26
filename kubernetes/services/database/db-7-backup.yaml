@@ -1,0 +1,16 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotPolicy
+metadata:
+  name: db-7-data
+spec:
+  repository:
+    kind: ClusterRepository
+    name: s3-qnap
+  sources:
+    - pvc:
+        name: db-7
+      sourcePathStrategy: PvcName
+      readOnly: true
+  copyMethod: Snapshot
+  defaultDeletionPolicy: Delete
+  groupBy: VolumeGroupSnapshot
