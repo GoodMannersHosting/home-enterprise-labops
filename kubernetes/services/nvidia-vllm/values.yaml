@@ -92,11 +92,9 @@ controllers:
           - --repeat-penalty
           - "1.0"
           # Enable Specific Settings
+          - --jinja
           - --load-mode
           - none
-          - --mlock
-          - --jinja
-          - --direct-io
         env:
           - name: LLAMA_ARG_HOST
             value: "0.0.0.0"
