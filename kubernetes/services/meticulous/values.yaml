@@ -8,6 +8,14 @@ defaultPodOptions:
   securityContext:
     fsGroup: 1000
     fsGroupChangePolicy: OnRootMismatch
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values: ["amd64"]
 
 serviceAccount:
   api:
@@ -198,14 +206,6 @@ controllers:
           repository: harbor.cloud.danmanners.com/meticulous/met-api
           tag: latest
           pullPolicy: Always
-        affinity:
-          nodeAffinity:
-            requiredDuringSchedulingIgnoredDuringExecution:
-              nodeSelectorTerms:
-                - matchExpressions:
-                    - key: kubernetes.io/arch
-                      operator: In
-                      values: ["amd64"]
         securityContext:
           allowPrivilegeEscalation: false
         env:
@@ -295,14 +295,6 @@ controllers:
           repository: harbor.cloud.danmanners.com/meticulous/met-frontend
           tag: latest
           pullPolicy: Always
-        affinity:
-          nodeAffinity:
-            requiredDuringSchedulingIgnoredDuringExecution:
-              nodeSelectorTerms:
-                - matchExpressions:
-                    - key: kubernetes.io/arch
-                      operator: In
-                      values: ["amd64"]
         env:
           - name: ORIGIN
             value: https://ci.cloud.danmanners.com
@@ -406,14 +398,6 @@ controllers:
           repository: harbor.cloud.danmanners.com/meticulous/met-controller
           tag: latest
           pullPolicy: Always
-        affinity:
-          nodeAffinity:
-            requiredDuringSchedulingIgnoredDuringExecution:
-              nodeSelectorTerms:
-                - matchExpressions:
-                    - key: kubernetes.io/arch
-                      operator: In
-                      values: ["amd64"]
         securityContext:
           allowPrivilegeEscalation: false
         env:
