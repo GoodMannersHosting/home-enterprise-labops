@@ -4,8 +4,19 @@ kind: Kustomization
 resources:
 - ceph-retain-sc.yaml
 
-patches:
-  - path: rbd-csi-snapshotter-patch.yaml
-    target:
+patchesJson6902:
+  - target:
+      group: apps
+      version: v1
       kind: Deployment
       name: rook-ceph.rbd.csi.ceph.com-ctrlplugin
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/-
+        value:
+          name: csi-snapshotter
+          image: registry.k8s.io/sig-storage/csi-snapshotter:v10.0.0
+          args: ["--v=5","--csi-address=/csi/csi.sock"]
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
