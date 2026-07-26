@@ -17,6 +17,9 @@ spec:
     parameters:
       max_connections: "600"
       shared_buffers: 512MB
+      wal_level: replica
+      min_wal_size: 1500MB
+      max_wal_size: 4GB
   resources:
     requests:
       memory: "2Gi"
