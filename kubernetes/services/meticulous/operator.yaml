@@ -1,18 +1,14 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: meticulous-operator
----
+# Operator RBAC (Cluster-scoped resources, don't inherit kustomize namespace transform)
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: meticulous-operator
 rules:
-- apiGroups: ["agents.meticulous.io"]
+- apiGroups: ["meticulous.dev"]
   resources: ["*"]
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-- apiGroups: ["agents.meticulous.io"]
-  resources: ["meticulousagentpools/status"]
+- apiGroups: ["meticulous.dev"]
+  resources: ["agentpools/status"]
   verbs: ["get", "update", "patch"]
 - apiGroups: [""]
   resources: ["pods"]
@@ -32,20 +28,18 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: meticulous-operator
-  namespace: meticulous-operator
+  namespace: meticulous
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: meticulous-operator
-  namespace: meticulous-operator
 automountServiceAccountToken: true
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: met-operator
-  namespace: meticulous-operator
 spec:
   replicas: 1
   selector:
@@ -76,4 +70,3 @@ spec:
               memory: 512Mi
           securityContext:
             allowPrivilegeEscalation: false
-            runAsNonRoot: true
