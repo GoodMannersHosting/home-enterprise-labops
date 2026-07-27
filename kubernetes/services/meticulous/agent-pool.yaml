@@ -1,0 +1,55 @@
+apiVersion: agents.meticulous.io/v1alpha1
+kind: MeticulousAgentPool
+metadata:
+  name: default-pool
+  namespace: meticulous-operator
+spec:
+  replicas:
+    min: 0
+    max: 3
+    idle: 0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: met-agent
+    spec:
+      automountServiceAccountToken: false
+      hostAliases:
+        - ip: "172.31.0.60"
+          hostnames:
+            - "agent-grpc.cloud.danmanners.com"
+        - ip: "172.31.0.10"
+          hostnames:
+            - "keycloak.cloud.danmanners.com"
+      volumes:
+        - name: nats-creds
+          secret:
+            secretName: meticulous-nats
+            defaultMode: 0400
+      containers:
+        - name: agent
+          image: harbor.cloud.danmanners.com/meticulous/agent:latest
+          imagePullPolicy: Always
+          command: ["met-agent"]
+          env:
+            - name: MET_CONTROLLER_URL
+              value: "agent-grpc.cloud.danmanners.com:9090"
+            - name: MET_NATS__URL
+              value: "nats://meticulous-nats.meticulous.svc.cluster.local:4222"
+            - name: MET_NATS_CREDS_PATH
+              value: "/etc/nats/creds/api.creds"
+            - name: RUST_LOG
+              value: "info,met_agent=debug"
+          volumeMounts:
+            - name: nats-creds
+              mountPath: /etc/nats/creds
+              readOnly: true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "4"
+              memory: 4Gi
+          securityContext:
+            allowPrivilegeEscalation: false
