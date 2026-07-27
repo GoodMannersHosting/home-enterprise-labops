@@ -146,6 +146,10 @@ controllers:
                   - key: kubernetes.io/arch
                     operator: In
                     values: ["amd64"]
+      hostAliases:
+        - ip: "172.31.0.10"
+          hostnames:
+            - "keycloak.cloud.danmanners.com"
     initContainers:
       wait-db:
         image:
@@ -295,6 +299,10 @@ controllers:
                   - key: kubernetes.io/arch
                     operator: In
                     values: ["amd64"]
+      hostAliases:
+        - ip: "172.31.0.10"
+          hostnames:
+            - "keycloak.cloud.danmanners.com"
     containers:
       main:
         ports:
@@ -356,6 +364,10 @@ controllers:
                   - key: kubernetes.io/arch
                     operator: In
                     values: ["amd64"]
+      hostAliases:
+        - ip: "172.31.0.10"
+          hostnames:
+            - "keycloak.cloud.danmanners.com"
     initContainers:
       wait-db:
         image:
