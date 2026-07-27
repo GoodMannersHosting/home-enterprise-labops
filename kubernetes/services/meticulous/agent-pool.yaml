@@ -1,5 +1,5 @@
-apiVersion: agents.meticulous.io/v1alpha1
-kind: MeticulousAgentPool
+apiVersion: meticulous.dev/v1alpha1
+kind: AgentPool
 metadata:
   name: default-pool
   namespace: meticulous-operator
