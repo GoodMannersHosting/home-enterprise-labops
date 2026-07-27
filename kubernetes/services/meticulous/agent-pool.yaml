@@ -2,7 +2,6 @@ apiVersion: meticulous.dev/v1alpha1
 kind: AgentPool
 metadata:
   name: default-pool
-  namespace: meticulous-operator
 spec:
   replicas:
     min: 0
@@ -18,9 +17,6 @@ spec:
         - ip: "172.31.0.60"
           hostnames:
             - "agent-grpc.cloud.danmanners.com"
-        - ip: "172.31.0.10"
-          hostnames:
-            - "keycloak.cloud.danmanners.com"
       volumes:
         - name: nats-creds
           secret:
