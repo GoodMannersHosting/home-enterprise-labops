@@ -48,6 +48,8 @@ controllers:
           - --spec-ngram-simple-size-m
           - "48"
           # Performance Settings
+          - --gpu-layers
+          - "999"
           - --fit
           - "on"
           - --fit-ctx
@@ -59,9 +61,9 @@ controllers:
           - --flash-attn
           - "on"
           - --cache-type-k
-          - q8_0
+          - q4_0
           - --cache-type-v
-          - q8_0
+          - q4_0
           - --cpu-strict
           - "1"
           # Single-user chat.
