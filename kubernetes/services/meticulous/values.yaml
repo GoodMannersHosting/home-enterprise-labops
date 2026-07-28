@@ -209,7 +209,7 @@ controllers:
             protocol: TCP
         image:
           repository: harbor.cloud.danmanners.com/meticulous/met-api
-          tag: test-ws-debug
+          tag: test-pub-github
           pullPolicy: Always
         securityContext:
           allowPrivilegeEscalation: false
