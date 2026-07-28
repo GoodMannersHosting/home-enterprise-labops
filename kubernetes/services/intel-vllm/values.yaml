@@ -51,7 +51,7 @@ controllers:
           - --fit
           - "on"
           - --fit-ctx
-          - "32768"
+          - "16384"
           - --ctx-size
           - "131072"
           - --ctx-checkpoints
@@ -74,7 +74,7 @@ controllers:
           - --reasoning-budget
           - "-1"
           - --batch-size
-          - "4096"
+          - "2048"
           - --ubatch-size
           - "512"
           - --threads
