@@ -209,13 +209,13 @@ controllers:
             protocol: TCP
         image:
           repository: harbor.cloud.danmanners.com/meticulous/met-api
-          tag: latest
+          tag: test-ws-debug
           pullPolicy: Always
         securityContext:
           allowPrivilegeEscalation: false
         env:
           - name: RUST_LOG
-            value: info
+            value: debug,met_api=info,met_engine=scheduler=debug,workspace_snapshots=debug
           - name: MET_API__RUN_MIGRATIONS
             value: "true"
           - name: MET_DATABASE__URL
