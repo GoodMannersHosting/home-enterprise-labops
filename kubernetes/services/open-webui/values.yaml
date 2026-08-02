@@ -2,7 +2,7 @@ nameOverride: ""
 namespaceOverride: ""
 ollama:
   name: "ollama"
-  enabled: true
+  enabled: false
   replicaCount: 0
   fullnameOverride: ""
   resources:
@@ -59,7 +59,7 @@ clusterDomain: cluster.local
 
 image:
   repository: ghcr.io/open-webui/open-webui
-  tag: "v0.10.2"
+  tag: "v0.11.0"
   pullPolicy: "IfNotPresent"
 
 serviceAccount:
