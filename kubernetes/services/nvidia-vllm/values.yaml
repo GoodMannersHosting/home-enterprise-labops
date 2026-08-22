@@ -27,60 +27,76 @@ controllers:
           tag: server-cuda12
           pullPolicy: Always
         args:
+          # Model
           - --hf-repo
-          # - DavidAU/Qwen3.6-27B-Fable-Fusion-711-Uncensored-Heretic-NM-DAU-NEO-MAX-MTP-GGUF
           - unsloth/Qwen3.8-27B-GGUF
           - --hf-file
           - Qwen3.8-27B-UD-Q5_K_M.gguf
-          # - Qwen3.6-27B-Fable-Fus-711-UnHeretic-NM-DAU-NEO-MAX-NEO-Q4_K_M.gguf
-          # Spec Settings
-          - --spec-draft-n-max
-          - "48"
-          - --spec-draft-n-min
-          - "1"
-          - --spec-ngram-simple-size-n
-          - "16"
-          - --spec-ngram-simple-size-m
-          - "48"
-          # Performance Settings
-          - --fit
-          - "on"
-          - --fit-ctx
-          - "32768"
-          # - --n-cpu-moe # disabling in favor of `--fit on`
-          # - "99"
-          # - --gpu-layers  # disabling in favor of `--fit on`
-          # - "99"
-          - --ctx-size
-          - "262144"
-          - --ctx-checkpoints
-          - "16"
+
+          # Vision
+          - --mmproj-auto
+          - --mmproj-offload
+          - --image-min-tokens
+          - "256"
+          - --image-max-tokens
+          - "4096"
+          - --mtmd-batch-max-tokens
+          - "1024"
+
+          # GPU
+          - --gpu-layers
+          - all
           - --flash-attn
           - "on"
+
+          - --parallel
+          - "4"
+          - --ctx-size
+          - "131072"
+          - --kv-unified
+          - --cont-batching
+
+          # Quantized KV cache
           - --cache-type-k
           - q8_0
           - --cache-type-v
           - q8_0
-          - --cpu-strict
-          - "1"
-          - --parallel
-          - "1"
-          - --cache-ram
-          - "0"
-          - --reasoning
-          - "on"
-          - --reasoning-budget
-          - "-1"
+
+          # Prompt processing
           - --batch-size
           - "2048"
           - --ubatch-size
-          - "128"
+          - "512"
+
+          # Prompt reuse
+          - --cache-prompt
+          - --cache-ram
+          - "4096"
+          - --cache-reuse
+          - "256"
+          - --ctx-checkpoints
+          - "4"
+          - --checkpoint-min-step
+          - "8192"
+          - --slot-prompt-similarity
+          - "0.25"
+
+          # CPU support
           - --threads
           - "8"
-          # Enable Tooling
-          # - --tools
-          # - "all"
-          # Tunings
+          - --threads-batch
+          - "8"
+          - --threads-http
+          - "8"
+
+          # Chat template and reasoning
+          - --jinja
+          - --reasoning
+          - "on"
+          - --reasoning-budget
+          - "8192"
+
+          # Thinking-mode sampling
           - --temperature
           - "1.0"
           - --top-k
@@ -88,15 +104,15 @@ controllers:
           - --top-p
           - "0.95"
           - --min-p
-          - "0.00"
+          - "0.0"
           - --presence-penalty
-          - "1.5"
+          - "0.0"
           - --repeat-penalty
           - "1.0"
-          # Enable Specific Settings
-          - --jinja
+          # Runtime
           - --load-mode
-          - none
+          - mmap
+          - --metrics
         env:
           - name: LLAMA_ARG_HOST
             value: "0.0.0.0"
