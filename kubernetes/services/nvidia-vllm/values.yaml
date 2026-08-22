@@ -28,9 +28,11 @@ controllers:
           pullPolicy: Always
         args:
           - --hf-repo
-          - DavidAU/Qwen3.6-27B-Fable-Fusion-711-Uncensored-Heretic-NM-DAU-NEO-MAX-MTP-GGUF
+          # - DavidAU/Qwen3.6-27B-Fable-Fusion-711-Uncensored-Heretic-NM-DAU-NEO-MAX-MTP-GGUF
+          - unsloth/Qwen3.8-27B-GGUF
           - --hf-file
-          - Qwen3.6-27B-Fable-Fus-711-UnHeretic-NM-DAU-NEO-MAX-NEO-Q4_K_M.gguf
+          - Qwen3.8-27B-UD-Q5_K_M.gguf
+          # - Qwen3.6-27B-Fable-Fus-711-UnHeretic-NM-DAU-NEO-MAX-NEO-Q4_K_M.gguf
           # Spec Settings
           - --spec-draft-n-max
           - "48"
