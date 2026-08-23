@@ -30,7 +30,7 @@ controllers:
             protocol: TCP
         image:
           repository: ghcr.io/aquasecurity/trivy
-          tag: "0.69.3"
+          tag: "0.74.0"
           pullPolicy: "IfNotPresent"
         args:
           - server
