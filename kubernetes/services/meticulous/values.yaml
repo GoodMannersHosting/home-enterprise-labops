@@ -292,8 +292,8 @@ controllers:
       name: meticulous-frontend
     pod:
       annotations:
-        # Bump to roll the deployment and pull the new met-frontend:latest (2026-08-23 failure-visibility deploy).
-        kubectl.kubernetes.io/restartedAt: "2026-08-23T21:25:57-04:00"
+        # Bump to roll the deployment and pull the new met-frontend:latest (secrets-tab fetch-loop fix, bb3a21c).
+        kubectl.kubernetes.io/restartedAt: "2026-08-23T23:29:30-04:00"
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
