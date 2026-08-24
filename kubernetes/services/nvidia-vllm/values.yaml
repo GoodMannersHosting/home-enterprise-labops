@@ -29,17 +29,21 @@ controllers:
         args:
           # Model
           - --hf-repo
-          - unsloth/Qwen3.8-27B-GGUF
+          # - unsloth/Qwen3.8-27B-GGUF
+          - DavidAU/Qwen3.8-27B-Cold-Fusion-GAIN-V1.1-NM-DAU-NEO-MAX-MTP-GGUF
           - --hf-file
-          - Qwen3.8-27B-UD-Q5_K_M.gguf
+          # - Qwen3.8-27B-UD-Q5_K_M.gguf
+          - Qwen3.8-27B-Cold-Fusion-GAIN-V1.1-NM-DAU-NEO-MAX-NEO-Q5_K_M.gguf
 
           # Vision
           - --mmproj-auto
           - --mmproj-offload
+          # - --mmproj-url
+          # - "https://huggingface.co/DavidAU/Qwen3.8-27B-Cold-Fusion-GAIN-V1.1-NM-DAU-NEO-MAX-MTP-GGUF/raw/main/mmproj-BF16.gguf"
           - --image-min-tokens
           - "256"
           - --image-max-tokens
-          - "4096"
+          - "8192"
           - --mtmd-batch-max-tokens
           - "1024"
 
@@ -52,7 +56,7 @@ controllers:
           - --parallel
           - "4"
           - --ctx-size
-          - "131072"
+          - "262144"
           - --kv-unified
           - --cont-batching
 
@@ -71,7 +75,7 @@ controllers:
           # Prompt reuse
           - --cache-prompt
           - --cache-ram
-          - "4096"
+          - "16384"
           - --cache-reuse
           - "256"
           - --ctx-checkpoints
