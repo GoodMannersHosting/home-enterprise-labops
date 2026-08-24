@@ -1,0 +1,18 @@
+---
+# Fission serverless platform (https://github.com/fission/fission).
+#
+# Functions are exposed via the shared Cilium Gateway (gwapi, 172.31.0.10):
+# the router generates an HTTPRoute per trigger under
+# functions.cloud.danmanners.com when a trigger uses
+# `--route-provider gateway` (gatewayAPI.enabled below).
+gatewayAPI:
+  enabled: true
+  # Shared cluster Gateway — kubernetes/core/gateway-api/gateway.yaml.
+  defaultParentRef: default/gwapi
+
+# Public traffic enters through the Gateway above; no LoadBalancer for the
+# router service (chart default is LoadBalancer).
+routerServiceType: ClusterIP
+
+# Namespace where functions/environments/triggers are created by default.
+defaultNamespace: default
