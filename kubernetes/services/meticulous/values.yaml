@@ -291,6 +291,9 @@ controllers:
     serviceAccount:
       name: meticulous-frontend
     pod:
+      annotations:
+        # Bump to roll the deployment and pull the new met-frontend:latest (2026-08-23 failure-visibility deploy).
+        kubectl.kubernetes.io/restartedAt: "2026-08-23T21:25:57-04:00"
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -356,6 +359,9 @@ controllers:
     serviceAccount:
       name: meticulous-controller
     pod:
+      annotations:
+        # Bump to roll the deployment and pull the new met-controller:latest (2026-08-23 failure-visibility deploy).
+        kubectl.kubernetes.io/restartedAt: "2026-08-23T21:25:57-04:00"
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
