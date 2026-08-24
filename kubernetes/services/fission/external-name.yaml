@@ -1,0 +1,14 @@
+---
+# ExternalName service so external-dns publishes functions.cloud.danmanners.com.
+# Follows the repo convention: the hostname CNAMEs to the homelab edge
+# (unifi-home), which routes into the cluster's shared Gateway.
+apiVersion: v1
+kind: Service
+metadata:
+  name: fission-external-name
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: functions.cloud.danmanners.com
+    external-dns.alpha.kubernetes.io/ttl: "300"
+spec:
+  type: ExternalName
+  externalName: unifi-home.homelab.danmanners.com
