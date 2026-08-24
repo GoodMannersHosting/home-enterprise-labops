@@ -1,0 +1,7 @@
+---
+namespace: fission
+resources:
+  - namespace.yaml
+  # Fission v1.27.0 CRDs; shipped separately from the fission-all chart.
+  # Keep the ref in sync with chartVersion in kubernetes/applications/fission.yaml.
+  - github.com/fission/fission/crds/v1?ref=v1.27.0
