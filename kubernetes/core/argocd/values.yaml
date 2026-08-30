@@ -6,7 +6,6 @@ global:
         - "harbor.cloud.danmanners.com"
         - "ollama.cloud.danmanners.com"
         - "n8n.cloud.danmanners.com"
-        - "keycloak.cloud.danmanners.com"
 
 crds:
   install: false
@@ -25,17 +24,14 @@ configs:
     admin.enabled: true
     url: &fullUrl https://argocd.cloud.danmanners.com
     oidc.config: |
-      name: Keycloak
-      issuer: https://keycloak.cloud.danmanners.com/realms/gmh
+      name: Authentik
+      issuer: https://auth.goodmanners.services/application/o/argo-cd/
       clientID: argocd
       refreshTokenThreshold: 2m
       enablePKCEAuthentication: true
-      requestedScopes: ["openid", "profile", "email", "groups"]
+      requestedScopes: ["openid", "profile", "email"]
       userNameKey: email
       overrideClaimMapping: true
-    # Additional Users
-    accounts.octopus: apiKey
-    accounts.octopus.enabled: "true"
   rbac:
     policy.default: role:readonly
     policy.csv: |
@@ -66,7 +62,7 @@ configs:
       p, role:org-admin, gpgkeys, create, *, allow
       p, role:org-admin, gpgkeys, delete, *, allow
       p, role:org-admin, exec, create, */*, allow
-      g, ArgoCDAdmins, role:org-admin
+      g, argocd-admins, role:org-admin
       # Gaming
       p, role:gamers, applications, get, */*, allow
       p, role:gamers, applications, sync, */*, allow
@@ -75,11 +71,6 @@ configs:
       p, role:gamers, applications, action/apps/StatefulSet/restart, default/windrose-9a, allow
       p, role:gamers, applications, action/apps/Deployment/restart, default/windrose-9a, allow
       g, gamers, role:gamers
-      # Octopus Deploy
-      p, octopus, applications, get, *, allow
-      p, octopus, applications, sync, *, allow
-      p, octopus, clusters, get, *, allow
-      p, octopus, logs, get, */*, allow
 
 repoServer:
   replicas: 2
