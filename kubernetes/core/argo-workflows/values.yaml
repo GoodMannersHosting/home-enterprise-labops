@@ -46,7 +46,7 @@ extraObjects:
       name: admin-user
       namespace: argo
       annotations:
-        workflows.argoproj.io/rbac-rule: "'ArgoCDAdmins' in groups"
+        workflows.argoproj.io/rbac-rule: "'argocd-admins' in groups"
         workflows.argoproj.io/rbac-rule-precedence: "1"
   - apiVersion: v1
     kind: Secret
