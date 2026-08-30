@@ -5,7 +5,6 @@ resources:
   - repo
   - namespace.yaml
   - external-dns.yaml
-  - oidc-secret.yaml
   - tlsroute.yaml
   - app-of-apps.yaml
   - argo-appproject.yaml

@@ -7,10 +7,6 @@ server:
   authModes:
     - client
     - sso
-  hostAliases:
-    - ip: "172.31.0.10"
-      hostnames:
-        - "keycloak.cloud.danmanners.com"
   httproute:
     enabled: true
     hostnames:
@@ -23,7 +19,7 @@ server:
         sectionName: https-cloud
   sso:
     enabled: true
-    issuer: https://keycloak.cloud.danmanners.com/realms/gmh
+    issuer: https://auth.goodmanners.services/application/o/argo-workflows/
     redirectUrl: https://workflows.cloud.danmanners.com/oauth2/callback
     clientId:
       name: argo-workflows-sso
@@ -32,9 +28,9 @@ server:
       name: argo-workflows-sso
       key: client-secret
     scopes:
+      - email
       - openid
       - profile
-      - groups
     rbac:
       enabled: true
       secretWhitelist:
