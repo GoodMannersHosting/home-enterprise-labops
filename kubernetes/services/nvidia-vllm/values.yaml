@@ -27,9 +27,10 @@ controllers:
           tag: server-cuda12
           pullPolicy: Always
         args:
-          # Model
           - --hf
-          - DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF:Q4_K_M
+          - DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF
+          - --hf-file
+          - Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-Q4_K_M.gguf
 
           # Vision
           - --mmproj-auto
