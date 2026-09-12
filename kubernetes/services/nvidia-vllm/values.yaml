@@ -29,17 +29,13 @@ controllers:
         args:
           # Model
           - --hf-repo
-          # - unsloth/Qwen3.8-27B-GGUF
-          - DavidAU/Qwen3.8-27B-Cold-Fusion-GAIN-V1.1-NM-DAU-NEO-MAX-MTP-GGUF
+          - DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF
           - --hf-file
-          # - Qwen3.8-27B-UD-Q5_K_M.gguf
-          - Qwen3.8-27B-Cold-Fusion-GAIN-V1.1-NM-DAU-NEO-MAX-NEO-Q5_K_M.gguf
+          - Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-Q6_K.gguf
 
           # Vision
           - --mmproj-auto
           - --mmproj-offload
-          # - --mmproj-url
-          # - "https://huggingface.co/DavidAU/Qwen3.8-27B-Cold-Fusion-GAIN-V1.1-NM-DAU-NEO-MAX-MTP-GGUF/raw/main/mmproj-BF16.gguf"
           - --image-min-tokens
           - "256"
           - --image-max-tokens
@@ -53,16 +49,17 @@ controllers:
           - --flash-attn
           - "on"
 
+          # Single slot: full context per request, no batch contention
           - --parallel
-          - "4"
+          - "1"
           - --ctx-size
-          - "262144"
+          - "32768"
           - --kv-unified
           - --cont-batching
 
-          # Quantized KV cache
+          # KV cache: f16 keys (quantization hurts K more than V), q8_0 values
           - --cache-type-k
-          - q8_0
+          - f16
           - --cache-type-v
           - q8_0
 
@@ -97,10 +94,14 @@ controllers:
           - --jinja
           - --reasoning
           - "on"
+          # Uncapped: the template defaults to xhigh effort, and TURBO tuning
+          # already cuts thinking tokens. Truncating mid-reasoning costs quality.
           - --reasoning-budget
-          - "8192"
+          - "-1"
 
-          # Thinking-mode sampling
+          # Thinking-mode sampling (Qwen recommended)
+          # Clients doing tool calls or precise coding should override to
+          # temperature 0.6-0.7, top_p 0.95 per request.
           - --temperature
           - "1.0"
           - --top-k
@@ -111,8 +112,10 @@ controllers:
           - "0.0"
           - --presence-penalty
           - "0.0"
+          # Must stay at 1.0 (off) - raising it degrades MTP acceptance
           - --repeat-penalty
           - "1.0"
+
           # Runtime
           - --load-mode
           - mmap
@@ -145,7 +148,7 @@ controllers:
                 port: http
               initialDelaySeconds: 60
               periodSeconds: 30
-              failureThreshold: 40
+              failureThreshold: 60
           readiness:
             enabled: true
             custom: true
@@ -218,7 +221,7 @@ persistence:
     enabled: true
     type: emptyDir
     medium: Memory
-    sizeLimit: 16Gi
+    sizeLimit: 2Gi
     advancedMounts:
       main:
         core:
