@@ -35,12 +35,3 @@ endpoints:
     conditions:
       - "[BODY] == pat(*.*.*.*)"
       - "[DNS_RCODE] == NOERROR"
-  # Static entry, not the usual gatus.home-operations.com annotation: the
-  # litellm-operator owns this HTTPRoute and doesn't expose an annotations
-  # field on it. /health/liveliness is unauthenticated by design (same
-  # endpoint the operator uses for the pod's own liveness probe).
-  - name: LLM Router
-    url: https://llm.cloud.danmanners.com/health/liveliness
-    interval: 1m
-    conditions:
-      - "[STATUS] == 200"

@@ -5,21 +5,13 @@ metadata:
   name: router
   namespace: aiml
 spec:
-  # No modelSelector: this proxy adopts every LiteLLMModel in the aiml namespace.
-  # No routerSettings: each model below has a distinct modelName, so clients pick
-  # the backend by name — routing_strategy only matters for load-balancing across
-  # entries that share one modelName, which doesn't apply here.
+  # No modelSelector: adopts every LiteLLMModel in aiml.
   generalSettings:
     background_health_checks: true
     health_check_interval: 300
   litellmSettings:
     drop_params: true
-    # intel-llama runs at 131072 ctx on hardware with known driver caveats
-    # (see intel-vllm/README.md); a long prefill + generation can outlast
-    # litellm's default client timeout.
-    request_timeout: 900
-  # Prometheus metrics are opt-in in litellm — this exposes /metrics on the
-  # proxy port. Scraped by servicemonitor.yaml.
+    request_timeout: 900 # intel-llama can outlast the default on long prefills
   callbacks:
     callbacks:
       - prometheus
@@ -40,12 +32,4 @@ spec:
         secretKeyRef:
           name: litellm-master-key
           key: master-key
-  route:
-    hostnames:
-      - llm.cloud.danmanners.com
-    parentRefs:
-      - kind: Gateway
-        group: gateway.networking.k8s.io
-        name: gwapi
-        namespace: default
-        sectionName: https-cloud
+  # No route: see httproute.yaml / README (DNS: the CNAME workaround).
