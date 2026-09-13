@@ -19,7 +19,9 @@ directory's manifests depend on. If it syncs after this app, ArgoCD's
 
 The `external-secrets` Argo app ([`../../applications/external-secrets.yaml`](../../applications/external-secrets.yaml))
 must also be synced first — it installs the `SecretStore`/`ExternalSecret`
-CRDs `secretstore.yaml`/`externalsecret.yaml` depend on.
+CRDs `secretstore.yaml`/`externalsecret.yaml` depend on. The operator itself
+runs in the `external-secrets` namespace; the `SecretStore` here is
+namespaced to `aiml` since this secret has exactly one consumer.
 
 ## What's here
 
@@ -29,7 +31,7 @@ CRDs `secretstore.yaml`/`externalsecret.yaml` depend on.
 | `model-nvidia.yaml` | `LiteLLMModel` pointing at `nvidia-vllm-core.aiml.svc.cluster.local:8080`, reusing the existing `nvidia-llm-api-key` secret |
 | `model-intel.yaml` | `LiteLLMModel` pointing at `intel-vllm-core.aiml.svc.cluster.local:8080`, reusing the existing `intel-llm-api-key` secret |
 | `serviceaccount.yaml` | `vault-litellm-reader` — the identity OpenBao's `kubernetes-labops` auth role trusts for reading the master key |
-| `secretstore.yaml` | `SecretStore` pointing at `https://keeper.goodmanners.services` (OpenBao), authenticating via Kubernetes auth as `vault-litellm-reader` |
+| `secretstore.yaml` | `SecretStore` named `openbao-litellm`, pointing at `https://keeper.goodmanners.services` (OpenBao), authenticating via Kubernetes auth as `vault-litellm-reader` |
 | `externalsecret.yaml` | `ExternalSecret` that materializes `LITELLM_MASTER_KEY` for the router as the `litellm-master-key` Secret, synced hourly from OpenBao |
 | `servicemonitor.yaml` | Scrapes the router's `/metrics` (enabled via `spec.callbacks`) for the existing `monitoring` (kube-prometheus-stack) install |
 
@@ -48,7 +50,10 @@ proxy, see `cnpg`/`database`) and add `LiteLLMVirtualKey` resources.
 ServiceAccount via a Kubernetes auth mount (`kubernetes-labops`) that trusts
 this cluster's TokenReview API; see
 `~/src/hcloud-security-cluster/bao/setup-kubernetes-auth.sh` for how that
-trust and the read-only `eso-labops-litellm` policy are bootstrapped.
+trust and the read-only `eso-labops-litellm` policy are bootstrapped. The
+Vault role behind it (`eso-litellm`) only grants read on this one secret
+path — if more secrets migrate off sealed-secrets later, they'll each get
+their own scoped `SecretStore`/role rather than widening this one.
 
 To set or rotate the key (needs a Vault root/admin token, run from a machine
 with `bao` configured against `keeper.goodmanners.services`):
