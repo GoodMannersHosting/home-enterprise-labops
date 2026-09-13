@@ -24,3 +24,9 @@ spec:
     - port: http
       path: /metrics
       interval: 30s
+      # litellm requires auth on every route except /health/*; scraping
+      # /metrics with no credentials 401s (confirmed in the live pod logs).
+      authorization:
+        credentials:
+          name: litellm-master-key
+          key: master-key
