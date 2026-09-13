@@ -17,6 +17,10 @@ must be synced first — it installs the `LiteLLMProxy`/`LiteLLMModel` CRDs this
 directory's manifests depend on. If it syncs after this app, ArgoCD's
 `selfHeal` will retry until the CRDs land; no manual ordering needed.
 
+The `external-secrets` Argo app ([`../../applications/external-secrets.yaml`](../../applications/external-secrets.yaml))
+must also be synced first — it installs the `SecretStore`/`ExternalSecret`
+CRDs `secretstore.yaml`/`externalsecret.yaml` depend on.
+
 ## What's here
 
 | File | Purpose |
@@ -24,7 +28,9 @@ directory's manifests depend on. If it syncs after this app, ArgoCD's
 | `proxy.yaml` | `LiteLLMProxy` — owns the router's Deployment/Service/ConfigMap and its `HTTPRoute` (no `modelSelector`, so it adopts every `LiteLLMModel` in `aiml`) |
 | `model-nvidia.yaml` | `LiteLLMModel` pointing at `nvidia-vllm-core.aiml.svc.cluster.local:8080`, reusing the existing `nvidia-llm-api-key` secret |
 | `model-intel.yaml` | `LiteLLMModel` pointing at `intel-vllm-core.aiml.svc.cluster.local:8080`, reusing the existing `intel-llm-api-key` secret |
-| `secret.litellm-master-key.yaml` | Sealed `LITELLM_MASTER_KEY` for the router itself (generate with `seal-litellm-master-key.sh`) |
+| `serviceaccount.yaml` | `vault-litellm-reader` — the identity OpenBao's `kubernetes-labops` auth role trusts for reading the master key |
+| `secretstore.yaml` | `SecretStore` pointing at `https://keeper.goodmanners.services` (OpenBao), authenticating via Kubernetes auth as `vault-litellm-reader` |
+| `externalsecret.yaml` | `ExternalSecret` that materializes `LITELLM_MASTER_KEY` for the router as the `litellm-master-key` Secret, synced hourly from OpenBao |
 | `servicemonitor.yaml` | Scrapes the router's `/metrics` (enabled via `spec.callbacks`) for the existing `monitoring` (kube-prometheus-stack) install |
 
 Runs in `applyMode: file` (the CRD default) — no Postgres/Redis dependency,
@@ -33,19 +39,32 @@ a small number of static backends; if per-app virtual keys or a live admin UI
 become worth it later, switch to `applyMode: api` (needs a Postgres-backed
 proxy, see `cnpg`/`database`) and add `LiteLLMVirtualKey` resources.
 
-## First-time setup
+## Secret source: OpenBao
 
-This secret can't be generated in CI/without cluster access — `kubeseal`
-encrypts against the live sealed-secrets controller's public cert. Run once,
-from a machine with `kubectl`/`kubeseal` pointed at the cluster:
+`LITELLM_MASTER_KEY` lives in the OpenBao instance at
+`https://keeper.goodmanners.services` (managed in
+`~/src/hcloud-security-cluster/bao/`), not in git — no sealed secret here.
+`secretstore.yaml` authenticates to it as the `vault-litellm-reader`
+ServiceAccount via a Kubernetes auth mount (`kubernetes-labops`) that trusts
+this cluster's TokenReview API; see
+`~/src/hcloud-security-cluster/bao/setup-kubernetes-auth.sh` for how that
+trust and the read-only `eso-labops-litellm` policy are bootstrapped.
+
+To set or rotate the key (needs a Vault root/admin token, run from a machine
+with `bao` configured against `keeper.goodmanners.services`):
 
 ```bash
-./seal-litellm-master-key.sh
-# commit secret.litellm-master-key.yaml, sync Argo
+bao kv put secret/labops/aiml/litellm-master-key \
+  master-key="sk-$(openssl rand -hex 32)"
 ```
 
-Until `secret.litellm-master-key.yaml` exists, this Kustomization won't build
-and the `llm-router` Argo app will fail to sync.
+`externalsecret.yaml` picks up the change within its `refreshInterval` (1h);
+force an immediate resync with:
+
+```bash
+kubectl annotate externalsecret litellm-master-key -n aiml \
+  force-sync=$(date +%s) --overwrite
+```
 
 ## Endpoints
 
