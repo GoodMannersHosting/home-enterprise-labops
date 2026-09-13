@@ -1,0 +1,51 @@
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMProxy
+metadata:
+  name: router
+  namespace: aiml
+spec:
+  # No modelSelector: this proxy adopts every LiteLLMModel in the aiml namespace.
+  # No routerSettings: each model below has a distinct modelName, so clients pick
+  # the backend by name — routing_strategy only matters for load-balancing across
+  # entries that share one modelName, which doesn't apply here.
+  generalSettings:
+    background_health_checks: true
+    health_check_interval: 300
+  litellmSettings:
+    drop_params: true
+    # intel-llama runs at 131072 ctx on hardware with known driver caveats
+    # (see intel-vllm/README.md); a long prefill + generation can outlast
+    # litellm's default client timeout.
+    request_timeout: 900
+  # Prometheus metrics are opt-in in litellm — this exposes /metrics on the
+  # proxy port. Scraped by servicemonitor.yaml.
+  callbacks:
+    callbacks:
+      - prometheus
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+  env:
+    - name: LITELLM_MASTER_KEY
+      valueFrom:
+        secretKeyRef:
+          name: litellm-master-key
+          key: master-key
+  route:
+    hostnames:
+      - llm.cloud.danmanners.com
+    parentRefs:
+      - kind: Gateway
+        group: gateway.networking.k8s.io
+        name: gwapi
+        namespace: default
+        sectionName: https-cloud

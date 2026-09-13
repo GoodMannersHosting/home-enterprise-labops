@@ -3,5 +3,8 @@ kind: Kustomization
 namespace: aiml
 
 resources:
-  - secret.intel-llm-api-key.yaml
+  - secret.litellm-master-key.yaml
+  - proxy.yaml
+  - model-nvidia.yaml
+  - model-intel.yaml
   - servicemonitor.yaml

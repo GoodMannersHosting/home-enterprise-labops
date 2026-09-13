@@ -1,0 +1,24 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: intel-vllm
+  namespace: aiml
+  labels:
+    # kube-prometheus-stack's Prometheus only watches ServiceMonitors carrying
+    # this label by default (release = the Helm release name, which for an
+    # unnamed Argo CD source defaults to the Application name: "monitoring").
+    # Verify with:
+    #   kubectl get prometheus -n monitoring -o jsonpath='{.items[0].spec.serviceMonitorSelector}'
+    release: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/service: intel-vllm-core
+  namespaceSelector:
+    matchNames:
+      - aiml
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s

@@ -1,0 +1,18 @@
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMModel
+metadata:
+  name: nvidia-llama
+  namespace: aiml
+spec:
+  modelName: nvidia-llama
+  params:
+    model: openai/local
+    apiBase: http://nvidia-vllm-core.aiml.svc.cluster.local:8080/v1
+    apiKeyRef:
+      name: nvidia-llm-api-key
+      key: api-key
+  info:
+    maxInputTokens: 98304
+    supportsFunctionCalling: true
+    supportsVision: true
