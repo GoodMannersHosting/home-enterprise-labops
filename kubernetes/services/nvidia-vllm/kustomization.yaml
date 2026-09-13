@@ -4,3 +4,4 @@ namespace: aiml
 
 resources:
   - secret.nvidia-llm-api-key.yaml
+  - servicemonitor.yaml

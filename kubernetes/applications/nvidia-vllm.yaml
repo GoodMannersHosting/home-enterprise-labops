@@ -5,7 +5,7 @@ metadata:
   name: nvidia-vllm
   namespace: argocd
   labels:
-    chartVersion: &chartVersion 4.1.2
+    chartVersion: &chartVersion 5.1.0
 spec:
   destination:
     namespace: aiml

@@ -3,4 +3,5 @@ resources:
   - helo-education-repo.yaml
   - helo-repo.yaml
   - home-operations-charts.yaml
+  - home-operations-charts-upstream.yaml
   - snapshot-controller.yaml

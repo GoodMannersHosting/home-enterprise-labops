@@ -1,0 +1,24 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: litellm-operator
+  namespace: argocd
+  labels:
+    chartVersion: &chartVersion 0.0.19
+spec:
+  destination:
+    namespace: litellm-system
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+    - repoURL: ghcr.io/home-operations/charts
+      chart: litellm-operator
+      targetRevision: *chartVersion
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true

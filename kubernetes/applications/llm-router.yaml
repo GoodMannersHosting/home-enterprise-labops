@@ -1,0 +1,21 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: llm-router
+  namespace: argocd
+spec:
+  destination:
+    namespace: aiml
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+    - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: main
+      path: kubernetes/services/llm-router
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
