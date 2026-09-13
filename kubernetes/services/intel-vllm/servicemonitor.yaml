@@ -5,12 +5,7 @@ metadata:
   name: intel-vllm
   namespace: aiml
   labels:
-    # kube-prometheus-stack's Prometheus only watches ServiceMonitors carrying
-    # this label by default (release = the Helm release name, which for an
-    # unnamed Argo CD source defaults to the Application name: "monitoring").
-    # Verify with:
-    #   kubectl get prometheus -n monitoring -o jsonpath='{.items[0].spec.serviceMonitorSelector}'
-    release: monitoring
+    release: monitoring # required by the monitoring Prometheus's serviceMonitorSelector
 spec:
   selector:
     matchLabels:

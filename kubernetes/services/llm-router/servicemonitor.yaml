@@ -5,12 +5,7 @@ metadata:
   name: llm-router
   namespace: aiml
   labels:
-    # kube-prometheus-stack's Prometheus only watches ServiceMonitors carrying
-    # this label by default (release = the Helm release name, which for an
-    # unnamed Argo CD source defaults to the Application name: "monitoring").
-    # Verify with:
-    #   kubectl get prometheus -n monitoring -o jsonpath='{.items[0].spec.serviceMonitorSelector}'
-    release: monitoring
+    release: monitoring # required by the monitoring Prometheus's serviceMonitorSelector
 spec:
   selector:
     matchLabels:
@@ -24,9 +19,7 @@ spec:
     - port: http
       path: /metrics
       interval: 30s
-      # litellm requires auth on every route except /health/*; scraping
-      # /metrics with no credentials 401s (confirmed in the live pod logs).
-      authorization:
+      authorization: # litellm requires auth on every route except /health/*
         credentials:
           name: litellm-master-key
           key: master-key
