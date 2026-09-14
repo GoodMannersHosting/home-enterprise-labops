@@ -81,6 +81,9 @@ controllers:
           - "512"
           - --threads
           - "8"
+          - --cache-prompt
+          - --load-mode
+          - mmap
           # Tunings
           - --temperature
           - "1.0"
