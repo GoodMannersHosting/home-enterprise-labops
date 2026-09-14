@@ -27,15 +27,13 @@ namespaced to `aiml` since this secret has exactly one consumer.
 
 | File | Purpose |
 |------|---------|
-| `proxy.yaml` | `LiteLLMProxy` — owns the router's Deployment/Service/ConfigMap (no `modelSelector`, so it adopts every `LiteLLMModel` in `aiml`). No `spec.route` — see "DNS: the CNAME workaround" below |
+| `proxy.yaml` | `LiteLLMProxy` — owns the router's Deployment/Service/ConfigMap and its `HTTPRoute` (no `modelSelector`, so it adopts every `LiteLLMModel` in `aiml`) |
 | `model-nvidia.yaml` | `LiteLLMModel` pointing at `nvidia-vllm-core.aiml.svc.cluster.local:8080`, reusing the existing `nvidia-llm-api-key` secret |
 | `model-intel.yaml` | `LiteLLMModel` pointing at `intel-vllm-core.aiml.svc.cluster.local:8080`, reusing the existing `intel-llm-api-key` secret |
 | `serviceaccount.yaml` | `vault-litellm-reader` — the identity OpenBao's `kubernetes-labops` auth role trusts for reading the master key |
 | `secretstore.yaml` | `SecretStore` named `openbao-litellm`, pointing at `https://keeper.goodmanners.services` (OpenBao), authenticating via Kubernetes auth as `vault-litellm-reader` |
 | `externalsecret.yaml` | `ExternalSecret` that materializes `LITELLM_MASTER_KEY` for the router as the `litellm-master-key` Secret, synced hourly from OpenBao |
 | `servicemonitor.yaml` | Scrapes the router's `/metrics` (enabled via `spec.callbacks`) for the existing `monitoring` (kube-prometheus-stack) install |
-| `httproute.yaml` | Hand-authored `HTTPRoute` (not operator-owned) fronting the `router` Service on `gwapi`'s `https-cloud` listener — needed so it can carry the `external-dns.alpha.kubernetes.io/controller: "false"` and `gatus.home-operations.com/*` annotations the operator's own route type doesn't expose |
-| `external-name.yaml` | `ExternalName` Service that gives `llm.cloud.danmanners.com` a CNAME to `unifi-home.homelab.danmanners.com` instead of a direct record to the Gateway's LB IP |
 
 Runs in `applyMode: file` (the CRD default) — no Postgres/Redis dependency,
 config renders into a ConfigMap and the proxy rolls on change. Good enough for
@@ -80,35 +78,14 @@ kubectl annotate externalsecret litellm-master-key -n aiml \
 | **In-cluster** | `http://router.aiml.svc.cluster.local:4000/v1` |
 | **LAN / public** | `https://llm.cloud.danmanners.com/v1` |
 
-## DNS: the CNAME workaround
-
-`llm.cloud.danmanners.com` is a CNAME to `unifi-home.homelab.danmanners.com`,
-not a direct record to the Cilium Gateway's LB IP (`172.31.0.10`) — same
-pattern as `grafana`, `harbor`, `argocd`, and `argo-workflows`
-(`kubernetes/core/monitoring/external.svc.yaml`,
-`kubernetes/core/harbor/networking/external-name.yaml`,
-`kubernetes/core/argocd/external-dns.yaml`,
-`kubernetes/core/argo-workflows/external-dns.yaml`).
-
-Why: the site-to-site VPN between this cluster's network and clients outside
-the homelab LAN is IPsec ("Dan's Site to Site" in UniFi). Its local routed-
-networks list includes `172.31.0.0/23`, but `Established` only reflects the
-Phase 1 (IKE) SA — Phase 2 negotiates traffic selectors per subnet pair, and
-both ends have to agree on them. If the far end's tunnel config was never
-updated to include the full `/23`, traffic to an IP like `172.31.0.10` inside
-it can silently fail (TCP SYN sent, no reply, eventual client-side timeout)
-even though the tunnel itself shows connected and the subnet shows routed.
-`mtr` from outside the LAN confirms this: the local gateway hop replies
-instantly, the next hop never does. `unifi-home.homelab.danmanners.com`
-apparently already falls inside whatever *was* negotiated, which is
-presumably why the other four services route through it instead. Fixing this
-for real means confirming the Phase 2 selectors on both ends of the tunnel
-include `172.31.0.0/23` — outside what this repo can express.
-
-Practical effect: `httproute.yaml` still exists and still matters — once
-traffic reaches the Gateway (via the CNAME's target, LAN, or a fixed tunnel),
-Envoy still needs the route to send it to the `router` Service. Only the DNS
-mechanism changed.
+DNS resolves directly to the Cilium Gateway's LB IP (`172.31.0.10`) via the
+standard `gateway-httproute` external-dns source — no CNAME indirection.
+(A previous version of this file routed through
+`unifi-home.homelab.danmanners.com` — same trick `grafana`/`harbor`/`argocd`/
+`argo-workflows` still use — to work around a site-to-site VPN routing bug on
+the far end's `core-router`: reply traffic for the VTI tunnel's inner subnet
+was falling through to a WAN default route instead of back into the tunnel.
+Fixed on the router side; no longer needed here.)
 
 ### Auth
 
@@ -141,5 +118,6 @@ Swap `model` for `intel-llama` to hit the Arc B70 box instead.
   default when no `helm.releaseName` is set). Confirm with
   `kubectl get prometheus -n monitoring -o jsonpath='{.items[0].spec.serviceMonitorSelector}'`
   and adjust the label if the release is actually named something else.
-- **Uptime**: `httproute.yaml` carries the standard `gatus.home-operations.com/*`
-  annotations, same as every other service's route.
+- **Uptime**: added as a static entry in `../../core/gatus/resources/config.yaml`
+  rather than the usual `gatus.home-operations.com/*` annotation, because the
+  operator owns this `HTTPRoute` and doesn't expose an annotations field on it.

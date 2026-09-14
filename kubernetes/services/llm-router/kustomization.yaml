@@ -10,5 +10,3 @@ resources:
   - model-nvidia.yaml
   - model-intel.yaml
   - servicemonitor.yaml
-  - httproute.yaml
-  - external-name.yaml

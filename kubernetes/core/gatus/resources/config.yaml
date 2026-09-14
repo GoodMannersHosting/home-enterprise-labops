@@ -35,3 +35,8 @@ endpoints:
     conditions:
       - "[BODY] == pat(*.*.*.*)"
       - "[DNS_RCODE] == NOERROR"
+  - name: LLM Router
+    url: https://llm.cloud.danmanners.com/health/liveliness
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
