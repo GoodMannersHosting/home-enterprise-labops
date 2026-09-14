@@ -7,7 +7,7 @@ metadata:
 spec:
   modelName: intel-llama
   params:
-    model: intel-qwen35b
+    model: openai/intel-qwen35b
     apiBase: http://intel-vllm-core.aiml.svc.cluster.local:8080/v1
     apiKeyRef:
       name: intel-llm-api-key
