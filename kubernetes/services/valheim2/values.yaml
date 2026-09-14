@@ -22,10 +22,10 @@ controllers:
       main:
         ports:
           - name: game
-            containerPort: 2556
+            containerPort: 2456
             protocol: UDP
           - name: query
-            containerPort: 2557
+            containerPort: 2457
             protocol: UDP
         image:
           repository: ghcr.io/lloesche/valheim-server
@@ -76,7 +76,7 @@ service:
     controller: main
     primary: true
     type: LoadBalancer
-    loadBalancerIP: 172.31.0.33
+    loadBalancerIP: 172.31.0.37
     ports:
       game:
         enabled: true
