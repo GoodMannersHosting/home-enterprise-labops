@@ -61,9 +61,9 @@ controllers:
           - --flash-attn
           - "on"
           - --cache-type-k
-          - q4_0
+          - q5_0
           - --cache-type-v
-          - q4_0
+          - q5_0
           - --cpu-strict
           - "1"
           # Single-user chat.
@@ -76,17 +76,17 @@ controllers:
           - --reasoning-budget
           - "-1"
           - --batch-size
-          - "2048"
+          - "4096"
           - --ubatch-size
-          - "512"
+          - "1024"
           - --threads
-          - "8"
+          - "16"
           - --cache-prompt
           - --load-mode
           - mmap
           # Tunings
           - --temperature
-          - "1.0"
+          - "0.8"
           - --top-k
           - "20"
           - --top-p
@@ -106,10 +106,10 @@ controllers:
             value: "8080"
           - name: ONEAPI_DEVICE_SELECTOR
             value: "level_zero:0"
+          - name: GGML_SYCL_ENABLE_LEVEL_ZERO
+            value: "1"
           - name: LLAMA_ARG_MODELS_DIR
             value: "/root/.cache/huggingface"
-          # - name: GGML_SYCL_ENABLE_LEVEL_ZERO
-          #   value: "1"
         securityContext: {}
         resources:
           requests:
