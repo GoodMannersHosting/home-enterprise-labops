@@ -27,11 +27,14 @@ configs:
       name: Authentik
       issuer: https://auth.goodmanners.services/application/o/argo-cd/
       clientID: argocd
-      refreshTokenThreshold: 2m
+      clientSecret: $oidc.argocd.clientSecret
+      allowedAudiences:
+        - argocd
       enablePKCEAuthentication: true
-      requestedScopes: ["openid", "profile", "email"]
+      requestedScopes: ["openid", "profile", "email", "groups"]
       userNameKey: email
       overrideClaimMapping: true
+      logoutURL: https://auth.goodmanners.services/application/o/argo-cd/logout/
   rbac:
     policy.default: role:readonly
     policy.csv: |
