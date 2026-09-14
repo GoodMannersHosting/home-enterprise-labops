@@ -32,4 +32,12 @@ spec:
         secretKeyRef:
           name: litellm-master-key
           key: master-key
-  # No route: see httproute.yaml / README (DNS: the CNAME workaround).
+  route:
+    hostnames:
+      - llm.cloud.danmanners.com
+    parentRefs:
+      - kind: Gateway
+        group: gateway.networking.k8s.io
+        name: gwapi
+        namespace: default
+        sectionName: https-cloud
