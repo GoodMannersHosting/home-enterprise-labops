@@ -1,6 +1,5 @@
 namespace: gaming
 resources:
-- namespace.yaml
 - secret.valheim.yaml
 
 components:

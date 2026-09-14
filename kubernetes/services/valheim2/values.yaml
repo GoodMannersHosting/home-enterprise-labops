@@ -80,12 +80,12 @@ service:
     ports:
       game:
         enabled: true
-        port: 2556
+        port: 2456
         targetPort: game
         protocol: UDP
       query:
         enabled: true
-        port: 2557
+        port: 2457
         targetPort: query
         protocol: UDP
   extname:
