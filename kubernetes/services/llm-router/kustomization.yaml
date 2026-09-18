@@ -9,4 +9,5 @@ resources:
   - proxy.yaml
   - model-nvidia.yaml
   - model-intel.yaml
+  - model-bonsai.yaml
   - servicemonitor.yaml
