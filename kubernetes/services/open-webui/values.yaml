@@ -59,7 +59,7 @@ clusterDomain: cluster.local
 
 image:
   repository: ghcr.io/open-webui/open-webui
-  tag: "v0.11.0"
+  tag: "v0.11.3"
   pullPolicy: "IfNotPresent"
 
 serviceAccount:
