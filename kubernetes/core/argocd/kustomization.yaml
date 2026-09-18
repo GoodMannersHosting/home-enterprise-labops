@@ -8,4 +8,4 @@ resources:
   - tlsroute.yaml
   - app-of-apps.yaml
   - argo-appproject.yaml
-  - https://github.com/argoproj/argo-cd/manifests/crds?ref=v3.4.4
+  - https://github.com/argoproj/argo-cd/manifests/crds?ref=v3.5.3
