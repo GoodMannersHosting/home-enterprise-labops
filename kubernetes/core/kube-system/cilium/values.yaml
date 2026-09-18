@@ -4,7 +4,7 @@ bandwidthManager:
   bbr: true
 bpf:
   datapathMode: netkit
-  masquerade: false
+  masquerade: true
   preallocateMaps: true
 bpfClockProbe: true
 bgpControlPlane:
