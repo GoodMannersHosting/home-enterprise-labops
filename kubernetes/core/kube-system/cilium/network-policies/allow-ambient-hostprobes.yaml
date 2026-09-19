@@ -1,0 +1,21 @@
+---
+# Istio ambient sends kubelet health probes to mesh-enrolled pods through a
+# SNAT'd link-local address (169.254.7.127) that Cilium doesn't otherwise
+# recognize. Without this, any default-deny CiliumNetworkPolicy/NetworkPolicy
+# in a namespace blocks kubelet's liveness/readiness probes to ambient pods.
+# enableDefaultDeny is false in both directions so this is purely additive —
+# it does not turn on default-deny for endpoints that don't already have it.
+# See: https://istio.io/latest/docs/ambient/install/platform-prerequisites/
+apiVersion: "cilium.io/v2"
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: "allow-ambient-hostprobes"
+spec:
+  description: "Allows SNAT-ed kubelet health check probes into ambient pods"
+  enableDefaultDeny:
+    egress: false
+    ingress: false
+  endpointSelector: {}
+  ingress:
+    - fromCIDR:
+        - "169.254.7.127/32"
