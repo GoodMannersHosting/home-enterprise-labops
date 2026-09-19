@@ -4,7 +4,10 @@ bandwidthManager:
   bbr: true
 bpf:
   datapathMode: netkit
-  masquerade: true
+  # eBPF masquerade is unsupported with Istio ambient (breaks health probes /
+  # SNAT for traffic proxied through ztunnel with a spoofed source IP);
+  # falls back to Cilium's iptables-based masquerade instead.
+  masquerade: false
   preallocateMaps: true
 bpfClockProbe: true
 bgpControlPlane:
