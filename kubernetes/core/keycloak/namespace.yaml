@@ -5,3 +5,4 @@ metadata:
   name: keycloak
   labels:
     security: restricted
+    istio.io/dataplane-mode: ambient

@@ -4,3 +4,4 @@ metadata:
   name: database
   labels:
     security: restricted
+    istio.io/dataplane-mode: ambient
