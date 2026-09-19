@@ -9,9 +9,8 @@ resources:
   - cnpg-cluster.yaml
   - db-superuser.yaml
   - operator.yaml
-  # TCPRoutes parent Gateway unsupported on Cilium (TCP listeners); use LoadBalancer services in values.yaml.
-  # - tcproute-nats.yaml
-  # - tcproute-grpc.yaml
+  - tcproute-nats.yaml
+  - tcproute-grpc.yaml
   - service.yaml
   # - httproute.yaml
   # - cilium-netpol.yaml
