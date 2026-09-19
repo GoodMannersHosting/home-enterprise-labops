@@ -82,5 +82,5 @@ gatewayAPI:
   gatewayClass:
     create: "true"
 
-# socketLB:
-#   hostNamespaceOnly: true
+socketLB:
+  hostNamespaceOnly: true
