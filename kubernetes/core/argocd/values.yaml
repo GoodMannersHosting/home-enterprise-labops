@@ -6,15 +6,20 @@ global:
         - "harbor.cloud.danmanners.com"
         - "ollama.cloud.danmanners.com"
         - "n8n.cloud.danmanners.com"
+  # Each component's NetworkPolicy template is gated on
+  # `.Values.<component>.networkPolicy.create OR .Values.global.networkPolicy.create`,
+  # so a component-level `create: false` can't actually disable it while this default
+  # (true) stands. Flip the default off here and re-enable per component below for
+  # everything except repoServer/controller — see the comment on `repoServer.networkPolicy`
+  # for why those two need it off.
+  networkPolicy:
+    create: false
 
 crds:
   install: false
 
 redis-ha:
   enabled: true
-
-controller:
-  replicas: 1
 
 applicationSet:
   replicas: 2
@@ -80,9 +85,35 @@ repoServer:
   # Node Selector to ensure the repo server runs on only AMD64 nodes
   nodeSelector:
     kubernetes.io/arch: amd64
+  # The default NetworkPolicy only allows ingress to the metrics/health port from
+  # `namespaceSelector: {}`, which (per k8s NetworkPolicy semantics) matches pod-
+  # originated traffic only — it never matches kubelet's host-network-origin
+  # liveness/readiness probes. That silently breaks probes and crash-loops the
+  # repo-server. Same issue affects `controller` below. Disabling NetworkPolicy
+  # creation for just these two components is low-risk: the existing rule was
+  # already permissive to "any pod in any namespace", so this doesn't meaningfully
+  # change the security posture.
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  readinessProbe:
+    timeoutSeconds: 5
+  livenessProbe:
+    timeoutSeconds: 5
+
+controller:
+  replicas: 1
+  # See the note on `repoServer` above and `global.networkPolicy.create` — left
+  # disabled (inherits the global default) for the same reason.
 
 server:
   replicas: 2
+  networkPolicy:
+    create: true
   service:
     annotations:
       gatus.home-operations.com/enabled: "true"
@@ -115,3 +146,11 @@ server:
       group: cert-manager.io
   ingress:
     enabled: false
+
+dex:
+  networkPolicy:
+    create: true
+
+notifications:
+  networkPolicy:
+    create: true

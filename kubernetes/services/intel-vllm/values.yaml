@@ -33,8 +33,7 @@ controllers:
           - -c
           - |
             set -eu
-            DEST=/root/.cache/huggingface/hauhaucs-gemma4
-            mkdir -p "$DEST"
+            DEST=/root/.cache/huggingface
 
             fetch() {
               url="$1"
@@ -71,12 +70,12 @@ controllers:
         # Image ENTRYPOINT is /app/llama-server; do not override command with sh.
         args:
           - --model
-          - /root/.cache/huggingface/hauhaucs-gemma4/Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-Q4_K_M.gguf
+          - /root/.cache/huggingface/Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-Q4_K_M.gguf
           - --mmproj
-          - /root/.cache/huggingface/hauhaucs-gemma4/mmproj-Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-BF16.gguf
+          - /root/.cache/huggingface/mmproj-Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-BF16.gguf
           - --no-mmproj-offload
           - --spec-draft-model
-          - /root/.cache/huggingface/hauhaucs-gemma4/mtp-gemma-4-26B-A4B-it.gguf
+          - /root/.cache/huggingface/mtp-gemma-4-26B-A4B-it.gguf
           - --spec-type
           - draft-mtp
           # Performance Settings
