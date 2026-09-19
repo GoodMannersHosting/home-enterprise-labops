@@ -4,7 +4,7 @@ metadata:
   name: gwapi
   namespace: default
 spec:
-  gatewayClassName: cilium
+  gatewayClassName: istio
   infrastructure:
     annotations:
       lbipam.cilium.io/ips: 172.31.0.10

@@ -517,12 +517,8 @@ service:
     enabled: true
     controller: controller
     primary: false
-    # Public agent gRPC — same LB IP as NATS via Cilium LB IPAM sharing-key (Gateway API TCP is not supported on Cilium yet).
-    type: LoadBalancer
-    externalTrafficPolicy: Cluster
-    annotations:
-      lbipam.cilium.io/ips: "172.31.0.60"
-      lbipam.cilium.io/sharing-key: meticulous-agent-tcp
+    # Public agent gRPC — exposed via TCPRoute on the meticulous-tcp Gateway (Istio).
+    type: ClusterIP
     ports:
       grpc:
         enabled: true
@@ -534,12 +530,8 @@ service:
     enabled: true
     controller: nats
     primary: false
-    # Public NATS client port — shares 172.31.0.60 with controller (different ports).
-    type: LoadBalancer
-    externalTrafficPolicy: Cluster
-    annotations:
-      lbipam.cilium.io/ips: "172.31.0.60"
-      lbipam.cilium.io/sharing-key: meticulous-agent-tcp
+    # Public NATS client port — exposed via TCPRoute on the meticulous-tcp Gateway (Istio).
+    type: ClusterIP
     ports:
       client:
         enabled: true
