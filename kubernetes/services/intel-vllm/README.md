@@ -17,7 +17,7 @@ The Argo app / Helm release is named **`intel-vllm`** from the homelab plan (dir
 | Context | `204800` (`--ctx-size`), KV cache `q5_0` k/v, `--fit on --fit-ctx 32768` as a safety net if the full context doesn't fit |
 | Image | `ghcr.io/ggml-org/llama.cpp:server-vulkan` (Vulkan; SYCL untested for this model — see §4b) |
 
-Weights are pulled by an **initContainer** (`curlimages/curl`) directly from the HF `resolve` URLs into the `cache` PVC at `/root/.cache/huggingface/hauhaucs-gemma4/`, skipping re-download if the file is already present. We do **not** use `--hf-repo`/`--hf-file` here because there's no reliable flag to select the draft-model file out of a multi-GGUF repo — direct URL downloads to fixed paths are deterministic instead.
+Weights are pulled by an **initContainer** (`curlimages/curl`) directly from the HF `resolve` URLs into the `cache` PVC at `/root/.cache/huggingface/`, skipping re-download if the file is already present. We do **not** use `--hf-repo`/`--hf-file` here because there's no reliable flag to select the draft-model file out of a multi-GGUF repo — direct URL downloads to fixed paths are deterministic instead. Files are written directly at the PVC mount root rather than a subdirectory: `curlimages/curl` runs as a non-root user, and only the exact mount point (`/root/.cache/huggingface`) gets `fsGroup`-based write access — the synthetic parent directory `/root/.cache` created by the container runtime does not, so `mkdir`-ing a subfolder there fails with `Permission denied`.
 
 ### Why this model
 
