@@ -17,6 +17,9 @@ spec:
       path: kubernetes/core/kube-system/cilium/bgp
     - repoURL: *url
       targetRevision: main
+      path: kubernetes/core/kube-system/cilium/network-policies
+    - repoURL: *url
+      targetRevision: main
       ref: values
     - repoURL: https://helm.cilium.io/
       chart: cilium
