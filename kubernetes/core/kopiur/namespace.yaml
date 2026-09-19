@@ -5,3 +5,4 @@ metadata:
   name: kopiur-system
   labels:
     app.kubernetes.io/part-of: kopiur
+    istio.io/dataplane-mode: ambient

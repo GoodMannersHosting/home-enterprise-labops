@@ -5,3 +5,4 @@ metadata:
   labels:
     security: restricted
     educational: "true"
+    istio.io/dataplane-mode: ambient

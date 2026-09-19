@@ -4,3 +4,4 @@ metadata:
   name: powerdns
   labels:
     security: restricted
+    istio.io/dataplane-mode: ambient
