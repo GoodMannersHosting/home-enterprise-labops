@@ -8,6 +8,10 @@ spec:
   infrastructure:
     annotations:
       lbipam.cilium.io/ips: 172.31.0.10
+    parametersRef:
+      group: ""
+      kind: ConfigMap
+      name: gwapi-gw-options
   listeners:
     - name: http
       protocol: HTTP
