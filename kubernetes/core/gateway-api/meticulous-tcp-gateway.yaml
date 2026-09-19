@@ -10,6 +10,10 @@ spec:
   infrastructure:
     annotations:
       lbipam.cilium.io/ips: 172.31.0.60
+    parametersRef:
+      group: ""
+      kind: ConfigMap
+      name: meticulous-tcp-gw-options
   listeners:
     - name: nats
       protocol: TCP

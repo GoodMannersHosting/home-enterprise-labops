@@ -1,5 +1,7 @@
 resources:
   - gateway.yaml
+  - gwapi-gw-options.yaml
   - meticulous-tcp-gateway.yaml
+  - meticulous-tcp-gw-options.yaml
   - cert-wildcard.yaml
   - https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.6.2/experimental-install.yaml
