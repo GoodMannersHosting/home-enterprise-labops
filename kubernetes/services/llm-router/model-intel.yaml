@@ -7,10 +7,10 @@ metadata:
 spec:
   modelName: intel-llama
   params:
-    model: openai/intel-qwen35b
+    model: openai/intel-gemma4-26b-a4b
     apiBase: http://intel-vllm-core.aiml.svc.cluster.local:8080/v1
     apiKeyRef:
       name: intel-llm-api-key
       key: api-key
   info:
-    maxInputTokens: 131072
+    maxInputTokens: 204800

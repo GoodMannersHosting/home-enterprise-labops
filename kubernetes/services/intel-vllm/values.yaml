@@ -1,8 +1,9 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
 ---
 # llama-server on Intel Arc B70 (intellectual). OpenAI-compatible API; not vLLM despite the service name.
-# GPU acceleration not yet working: Mesa 24.2.8 doesn't support Battlemage PCI ID 0xe223.
-# llama.cpp builds b4735-b4740 don't support qwen35/gemma4 architectures.
+# Model: HauhauCS Gemma4-26B-A4B-QAT-Uncensored (Balanced), Q4_K_M + BF16 mmproj + MTP speculative draft.
+# Backend: Vulkan (ghcr.io/ggml-org/llama.cpp:server-vulkan). GPU offload confirmed working via gpu.intel.com/xe.
+# SYCL (server-intel) untested for this model/build; see README before switching.
 defaultPodOptions:
   automountServiceAccountToken: false
   enableServiceLinks: false
@@ -21,6 +22,42 @@ controllers:
     type: deployment
     replicas: 1
     revisionHistoryLimit: 2
+    initContainers:
+      download-model:
+        image:
+          repository: curlimages/curl
+          tag: "8.11.1"
+          pullPolicy: IfNotPresent
+        command:
+          - /bin/sh
+          - -c
+          - |
+            set -eu
+            DEST=/root/.cache/huggingface/hauhaucs-gemma4
+            mkdir -p "$DEST"
+
+            fetch() {
+              url="$1"
+              out="$DEST/$2"
+              if [ -s "$out" ]; then
+                echo "already present: $out"
+                return 0
+              fi
+              echo "downloading: $out"
+              curl -fL --retry 5 --retry-delay 5 -o "$out.part" "$url"
+              mv "$out.part" "$out"
+            }
+
+            fetch "https://huggingface.co/HauhauCS/Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-MTP/resolve/main/Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-Q4_K_M.gguf" "Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-Q4_K_M.gguf"
+            fetch "https://huggingface.co/HauhauCS/Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-MTP/resolve/main/mmproj-Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-BF16.gguf" "mmproj-Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-BF16.gguf"
+            fetch "https://huggingface.co/HauhauCS/Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-MTP/resolve/main/mtp-gemma-4-26B-A4B-it.gguf" "mtp-gemma-4-26B-A4B-it.gguf"
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+          limits:
+            cpu: "1000m"
+            memory: "512Mi"
     containers:
       core:
         ports:
@@ -30,32 +67,27 @@ controllers:
         image:
           repository: ghcr.io/ggml-org/llama.cpp
           tag: server-vulkan
-          # tag: server-intel
           pullPolicy: Always
         # Image ENTRYPOINT is /app/llama-server; do not override command with sh.
         args:
-          - --hf-repo
-          - hotdogs/qwen35b-a3b-fable-sft-abliterated
-          - --hf-file
-          - GGUF/Qwen-35B-A3B-abliterated-AgentWorld-fable-opus4.8.Q4_K_M.gguf
-          # Speculative Decoding Settings
-          - --spec-draft-n-max
-          - "48"
-          - --spec-draft-n-min
-          - "1"
-          - --spec-ngram-simple-size-n
-          - "16"
-          - --spec-ngram-simple-size-m
-          - "48"
+          - --model
+          - /root/.cache/huggingface/hauhaucs-gemma4/Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-Q4_K_M.gguf
+          - --mmproj
+          - /root/.cache/huggingface/hauhaucs-gemma4/mmproj-Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-BF16.gguf
+          - --no-mmproj-offload
+          - --spec-draft-model
+          - /root/.cache/huggingface/hauhaucs-gemma4/mtp-gemma-4-26B-A4B-it.gguf
+          - --spec-type
+          - draft-mtp
           # Performance Settings
           - --gpu-layers
           - "999"
           - --fit
           - "on"
           - --fit-ctx
-          - "16384"
+          - "32768"
           - --ctx-size
-          - "131072"
+          - "204800"
           - --ctx-checkpoints
           - "16"
           - --flash-attn
@@ -84,19 +116,17 @@ controllers:
           - --cache-prompt
           - --load-mode
           - mmap
-          # Tunings
+          # Tunings — per HauhauCS Balanced model card recommendations
           - --temperature
-          - "0.8"
+          - "0.6"
           - --top-k
-          - "20"
+          - "64"
           - --top-p
-          - "0.95"
+          - "0.9"
           - --min-p
-          - "0.00"
-          - --presence-penalty
-          - "1.5"
+          - "0.05"
           - --repeat-penalty
-          - "1.0"
+          - "1.1"
           - --jinja
         env:
           # Bind via env only — image sets LLAMA_ARG_HOST; duplicating --host triggers a startup warning.
@@ -104,12 +134,8 @@ controllers:
             value: "0.0.0.0"
           - name: LLAMA_ARG_PORT
             value: "8080"
-          - name: ONEAPI_DEVICE_SELECTOR
-            value: "level_zero:0"
-          - name: GGML_SYCL_ENABLE_LEVEL_ZERO
+          - name: GGML_VK_MMVQ_SHMEM_STAGING
             value: "1"
-          - name: LLAMA_ARG_MODELS_DIR
-            value: "/root/.cache/huggingface"
         securityContext: {}
         resources:
           requests:
@@ -161,6 +187,9 @@ persistence:
     advancedMounts:
       main:
         core:
+          - path: /root/.cache/huggingface
+            readOnly: false
+        download-model:
           - path: /root/.cache/huggingface
             readOnly: false
   shm:
