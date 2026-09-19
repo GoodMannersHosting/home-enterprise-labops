@@ -1,0 +1,5 @@
+# Node hostnames are <name>.homelab.danmanners.com (see infrastructure/talconfig.yaml).
+providerRegex: '^[a-z0-9-]+\.homelab\.danmanners\.com$'
+metrics:
+  serviceMonitor:
+    enabled: true
