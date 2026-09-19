@@ -28,6 +28,14 @@ controllers:
           repository: curlimages/curl
           tag: "8.11.1"
           pullPolicy: IfNotPresent
+        # /root is 0700 root:root in the base image; curlimages/curl's default
+        # non-root user can't even traverse into it, regardless of the permissions
+        # on the mounted PVC subdirectory beneath it. Run as root here (matching
+        # how the "core" container already implicitly runs as root with no
+        # runAsUser override) rather than fighting the base image's home dir perms.
+        securityContext:
+          runAsUser: 0
+          runAsNonRoot: false
         command:
           - /bin/sh
           - -c
