@@ -1,0 +1,36 @@
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMVirtualKey
+metadata:
+  name: dan
+  namespace: aiml
+spec:
+  proxyRef: router
+  secretName: llm-router-key-dan
+  keyAlias: dan
+  userID: dan
+  teamID: scum
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMVirtualKey
+metadata:
+  name: james
+  namespace: aiml
+spec:
+  proxyRef: router
+  secretName: llm-router-key-james
+  keyAlias: james
+  userID: james
+  teamID: scum
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMVirtualKey
+metadata:
+  name: tyler
+  namespace: aiml
+spec:
+  proxyRef: router
+  secretName: llm-router-key-tyler
+  keyAlias: tyler
+  userID: tyler
+  teamID: scum

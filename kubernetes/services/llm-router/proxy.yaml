@@ -6,6 +6,12 @@ metadata:
   namespace: aiml
 spec:
   # No modelSelector: adopts every LiteLLMModel in aiml.
+  applyMode: api # models push to the live admin API (DB-backed); needed for
+  # the webui and for LiteLLMVirtualKey/LiteLLMTeam to mint keys through it.
+  apiAccess:
+    masterKeyRef:
+      name: litellm-master-key
+      key: master-key
   generalSettings:
     background_health_checks: true
     health_check_interval: 300
@@ -32,6 +38,27 @@ spec:
         secretKeyRef:
           name: litellm-master-key
           key: master-key
+    - name: LITELLM_DB_USER
+      valueFrom:
+        secretKeyRef:
+          name: litellm-db-credentials # reflected into aiml from database/litellm-db-credentials
+          key: username
+    - name: LITELLM_DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: litellm-db-credentials
+          key: password
+    - name: DATABASE_URL
+      value: "postgresql://$(LITELLM_DB_USER):$(LITELLM_DB_PASSWORD)@db-rw.database.svc.cluster.local:5432/litellm"
+    # Enabling DATABASE_URL turns on the admin UI at /ui automatically; these
+    # give it its own login instead of falling back to admin/<master key>.
+    - name: UI_USERNAME
+      value: admin
+    - name: UI_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: litellm-ui-credentials
+          key: password
   route:
     hostnames:
       - llm.cloud.danmanners.com

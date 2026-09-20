@@ -13,6 +13,9 @@ spec:
     - repoURL: &repo https://github.com/GoodMannersHosting/home-enterprise-labops.git
       targetRevision: main
       path: kubernetes/services/database
+    - repoURL: *repo
+      targetRevision: main
+      path: kubernetes/core/database
   syncPolicy:
     automated:
       prune: true

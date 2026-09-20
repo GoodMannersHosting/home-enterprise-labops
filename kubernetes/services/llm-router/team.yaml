@@ -1,0 +1,16 @@
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMTeam
+metadata:
+  name: scum
+  namespace: aiml
+spec:
+  proxyRef: router
+  alias: scum
+  members:
+    - userID: dan
+      role: user
+    - userID: james
+      role: user
+    - userID: tyler
+      role: admin
