@@ -106,9 +106,9 @@ enabled for secure authorization. The proxy is configured with:
 
 - `GENERIC_CLIENT_ID` / `GENERIC_CLIENT_SECRET` — from `litellm-sso-credentials`
   secret (sourced from OpenBao)
-- `GENERIC_AUTHORIZATION_ENDPOINT` — `https://auth.goodmanners.services/application/o/llm-router/authorization/`
-- `GENERIC_TOKEN_ENDPOINT` — `https://auth.goodmanners.services/application/o/llm-router/token/`
-- `GENERIC_USERINFO_ENDPOINT` — `https://auth.goodmanners.services/application/o/llm-router/userinfo/`
+- `GENERIC_AUTHORIZATION_ENDPOINT` — `https://auth.goodmanners.services/application/o/authorize/`
+- `GENERIC_TOKEN_ENDPOINT` — `https://auth.goodmanners.services/application/o/token/`
+- `GENERIC_USERINFO_ENDPOINT` — `https://auth.goodmanners.services/application/o/userinfo/`
 - `PROXY_BASE_URL` — `https://llm.cloud.danmanners.com`
 
 Users click the SSO login button on the UI and are redirected to Authentik.

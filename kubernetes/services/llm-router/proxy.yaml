@@ -85,11 +85,11 @@ spec:
           name: litellm-sso-credentials
           key: client-secret
     - name: GENERIC_AUTHORIZATION_ENDPOINT
-      value: https://auth.goodmanners.services/application/o/llm-router/authorization/
+      value: https://auth.goodmanners.services/application/o/authorize/
     - name: GENERIC_TOKEN_ENDPOINT
-      value: https://auth.goodmanners.services/application/o/llm-router/token/
+      value: https://auth.goodmanners.services/application/o/token/
     - name: GENERIC_USERINFO_ENDPOINT
-      value: https://auth.goodmanners.services/application/o/llm-router/userinfo/
+      value: https://auth.goodmanners.services/application/o/userinfo/
     - name: PROXY_BASE_URL
       value: https://llm.cloud.danmanners.com
     - name: PROXY_LOGOUT_URL
