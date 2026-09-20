@@ -1,0 +1,15 @@
+machine:
+  network:
+    interfaces:
+      - deviceSelector:
+          hardwareAddr: "38:05:25:33:e3:8d"
+        dhcp: false
+        mtu: 1500
+        addresses:
+          - 172.21.0.21/20
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 172.21.0.1
+      - deviceSelector:
+          hardwareAddr: "38:05:25:33:e3:8e"
+        dhcp: false

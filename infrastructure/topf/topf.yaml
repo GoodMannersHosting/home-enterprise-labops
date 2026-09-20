@@ -1,0 +1,49 @@
+clusterName: helo
+clusterEndpoint: "https://k8s.homelab.danmanners.com:6443"
+kubernetesVersion: 1.36.1
+talosVersion: 1.14.0
+patchesDir: .
+secretsPath: secrets.yaml
+
+nodes:
+  - host: segfault.homelab.danmanners.com
+    ip: 172.21.0.15
+    role: control-plane
+    secureboot: true
+    schematicId: "@schematics/amd.yaml"
+  - host: quantumleap.homelab.danmanners.com
+    ip: 172.21.0.16
+    role: worker
+    secureboot: true
+    schematicId: "@schematics/gpu-worker.yaml"
+  - host: cachecow.homelab.danmanners.com
+    ip: 172.21.0.17
+    role: control-plane
+    secureboot: true
+    schematicId: "@schematics/intel.yaml"
+  - host: intellectual.homelab.danmanners.com
+    ip: 172.21.0.19
+    role: worker
+    secureboot: true
+    schematicId: "@schematics/intellectual.yaml"
+  - host: rampage.homelab.danmanners.com
+    ip: 172.21.0.18
+    role: control-plane
+    secureboot: true
+    schematicId: "@schematics/amd.yaml"
+  - host: publicforum.homelab.danmanners.com
+    ip: 172.21.0.11
+    role: worker
+    schematicId: "@schematics/intel.yaml"
+  # - host: stackover.homelab.danmanners.com
+  #   ip: 172.21.0.13
+  #   role: worker
+  #   schematicId: "@schematics/intel.yaml"
+  - host: zephyr.homelab.danmanners.com
+    ip: 172.21.0.14
+    role: worker
+    schematicId: "@schematics/intel.yaml"
+  - host: armstrong.homelab.danmanners.com
+    ip: 172.21.0.21
+    role: worker
+    schematicId: "@schematics/armstrong.yaml"

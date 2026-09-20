@@ -1,0 +1,17 @@
+machine:
+  network:
+    interfaces:
+      - deviceSelector:
+          hardwareAddr: "9c:6b:00:84:ce:2e"
+        dhcp: false
+        mtu: 9000
+        addresses:
+          - 172.21.0.15/20
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 172.21.0.1
+        vip:
+          ip: 172.21.0.10
+      - deviceSelector:
+          hardwareAddr: "9c:6b:00:84:cd:47"
+        dhcp: false

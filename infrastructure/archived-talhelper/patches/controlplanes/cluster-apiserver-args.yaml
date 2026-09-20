@@ -1,0 +1,9 @@
+cluster:
+  apiServer:
+    extraArgs:
+      oidc-issuer-url: https://keycloak.cloud.danmanners.com/realms/gmh
+      oidc-client-id: helo-k8s
+      oidc-username-claim: preferred_username
+      oidc-username-prefix: "oidc:/"
+      oidc-groups-claim: groups
+      oidc-groups-prefix: "oidc:/"

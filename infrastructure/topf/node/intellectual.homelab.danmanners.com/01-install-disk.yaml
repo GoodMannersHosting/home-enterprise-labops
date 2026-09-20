@@ -1,0 +1,4 @@
+machine:
+  install:
+    diskSelector:
+      wwid: eui.00a07501e9caa18f
