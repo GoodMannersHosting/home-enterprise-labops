@@ -16,3 +16,10 @@ kubectl config set-credentials oidc \
   --exec-arg="--oidc-extra-scope=profile" \
   --exec-arg="--oidc-extra-scope=email"
 ```
+
+# Applying the Cluster Admin Role
+
+You can reference the [`cluster-admin-role.yaml`](./cluster-admin-role.yaml) file to apply the Cluster Admin role to map the IdP group `helo-admins`.
+
+> [!TIP]
+> You should _ALWAYS_ map locked-down groups, avoid using a global cluster-admin permission/role. The mapped file is purely for reference.
