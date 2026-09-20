@@ -2,17 +2,16 @@
 
 [External Secrets Operator](https://external-secrets.io/) — syncs secrets
 from OpenBao into native Kubernetes Secrets, so they don't need to live in
-git as sealed secrets. Only the operator itself lives here; each consumer
-owns its own `SecretStore`/`ExternalSecret` in its own namespace (see
-[`../../services/llm-router/`](../../services/llm-router/) for the first
-one), since OpenBao access here is granted per-secret via narrowly-scoped
-Vault policies rather than one broadly-shared connection.
+git as sealed secrets. The `openbao-labops` `ClusterSecretStore` authenticates
+once with the controller's ServiceAccount and the namespaced `labops-eso`
+role. Consumers only need an `ExternalSecret` that references this store.
 
 ## What's here
 
 | File | Purpose |
 |------|---------|
 | `values.yaml` | Helm values for the `external-secrets` chart, installed into the `external-secrets` namespace by [`../../applications/external-secrets.yaml`](../../applications/external-secrets.yaml) |
+| `clustersecretstore.yaml` | Cluster-wide connection to the `homelab-dan` OpenBao namespace using the read-only `labops-eso` role |
 
 ## Bootstrapping OpenBao's Kubernetes auth
 
@@ -26,20 +25,15 @@ first (it gives OpenBao a token to call this cluster's TokenReview API).
 
 For a new consumer in namespace `<ns>`:
 
-1. In `~/src/hcloud-security-cluster/bao/`, add a policy scoped to the new
-   secret's path and a role (`bao/kubernetes/*.json`) bound to a new
-   ServiceAccount name in `<ns>`.
-2. In `<ns>`, add a `ServiceAccount`, a namespaced `SecretStore` (vault
-   provider, `auth.kubernetes` pointing at that role/ServiceAccount), and an
-   `ExternalSecret` referencing it — see
-   [`../../services/llm-router/secretstore.yaml`](../../services/llm-router/secretstore.yaml)
-   and `externalsecret.yaml` as a template.
+1. Store the value below `secret/dan/` in the `homelab-dan` OpenBao namespace.
+2. Add an `ExternalSecret` with `secretStoreRef.name: openbao-labops` and
+   `secretStoreRef.kind: ClusterSecretStore`.
 
 ## Troubleshooting
 
 ```bash
-kubectl get secretstore -A
-kubectl describe secretstore <name> -n <namespace>
+kubectl get clustersecretstore openbao-labops
+kubectl describe clustersecretstore openbao-labops
 
 kubectl get externalsecret -A
 kubectl describe externalsecret <name> -n <namespace>

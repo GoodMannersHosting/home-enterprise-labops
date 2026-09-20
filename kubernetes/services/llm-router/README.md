@@ -13,61 +13,121 @@ Despite the app names, **neither backend is actually vLLM** — both
 ## Prerequisite
 
 The `litellm-operator` Argo app ([`../../applications/litellm-operator.yaml`](../../applications/litellm-operator.yaml))
-must be synced first — it installs the `LiteLLMProxy`/`LiteLLMModel` CRDs this
-directory's manifests depend on. If it syncs after this app, ArgoCD's
-`selfHeal` will retry until the CRDs land; no manual ordering needed.
+must be synced first — it installs the `LiteLLMProxy`/`LiteLLMModel`/`LiteLLMTeam`/
+`LiteLLMVirtualKey` CRDs this directory's manifests depend on. If it syncs
+after this app, ArgoCD's `selfHeal` will retry until the CRDs land; no manual
+ordering needed.
 
 The `external-secrets` Argo app ([`../../applications/external-secrets.yaml`](../../applications/external-secrets.yaml))
-must also be synced first — it installs the `SecretStore`/`ExternalSecret`
-CRDs `secretstore.yaml`/`externalsecret.yaml` depend on. The operator itself
-runs in the `external-secrets` namespace; the `SecretStore` here is
-namespaced to `aiml` since this secret has exactly one consumer.
+must also be synced first. It installs the External Secrets CRDs and the
+cluster-wide `openbao-labops` store used by this app.
+
+The `database` Argo app syncs both `../../core/database/` and
+`../../services/database/`. This keeps the shared CNPG `Cluster`, its managed
+roles, and its snapshot policies under one GitOps application.
 
 ## What's here
 
 | File | Purpose |
 |------|---------|
-| `proxy.yaml` | `LiteLLMProxy` — owns the router's Deployment/Service/ConfigMap and its `HTTPRoute` (no `modelSelector`, so it adopts every `LiteLLMModel` in `aiml`) |
+| `proxy.yaml` | `LiteLLMProxy` — owns the router's Deployment/Service/ConfigMap and its `HTTPRoute` (no `modelSelector`, so it adopts every `LiteLLMModel` in `aiml`); runs `applyMode: api` |
 | `model-nvidia.yaml` | `LiteLLMModel` pointing at `nvidia-vllm-core.aiml.svc.cluster.local:8080`, reusing the existing `nvidia-llm-api-key` secret |
 | `model-intel.yaml` | `LiteLLMModel` pointing at `intel-vllm-core.aiml.svc.cluster.local:8080`, reusing the existing `intel-llm-api-key` secret |
-| `serviceaccount.yaml` | `vault-litellm-reader` — the identity OpenBao's `kubernetes-labops` auth role trusts for reading the master key |
-| `secretstore.yaml` | `SecretStore` named `openbao-litellm`, pointing at `https://keeper.goodmanners.services` (OpenBao), authenticating via Kubernetes auth as `vault-litellm-reader` |
+| `model-bonsai.yaml` | `LiteLLMModel` pointing at a bare-metal endpoint (`10.2.30.217:8080`) |
+| `team.yaml` | `LiteLLMTeam` `scum` — shared team the virtual keys below belong to |
+| `virtualkeys.yaml` | One `LiteLLMVirtualKey` per member of `scum` (dan, james, tyler) |
+| `ui-credentials.yaml` | `ExternalSecret` that materializes the admin UI's `UI_PASSWORD` from OpenBao through the cluster-wide store |
+| `db/` | `database`-namespace resources: the OpenBao-backed `ExternalSecret` for the `litellm` Postgres role and the native CNPG `Database` resource. The generated Secret is reflected into `aiml` for the proxy |
 | `externalsecret.yaml` | `ExternalSecret` that materializes `LITELLM_MASTER_KEY` for the router as the `litellm-master-key` Secret, synced hourly from OpenBao |
 | `servicemonitor.yaml` | Scrapes the router's `/metrics` (enabled via `spec.callbacks`) for the existing `monitoring` (kube-prometheus-stack) install |
 
-Runs in `applyMode: file` (the CRD default) — no Postgres/Redis dependency,
-config renders into a ConfigMap and the proxy rolls on change. Good enough for
-a small number of static backends; if per-app virtual keys or a live admin UI
-become worth it later, switch to `applyMode: api` (needs a Postgres-backed
-proxy, see `cnpg`/`database`) and add `LiteLLMVirtualKey` resources.
+Runs `applyMode: api`: models still get declared as `LiteLLMModel` resources
+here and rendered by the operator, but they (and virtual keys/teams) push to
+the proxy's DB-backed admin API live instead of a ConfigMap render + restart.
+This is what makes the admin UI and `LiteLLMVirtualKey`/`LiteLLMTeam` work —
+both need the proxy running against Postgres.
+
+## Database
+
+The proxy's Postgres database lives on the shared cluster (`db-rw.database.svc.cluster.local`,
+owned by `../../core/database/`), not a dedicated one — same pattern as
+`open-webui`/`artifact-keeper`/`forgejo`/`keycloak`. Unlike those, though, the
+`litellm` role and database are provisioned declaratively via CNPG's own CRDs
+instead of a `postgres-init` Job:
+
+- `../../core/database/database.yaml` — `spec.managed.roles` on the shared
+  `db` Cluster declares the `litellm` login role, pointing at a
+  `passwordSecret` named `litellm-db-credentials` (must live in `database`,
+  alongside the Cluster).
+- `db/externalsecret.yaml` — materializes the OpenBao value at
+  `homelab-dan/secret/dan/aiml/litellm-db-credentials` as a CNPG-compatible
+  basic-auth Secret. Reflection annotations mirror it into `aiml`, where
+  `proxy.yaml` uses it to compose `DATABASE_URL`.
+- `db/database.yaml` — a CNPG `Database` CR that creates the `litellm`
+  database itself, owned by that role.
+
+## Admin UI
+
+Setting `DATABASE_URL` turns on litellm's built-in admin UI automatically, at
+`https://llm.cloud.danmanners.com/ui`. It gets its own login instead of
+falling back to the master key: username `admin` (literal, in `proxy.yaml`),
+password from `litellm-ui-credentials` — sourced from OpenBao (see Secret
+source: OpenBao below), same as the master key. Fetch it with:
+
+```bash
+kubectl get secret litellm-ui-credentials -n aiml \
+  -o jsonpath='{.data.password}' | base64 -d
+```
+
+## Teams & virtual keys
+
+`team.yaml` defines a `scum` team (`tyler` as admin; `dan`/`james` as
+members) and `virtualkeys.yaml` mints one `LiteLLMVirtualKey` per member,
+scoped to that team. Each key lands in its own Secret
+(`llm-router-key-<name>`, key `key`) minted live through the proxy's admin
+API — that's why this only works under `applyMode: api`. Fetch a key with:
+
+```bash
+kubectl get secret llm-router-key-dan -n aiml \
+  -o jsonpath='{.data.key}' | base64 -d
+```
+
+Add a new person by appending to both `spec.members` in `team.yaml` and a new
+`LiteLLMVirtualKey` block in `virtualkeys.yaml` (`userID` matching the member,
+`teamID: scum`). Neither key currently sets `maxBudget`/`tpmLimit`/`rpmLimit`
+— add those per-key or at the team level if spend needs capping.
 
 ## Secret source: OpenBao
 
-`LITELLM_MASTER_KEY` lives in the OpenBao instance at
-`https://keeper.goodmanners.services` (managed in
-`~/src/hcloud-security-cluster/bao/`), not in git — no sealed secret here.
-`secretstore.yaml` authenticates to it as the `vault-litellm-reader`
-ServiceAccount via a Kubernetes auth mount (`kubernetes-labops`) that trusts
-this cluster's TokenReview API; see
-`~/src/hcloud-security-cluster/bao/setup-kubernetes-auth.sh` for how that
-trust and the read-only `eso-labops-litellm` policy are bootstrapped. The
-Vault role behind it (`eso-litellm`) only grants read on this one secret
-path — if more secrets migrate off sealed-secrets later, they'll each get
-their own scoped `SecretStore`/role rather than widening this one.
+The master key, UI password, and database credentials live in the
+`homelab-dan` OpenBao namespace below `secret/dan/aiml/`. The shared
+`openbao-labops` `ClusterSecretStore` authenticates as the External Secrets
+controller through the `kubernetes-labops` mount and `labops-eso` role.
 
-To set or rotate the key (needs a Vault root/admin token, run from a machine
-with `bao` configured against `keeper.goodmanners.services`):
+To rotate the UI password:
 
 ```bash
-bao kv put secret/labops/aiml/litellm-master-key \
+BAO_NAMESPACE=homelab-dan bao kv put secret/dan/aiml/litellm-ui-credentials \
+  password="$(openssl rand -base64 24)"
+```
+
+To rotate the master key the same way (unrelated to the above, already
+existed before this change):
+
+```bash
+BAO_NAMESPACE=homelab-dan bao kv put secret/dan/aiml/litellm-master-key \
   master-key="sk-$(openssl rand -hex 32)"
 ```
 
-`externalsecret.yaml` picks up the change within its `refreshInterval` (1h);
-force an immediate resync with:
+The ExternalSecrets pick up changes within one hour. Force an immediate resync
+with:
 
 ```bash
 kubectl annotate externalsecret litellm-master-key -n aiml \
+  force-sync=$(date +%s) --overwrite
+kubectl annotate externalsecret litellm-ui-credentials -n aiml \
+  force-sync=$(date +%s) --overwrite
+kubectl annotate externalsecret litellm-db-credentials -n database \
   force-sync=$(date +%s) --overwrite
 ```
 
@@ -94,6 +154,9 @@ Clients send:
 ```http
 Authorization: Bearer <LITELLM_MASTER_KEY>
 ```
+
+A per-user virtual key (see Teams & virtual keys) works the same way and is
+scoped to `scum`'s models/budget instead of having full admin access.
 
 ### Smoke test
 

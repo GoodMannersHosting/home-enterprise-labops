@@ -13,6 +13,16 @@ spec:
   superuserSecret:
     name: database-superuser
   enableSuperuserAccess: true
+  managed:
+    roles:
+      - name: litellm
+        ensure: present
+        login: true
+        # Secret lives in this namespace, produced by
+        # ../../services/llm-router/db/externalsecret.yaml (sourced from
+        # OpenBao) and reflected into aiml for the proxy.
+        passwordSecret:
+          name: litellm-db-credentials
   postgresql:
     parameters:
       max_connections: "600"
@@ -36,4 +46,3 @@ spec:
                 operator: In
                 values:
                   - "amd64"
-
