@@ -51,17 +51,21 @@ controllers:
           # Single slot: full context per request, no batch contention
           - --parallel
           - "1"
+          - --fit
+          - "on"
+          - --fit-ctx
+          - "16384"
           - --ctx-size
-          - "98304"
+          - "262144"
           - --kv-unified
           - --cont-batching
 
-          # KV cache: full f16. The VRAM freed by Q4 weights is best spent here,
-          # since quantized KV compounds with already-quantized weights.
+          # q8_0 KV cache for 262k context. f16 would require ~128GB at this size;
+          # q8_0 fits in ~40GB with negligible quality loss.
           - --cache-type-k
-          - f16
+          - q8_0
           - --cache-type-v
-          - f16
+          - q8_0
 
           # Prompt processing
           - --batch-size
@@ -170,7 +174,7 @@ controllers:
         resources:
           limits:
             nvidia.com/gpu: "1"
-            memory: 48Gi
+            memory: 64Gi
           requests:
             nvidia.com/gpu: "1"
             memory: 48Gi
