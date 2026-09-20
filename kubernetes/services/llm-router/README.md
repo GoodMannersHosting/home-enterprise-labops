@@ -70,11 +70,13 @@ instead of a `postgres-init` Job:
 
 Setting `DATABASE_URL` turns on litellm's built-in admin UI automatically, at
 `https://llm.cloud.danmanners.com/ui`. It gets its own login instead of
-falling back to the master key: username `admin` (literal, in `proxy.yaml`),
-password from `litellm-ui-credentials` — sourced from OpenBao (see Secret
-source: OpenBao below), same as the master key. Fetch it with:
+falling back to the master key: both username and password come from
+`litellm-ui-credentials` — sourced from OpenBao (see Secret source: OpenBao
+below). Fetch the credentials with:
 
 ```bash
+kubectl get secret litellm-ui-credentials -n aiml \
+  -o jsonpath='{.data.username}' | base64 -d
 kubectl get secret litellm-ui-credentials -n aiml \
   -o jsonpath='{.data.password}' | base64 -d
 ```
@@ -97,10 +99,39 @@ Add a new person by appending to both `spec.members` in `team.yaml` and a new
 `teamID: scum`). Neither key currently sets `maxBudget`/`tpmLimit`/`rpmLimit`
 — add those per-key or at the team level if spend needs capping.
 
+## Admin UI SSO (Authentik)
+
+The admin UI uses SSO via Authentik as a Generic OIDC provider with PKCE
+enabled for secure authorization. The proxy is configured with:
+
+- `GENERIC_CLIENT_ID` / `GENERIC_CLIENT_SECRET` — from `litellm-sso-credentials`
+  secret (sourced from OpenBao)
+- `GENERIC_AUTHORIZATION_ENDPOINT` — `https://auth.goodmanners.services/application/o/llm-router/authorization/`
+- `GENERIC_TOKEN_ENDPOINT` — `https://auth.goodmanners.services/application/o/llm-router/token/`
+- `GENERIC_USERINFO_ENDPOINT` — `https://auth.goodmanners.services/application/o/llm-router/userinfo/`
+- `PROXY_BASE_URL` — `https://llm.cloud.danmanners.com`
+
+Users click the SSO login button on the UI and are redirected to Authentik.
+
+**First login:** After a user logs in via SSO for the first time, copy their
+user ID from the UI (Internal Users page) and set it in OpenBao to make them
+a proxy admin:
+
+```bash
+BAO_NAMESPACE=homelab-dan bao kv put secret/dan/aiml/litellm-proxy-admin \
+  proxy-admin-id="<user-id-from-ui>"
+```
+
+Then add the environment variable to `proxy.yaml` and redeploy. This gives the
+user full admin access to see all keys and spend.
+
+**Fallback login:** Username/password login is still available at
+`https://llm.cloud.danmanners.com/fallback/login`.
+
 ## Secret source: OpenBao
 
-The master key, UI password, and database credentials live in the
-`homelab-dan` OpenBao namespace below `secret/dan/aiml/`. The shared
+The master key, UI password, SSO credentials, and database credentials live in
+the `homelab-dan` OpenBao namespace below `secret/dan/aiml/`. The shared
 `openbao-labops` `ClusterSecretStore` authenticates as the External Secrets
 controller through the `kubernetes-labops` mount and `labops-eso` role.
 
@@ -111,8 +142,15 @@ BAO_NAMESPACE=homelab-dan bao kv put secret/dan/aiml/litellm-ui-credentials \
   password="$(openssl rand -base64 24)"
 ```
 
-To rotate the master key the same way (unrelated to the above, already
-existed before this change):
+To rotate the SSO client secret:
+
+```bash
+# Update the client secret in Authentik first, then in OpenBao
+BAO_NAMESPACE=homelab-dan bao kv put secret/dan/aiml/litellm-sso-credentials \
+  client-secret="$(openssl rand -hex 32)"
+```
+
+To rotate the master key:
 
 ```bash
 BAO_NAMESPACE=homelab-dan bao kv put secret/dan/aiml/litellm-master-key \
@@ -126,6 +164,8 @@ with:
 kubectl annotate externalsecret litellm-master-key -n aiml \
   force-sync=$(date +%s) --overwrite
 kubectl annotate externalsecret litellm-ui-credentials -n aiml \
+  force-sync=$(date +%s) --overwrite
+kubectl annotate externalsecret litellm-sso-credentials -n aiml \
   force-sync=$(date +%s) --overwrite
 kubectl annotate externalsecret litellm-db-credentials -n database \
   force-sync=$(date +%s) --overwrite
