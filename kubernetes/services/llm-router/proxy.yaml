@@ -96,6 +96,8 @@ spec:
       value: https://auth.goodmanners.services/application/o/llm-router/logout/
     - name: GENERIC_CLIENT_USE_PKCE
       value: "true"
+    - name: UI_DEFAULT_LOGIN
+      value: sso
   route:
     hostnames:
       - llm.cloud.danmanners.com
