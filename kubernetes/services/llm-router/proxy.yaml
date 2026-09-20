@@ -97,6 +97,8 @@ spec:
     - name: UI_DEFAULT_LOGIN
       value: sso
     # OIDC group-to-role mapping
+    - name: GENERIC_CLIENT_USE_PKCE
+      value: "false"
     - name: OIDC_GROUP_CLAIM
       value: groups
     - name: OIDC_GROUP_TO_ROLE_MAP
