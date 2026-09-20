@@ -99,7 +99,7 @@ spec:
     # OIDC group-to-role mapping
     # Redis for PKCE verifier storage (shared with open-webui, no auth)
     - name: REDIS_HOST
-      value: ollama-open-webui-redis.aiml.svc.cluster.local
+      value: llm-router-valkey.aiml.svc.cluster.local
     - name: REDIS_PORT
       value: "6379"
     - name: OIDC_GROUP_CLAIM
