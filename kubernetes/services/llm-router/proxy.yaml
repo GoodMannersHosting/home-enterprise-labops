@@ -64,12 +64,38 @@ spec:
     # Enabling DATABASE_URL turns on the admin UI at /ui automatically; these
     # give it its own login instead of falling back to admin/<master key>.
     - name: UI_USERNAME
-      value: admin
+      valueFrom:
+        secretKeyRef:
+          name: litellm-ui-credentials
+          key: username
     - name: UI_PASSWORD
       valueFrom:
         secretKeyRef:
           name: litellm-ui-credentials
           key: password
+    # SSO via Authentik (Generic OIDC provider)
+    - name: GENERIC_CLIENT_ID
+      valueFrom:
+        secretKeyRef:
+          name: litellm-sso-credentials
+          key: client-id
+    - name: GENERIC_CLIENT_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: litellm-sso-credentials
+          key: client-secret
+    - name: GENERIC_AUTHORIZATION_ENDPOINT
+      value: https://auth.goodmanners.services/application/o/llm-router/authorization/
+    - name: GENERIC_TOKEN_ENDPOINT
+      value: https://auth.goodmanners.services/application/o/llm-router/token/
+    - name: GENERIC_USERINFO_ENDPOINT
+      value: https://auth.goodmanners.services/application/o/llm-router/userinfo/
+    - name: PROXY_BASE_URL
+      value: https://llm.cloud.danmanners.com
+    - name: PROXY_LOGOUT_URL
+      value: https://auth.goodmanners.services/application/o/llm-router/logout/
+    - name: GENERIC_CLIENT_USE_PKCE
+      value: "true"
   route:
     hostnames:
       - llm.cloud.danmanners.com
