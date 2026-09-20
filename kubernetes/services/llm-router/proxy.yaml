@@ -97,8 +97,11 @@ spec:
     - name: UI_DEFAULT_LOGIN
       value: sso
     # OIDC group-to-role mapping
-    - name: GENERIC_CLIENT_USE_PKCE
-      value: "false"
+    # Redis for PKCE verifier storage (shared with open-webui, no auth)
+    - name: REDIS_HOST
+      value: ollama-open-webui-redis.aiml.svc.cluster.local
+    - name: REDIS_PORT
+      value: "6379"
     - name: OIDC_GROUP_CLAIM
       value: groups
     - name: OIDC_GROUP_TO_ROLE_MAP
