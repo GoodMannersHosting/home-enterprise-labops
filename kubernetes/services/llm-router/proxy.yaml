@@ -96,6 +96,11 @@ spec:
       value: https://auth.goodmanners.services/application/o/llm-router/logout/
     - name: UI_DEFAULT_LOGIN
       value: sso
+    # OIDC group-to-role mapping
+    - name: OIDC_GROUP_CLAIM
+      value: groups
+    - name: OIDC_GROUP_TO_ROLE_MAP
+      value: '{"llm-admin":"proxy_admin","llm-user":"internal_user_viewer"}'
   route:
     hostnames:
       - llm.cloud.danmanners.com
