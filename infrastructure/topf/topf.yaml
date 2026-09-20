@@ -1,6 +1,6 @@
 clusterName: helo
 clusterEndpoint: "https://k8s.homelab.danmanners.com:6443"
-kubernetesVersion: 1.36.1
+kubernetesVersion: 1.37.0
 talosVersion: 1.14.1
 patchesDir: .
 secretsPath: secrets.yaml

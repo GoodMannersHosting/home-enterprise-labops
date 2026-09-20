@@ -1,0 +1,4 @@
+apiVersion: v1alpha1
+kind: KubeAPIServerConfig
+certExtraSANs:
+  - 172.21.0.10

@@ -1,6 +1,11 @@
-machine:
-  network:
-    disableSearchDomain: true
-    nameservers:
-      - 10.3.0.1
-      - 172.21.0.1
+apiVersion: v1alpha1
+kind: ResolverConfig
+nameservers:
+  - address: 10.3.0.1
+  - address: 172.21.0.1
+searchDomains:
+  disableDefault: true
+hostDNS:
+  enabled: true
+  resolveMemberNames: false
+  forwardKubeDNSToHost: false

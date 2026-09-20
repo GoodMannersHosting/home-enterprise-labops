@@ -1,3 +1,4 @@
-machine:
-  install:
-    wipe: true
+apiVersion: v1alpha1
+kind: UnattendedInstallConfig
+provisioning:
+  wipe: true

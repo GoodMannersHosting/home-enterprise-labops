@@ -1,15 +1,10 @@
-cluster:
-  allowSchedulingOnControlPlanes: true
-  network:
-    cni:
-      name: none
-    podSubnets:
-      - 10.244.0.0/16
-    serviceSubnets:
-      - 10.96.0.0/12
-  apiServer:
-    certSANs:
-      - 172.21.0.10
 machine:
   certSANs:
     - 172.21.0.10
+---
+apiVersion: v1alpha1
+kind: KubeNetworkConfig
+podSubnets:
+  - 10.244.0.0/16
+serviceSubnets:
+  - 10.96.0.0/12
