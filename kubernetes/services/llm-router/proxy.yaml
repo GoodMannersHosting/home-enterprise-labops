@@ -27,6 +27,17 @@ spec:
       memory: 512Mi
     limits:
       memory: 1Gi
+  # Prisma's first database migration can take longer than the operator's
+  # default 60-second liveness window. Keep readiness strict while allowing
+  # enough time for one-time schema initialization.
+  livenessProbe:
+    httpGet:
+      path: /health/liveliness
+      port: 4000
+    initialDelaySeconds: 180
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
   securityContext:
     allowPrivilegeEscalation: false
     capabilities:
