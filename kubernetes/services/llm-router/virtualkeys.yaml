@@ -8,7 +8,7 @@ spec:
   proxyRef: router
   secretName: llm-router-key-dan
   keyAlias: dan
-  userID: dan
+  userID: danmanners
   teamID: scum
 ---
 apiVersion: litellm.home-operations.com/v1alpha1
