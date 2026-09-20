@@ -1,9 +1,21 @@
-cluster:
-  apiServer:
-    extraArgs:
-      oidc-issuer-url: https://keycloak.cloud.danmanners.com/realms/gmh
-      oidc-client-id: helo-k8s
-      oidc-username-claim: preferred_username
-      oidc-username-prefix: "oidc:/"
-      oidc-groups-claim: groups
-      oidc-groups-prefix: "oidc:/"
+apiVersion: v1alpha1
+kind: KubeAuthenticationConfig
+configuration:
+  anonymous:
+    enabled: true
+    conditions:
+      - path: /livez
+      - path: /readyz
+      - path: /healthz
+  jwt:
+    - issuer:
+        url: https://keycloak.cloud.danmanners.com/realms/gmh
+        audiences:
+          - helo-k8s
+      claimMappings:
+        username:
+          claim: preferred_username
+          prefix: "oidc:/"
+        groups:
+          claim: groups
+          prefix: "oidc:/"

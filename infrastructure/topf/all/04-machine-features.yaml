@@ -2,10 +2,7 @@ machine:
   features:
     diskQuotaSupport: true
     rbac: true
-    kubePrism:
-      enabled: true
-      port: 7445
-    hostDNS:
-      enabled: true
-      resolveMemberNames: false
-      forwardKubeDNSToHost: false
+---
+apiVersion: v1alpha1
+kind: KubePrismConfig
+port: 7445

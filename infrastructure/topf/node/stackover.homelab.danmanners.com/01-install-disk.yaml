@@ -1,4 +1,5 @@
-machine:
-  install:
-    diskSelector:
-      wwid: naa.57c35481fb0e1110
+apiVersion: v1alpha1
+kind: UnattendedInstallConfig
+provisioning:
+  diskSelector:
+    match: disk.wwid == "naa.57c35481fb0e1110"
