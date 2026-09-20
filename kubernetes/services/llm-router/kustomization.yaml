@@ -9,6 +9,7 @@ resources:
   - externalsecret.yaml
   - db # database-namespace: CNPG Database CR + reflected role credentials
   - ui-credentials.yaml
+  - sso-credentials.yaml
   - proxy.yaml
   - model-nvidia.yaml
   - model-intel.yaml
