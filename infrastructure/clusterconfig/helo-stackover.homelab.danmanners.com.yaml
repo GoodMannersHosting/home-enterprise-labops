@@ -1,0 +1,151 @@
+version: v1alpha1
+debug: false
+persist: true
+machine:
+  type: worker
+  token: 2fii30.jrhccueq2si0hi22
+  ca:
+    crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJQakNCOGFBREFnRUNBaEIrQlBBRDdLL3pveGxSaVBIV2tDbTBNQVVHQXl0bGNEQVFNUTR3REFZRFZRUUsKRXdWMFlXeHZjekFlRncweU5UQTBNVE15TURVeE1UbGFGdzB6TlRBME1URXlNRFV4TVRsYU1CQXhEakFNQmdOVgpCQW9UQlhSaGJHOXpNQ293QlFZREsyVndBeUVBZTRQMExQNjE1eTd6UDU5SFI1Ym9zcERXZjFuNmYyVVpBV1k1CkxxTjR0bk9qWVRCZk1BNEdBMVVkRHdFQi93UUVBd0lDaERBZEJnTlZIU1VFRmpBVUJnZ3JCZ0VGQlFjREFRWUkKS3dZQkJRVUhBd0l3RHdZRFZSMFRBUUgvQkFVd0F3RUIvekFkQmdOVkhRNEVGZ1FVdCs0b1RmazVaZ0hkUnF5LwpINXNqM01wc2s4UXdCUVlESzJWd0EwRUFjSzNmTm9NeHNHVWg0ZDhUci90WEpYMWpmd2xkQmFIRlBCbTFCSmZkCk5Kc09ZQTVhWFBDUW1xbk9DOUtya2hpcmgxZnkxRmZvc0J2NE4vUDRtWnl3QWc9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+    key: ""
+  certSANs:
+    - 172.21.0.10
+  kubelet:
+    image: ghcr.io/siderolabs/kubelet:v1.36.1
+    defaultRuntimeSeccompProfileEnabled: true
+    nodeIP:
+      validSubnets:
+        - 172.21.0.0/20
+    disableManifestsDirectory: true
+  network:
+    extraHostEntries:
+      - ip: 172.31.0.10
+        aliases:
+          - harbor.cloud.danmanners.com
+          - ollama.cloud.danmanners.com
+          - n8n.cloud.danmanners.com
+          - keycloak.cloud.danmanners.com
+  install:
+    diskSelector:
+      wwid: naa.57c35481fb0e1110
+    image: factory.talos.dev/metal-installer/fcfddeea3f30715ffa8cf9f7b23882b8ce7f0ea0baadbd1fdb56a4278ba1529b:v1.13.2
+    wipe: true
+    grubUseUKICmdline: true
+  time:
+    servers:
+      - time.cloudflare.com
+  sysctls:
+    fs.file-max: "131072"
+    fs.inotify.max_user_instances: "8192"
+    fs.inotify.max_user_watches: "1048576"
+    net.core.bpf_jit_harden: "1"
+    net.core.default_qdisc: fq
+    net.core.rmem_max: "67108864"
+    net.core.wmem_max: "67108864"
+    net.ipv4.neigh.default.gc_thresh1: "4096"
+    net.ipv4.neigh.default.gc_thresh2: "8192"
+    net.ipv4.neigh.default.gc_thresh3: "16384"
+    net.ipv4.tcp_congestion_control: bbr
+    net.ipv4.tcp_fastopen: "3"
+    net.ipv4.tcp_mtu_probing: "1"
+    net.ipv4.tcp_rmem: 4096 87380 33554432
+    net.ipv4.tcp_window_scaling: "1"
+    net.ipv4.tcp_wmem: 4096 65536 33554432
+    sunrpc.tcp_max_slot_table_entries: "128"
+    sunrpc.tcp_slot_table_entries: "128"
+    user.max_user_namespaces: "11255"
+    vm.max_map_count: "524288"
+    vm.nr_hugepages: "1024"
+  features:
+    rbac: true
+    diskQuotaSupport: true
+    kubePrism:
+      enabled: true
+      port: 7445
+    hostDNS:
+      enabled: true
+      forwardKubeDNSToHost: false
+      resolveMemberNames: false
+cluster:
+  id: 0pJqKzPEDtv84kbTxPbgMncEu6pEvwgxhJtAz4tWqEM=
+  secret: 5+/m0OSeekQVU2bQs01ViPSsCTPKMCXDjlNofnEhmu8=
+  controlPlane:
+    endpoint: https://k8s.homelab.danmanners.com:6443
+  clusterName: helo
+  network:
+    cni:
+      name: none
+    dnsDomain: cluster.local
+    podSubnets:
+      - 10.244.0.0/16
+    serviceSubnets:
+      - 10.96.0.0/12
+  token: bvtnvc.py21a6bsgun16mpa
+  ca:
+    crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJpekNDQVRDZ0F3SUJBZ0lSQUo0d2hUcG5qYnl6eHBtWllnSitYdFF3Q2dZSUtvWkl6ajBFQXdJd0ZURVQKTUJFR0ExVUVDaE1LYTNWaVpYSnVaWFJsY3pBZUZ3MHlOVEEwTVRNeU1EVXhNVGhhRncwek5UQTBNVEV5TURVeApNVGhhTUJVeEV6QVJCZ05WQkFvVENtdDFZbVZ5Ym1WMFpYTXdXVEFUQmdjcWhrak9QUUlCQmdncWhrak9QUU1CCkJ3TkNBQVFlR3hJbUtjakl2ZHlLUHZEMXBwQThlelpFaTgzY3RFTTRkUDFRZkFmWW9wR25TTy9mclNIU1d2NTkKanlmSUFhQ1JoUk5PRUorM0g0UkdJN2RJbDYyRW8yRXdYekFPQmdOVkhROEJBZjhFQkFNQ0FvUXdIUVlEVlIwbApCQll3RkFZSUt3WUJCUVVIQXdFR0NDc0dBUVVGQndNQ01BOEdBMVVkRXdFQi93UUZNQU1CQWY4d0hRWURWUjBPCkJCWUVGQ2FwSjgvbzZKRXp4MlBnQ01YL0ZYS2ZKeVkzTUFvR0NDcUdTTTQ5QkFNQ0Ewa0FNRVlDSVFEL2ZEQ1AKSzhpL2JXVGV4dUFvRVF4YTlDOHZMVkgwVHFKTStRUjlObHlFT0FJaEFMTWpHR256RHZZc0ZnRndkc05XM3pmKwo2dm9CNEk2MkEvRDBEOTF4WFhlcQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+    key: ""
+  proxy:
+    disabled: true
+  discovery:
+    enabled: true
+    registries:
+      kubernetes:
+        disabled: true
+      service: {}
+---
+apiVersion: v1alpha1
+kind: HostnameConfig
+auto: 'off'
+hostname: stackover.homelab.danmanners.com
+---
+apiVersion: v1alpha1
+kind: ResolverConfig
+nameservers:
+  - address: 10.3.0.1
+  - address: 172.21.0.1
+searchDomains:
+  disableDefault: true
+---
+apiVersion: v1alpha1
+kind: LinkAliasConfig
+name: ethSel0
+selector:
+  match: glob("e4:3a:6e:59:d4:45", mac(link.hardware_addr))
+---
+apiVersion: v1alpha1
+kind: LinkAliasConfig
+name: ethSel1
+selector:
+  match: glob("e4:3a:6e:59:d4:46", mac(link.hardware_addr))
+---
+apiVersion: v1alpha1
+kind: LinkAliasConfig
+name: ethSel2
+selector:
+  match: glob("e4:3a:6e:59:d4:47", mac(link.hardware_addr))
+---
+apiVersion: v1alpha1
+kind: LinkAliasConfig
+name: ethSel3
+selector:
+  match: glob("e4:3a:6e:59:d4:48", mac(link.hardware_addr))
+---
+apiVersion: v1alpha1
+kind: LinkAliasConfig
+name: ethSel4
+selector:
+  match: glob("e4:3a:6e:59:d4:49", mac(link.hardware_addr))
+---
+apiVersion: v1alpha1
+kind: LinkAliasConfig
+name: ethSel5
+selector:
+  match: glob("e4:3a:6e:59:d4:4a", mac(link.hardware_addr))
+---
+apiVersion: v1alpha1
+kind: LinkConfig
+name: ethSel0
+mtu: 9000
+addresses:
+  - address: 172.21.0.13/20
+routes:
+  - gateway: 172.21.0.1

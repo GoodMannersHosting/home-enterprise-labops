@@ -6,7 +6,12 @@ metadata:
   namespace: aiml
 spec:
   proxyRef: router
+  teamID: scum
   alias: scum
+  models:
+    - bonsai-llama
+    - intel-llama
+    - nvidia-llama
   members:
     - userID: dan
       role: user

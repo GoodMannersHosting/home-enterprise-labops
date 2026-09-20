@@ -5,7 +5,7 @@ metadata:
   name: bonsai-llama
   namespace: aiml
 spec:
-  modelName: intel-llama
+  modelName: bonsai-llama
   params:
     model: openai/ternary-bonsai-2-27B
     apiBase: http://10.2.30.217:8080/v1
