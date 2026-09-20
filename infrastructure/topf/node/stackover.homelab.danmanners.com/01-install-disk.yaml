@@ -1,0 +1,4 @@
+machine:
+  install:
+    diskSelector:
+      wwid: naa.57c35481fb0e1110

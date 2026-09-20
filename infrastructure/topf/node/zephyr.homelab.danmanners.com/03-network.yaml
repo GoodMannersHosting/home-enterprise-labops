@@ -1,0 +1,27 @@
+machine:
+  network:
+    interfaces:
+      - deviceSelector:
+          hardwareAddr: "e4:3a:6e:5b:a9:b9"
+        dhcp: false
+        mtu: 9000
+        addresses:
+          - 172.21.0.14/20
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 172.21.0.1
+      - deviceSelector:
+          hardwareAddr: "e4:3a:6e:5b:a9:ba"
+        dhcp: false
+      - deviceSelector:
+          hardwareAddr: "e4:3a:6e:5b:a9:bb"
+        dhcp: false
+      - deviceSelector:
+          hardwareAddr: "e4:3a:6e:5b:a9:bc"
+        dhcp: false
+      - deviceSelector:
+          hardwareAddr: "e4:3a:6e:5b:a9:bd"
+        dhcp: false
+      - deviceSelector:
+          hardwareAddr: "e4:3a:6e:5b:a9:be"
+        dhcp: false

@@ -1,0 +1,14 @@
+machine:
+  kernel:
+    modules:
+      # During Installation the kernel modules MUST NOT be loaded and
+      # the below SHOULD BE COMMENTED OUT. Once the system is installed,
+      # the kernel modules should be uncommented, the config re-generated,
+      # and the system rebooted. This is to avoid issues where the NVIDIA
+      # kernel modules cannot be loaded during the installation process,
+      # which makes sure the Talos installer fail.
+      - name: nvidia
+      - name: nvidia_uvm
+      - name: nvidia_drm
+      - name: nvidia_modeset
+      - name: rbd
