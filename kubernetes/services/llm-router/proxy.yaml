@@ -24,9 +24,9 @@ spec:
   resources:
     requests:
       cpu: 100m
-      memory: 512Mi
-    limits:
       memory: 1Gi
+    limits:
+      memory: 2Gi
   # Prisma's first database migration can take longer than the operator's
   # default 60-second liveness window. Keep readiness strict while allowing
   # enough time for one-time schema initialization.
