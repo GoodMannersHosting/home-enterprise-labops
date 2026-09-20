@@ -9,7 +9,7 @@ configuration:
       - path: /healthz
   jwt:
     - issuer:
-        url: https://keycloak.cloud.danmanners.com/realms/gmh
+        url: https://auth.goodmanners.services/application/o/kubernetes-helo/
         audiences:
           - helo-k8s
       claimMappings:

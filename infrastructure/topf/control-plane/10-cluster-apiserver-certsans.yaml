@@ -2,3 +2,4 @@ apiVersion: v1alpha1
 kind: KubeAPIServerConfig
 certExtraSANs:
   - 172.21.0.10
+serviceAccountJwksUri: https://k8s.homelab.danmanners.com:6443/openid/v1/jwks
