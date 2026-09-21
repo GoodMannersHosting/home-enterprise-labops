@@ -5,7 +5,7 @@ metadata:
   name: intel-llama
   namespace: aiml
 spec:
-  modelName: intel-llama
+  modelName: openai/intel-gemma4-26b-a4b
   params:
     model: openai/intel-gemma4-26b-a4b
     apiBase: http://intel-vllm-core.aiml.svc.cluster.local:8080/v1
