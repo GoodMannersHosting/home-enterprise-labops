@@ -5,12 +5,15 @@ metadata:
   name: intel-llama
   namespace: aiml
 spec:
-  modelName: openai/intel-gemma4-26b-a4b
+  modelName: intel-llama
   params:
     model: openai/intel-gemma4-26b-a4b
     apiBase: http://intel-vllm-core.aiml.svc.cluster.local:8080/v1
     apiKeyRef:
       name: intel-llm-api-key
       key: api-key
+    additional:
+      input_cost_per_token: 0.00000249
+      output_cost_per_token: 0.00000249
   info:
     maxInputTokens: 204800
