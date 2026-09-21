@@ -1,23 +1,37 @@
 ---
-# Valkey Cluster managed by valkey-operator (valkey-io/valkey-operator).
-# 3 shards × 2 replicas (leader + follower) for HA across 3 availability zones.
+# Valkey Cluster managed by valkey-operator (valkey-io/valkey-operator),
+# backing the proxy's response cache, shared virtual-key auth cache, and OIDC
+# PKCE storage (see proxy.yaml's litellmSettings and REDIS_CLUSTER_NODES).
+#
+# shards: 1 is deliberate, not a placeholder. The operator only supports
+# Cluster-mode Valkey (no standalone/sentinel), and litellm's Redis client
+# issues some multi-key operations (pipelines, MSET/MGET-style batches) that
+# Valkey/Redis Cluster only allows when every key in the batch hashes to the
+# same slot. With more than one shard, that requires hash-tagging every key
+# litellm writes — which we don't control — so cross-slot errors are a real
+# risk. A single shard has every one of the 16384 slots on one primary, so
+# there is never a cross-slot case, at the cost of no horizontal write
+# scaling (not a real constraint for one team's response/auth cache).
+# `replicas: 1` still gives it a failover target.
+#
+# workloadType: Deployment (no persistence): everything stored here is a
+# cache (response cache, auth cache, OIDC PKCE state) or is fine to lose on
+# restart, so we skip PVCs entirely per the operator's own "cache-only"
+# guidance rather than pay for storage this data doesn't need.
 apiVersion: valkey.io/v1alpha1
 kind: ValkeyCluster
 metadata:
   name: llm-router
   namespace: aiml
 spec:
-  shards: 3
+  shards: 1
   replicas: 1
+  image: docker.io/valkey/valkey:9-alpine
+  workloadType: Deployment
   resources:
     requests:
-      cpu: 250m
-      memory: 512Mi
+      cpu: 100m
+      memory: 256Mi
     limits:
       cpu: "1"
-      memory: 2Gi
-  valkeyImage:
-    repository: docker.io/valkey/valkey
-    tag: "9-alpine"
-  storageClassName: "default"
-  volumeSize: 10Gi
+      memory: 1Gi

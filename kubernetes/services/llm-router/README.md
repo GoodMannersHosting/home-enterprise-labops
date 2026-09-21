@@ -26,6 +26,10 @@ The `database` Argo app syncs both `../../core/database/` and
 `../../services/database/`. This keeps the shared CNPG `Cluster`, its managed
 roles, and its snapshot policies under one GitOps application.
 
+The `valkey-operator` Argo app ([`../../applications/valkey-operator.yaml`](../../applications/valkey-operator.yaml))
+must be synced first — it installs the `ValkeyCluster` CRD `valkeycluster.yaml`
+depends on.
+
 ## What's here
 
 | File | Purpose |
@@ -33,12 +37,14 @@ roles, and its snapshot policies under one GitOps application.
 | `proxy.yaml` | `LiteLLMProxy` — owns the router's Deployment/Service/ConfigMap and its `HTTPRoute` (no `modelSelector`, so it adopts every `LiteLLMModel` in `aiml`); runs `applyMode: api` |
 | `model-nvidia.yaml` | `LiteLLMModel` pointing at `nvidia-vllm-core.aiml.svc.cluster.local:8080`, reusing the existing `nvidia-llm-api-key` secret |
 | `model-intel.yaml` | `LiteLLMModel` pointing at `intel-vllm-core.aiml.svc.cluster.local:8080`, reusing the existing `intel-llm-api-key` secret |
-| `model-bonsai.yaml` | `LiteLLMModel` pointing at a bare-metal endpoint (`10.2.30.217:8080`) |
+| `model-bonsai.yaml` | `LiteLLMModel` pointing at a bare-metal endpoint (`10.2.30.217:8080`), authenticated via `bonsai-llm-api-key` |
+| `externalsecret.bonsai.yaml` | `ExternalSecret` that materializes `bonsai-llm-api-key` from OpenBao |
 | `team.yaml` | `LiteLLMTeam` `scum` — shared team the virtual keys below belong to |
 | `virtualkeys.yaml` | One `LiteLLMVirtualKey` per member of `scum` (dan, james, tyler) |
 | `ui-credentials.yaml` | `ExternalSecret` that materializes the admin UI's `UI_PASSWORD` from OpenBao through the cluster-wide store |
 | `db/` | `database`-namespace resources: the OpenBao-backed `ExternalSecret` for the `litellm` Postgres role and the native CNPG `Database` resource. The generated Secret is reflected into `aiml` for the proxy |
 | `externalsecret.yaml` | `ExternalSecret` that materializes `LITELLM_MASTER_KEY` for the router as the `litellm-master-key` Secret, synced hourly from OpenBao |
+| `valkeycluster.yaml` | `ValkeyCluster` (valkey-operator) — single-shard, cache-only (no persistence) cluster backing the response cache, virtual-key auth cache, and OIDC PKCE storage below |
 | `servicemonitor.yaml` | Scrapes the router's `/metrics` (enabled via `spec.callbacks`) for the existing `monitoring` (kube-prometheus-stack) install |
 
 Runs `applyMode: api`: models still get declared as `LiteLLMModel` resources
@@ -65,6 +71,68 @@ instead of a `postgres-init` Job:
   `proxy.yaml` uses it to compose `DATABASE_URL`.
 - `db/database.yaml` — a CNPG `Database` CR that creates the `litellm`
   database itself, owned by that role.
+
+## Response & auth caching (Valkey)
+
+`valkeycluster.yaml` deploys a `ValkeyCluster` (via `valkey-operator`,
+installed by the `valkey-operator` Argo app) that replaced
+`ollama-open-webui-redis` as the Redis backend for everything litellm needs:
+OIDC PKCE storage, the exact-match response cache, and the shared virtual-key
+auth cache. It's dedicated to the router so cache traffic can't compete with
+or evict open-webui's unrelated Redis usage.
+
+**Why `shards: 1`:** valkey-operator only runs Cluster-mode Valkey (no
+standalone/sentinel), and litellm's Redis client issues multi-key operations
+(pipelines, batched MSET/MGET) that Cluster mode only permits when every key
+in the batch hashes to the same slot — something we don't control on
+litellm's side. A single shard puts all 16384 slots on one primary, so
+cross-slot errors can't happen; `replicas: 1` still gives it a failover
+target. `workloadType: Deployment` skips PVCs entirely: everything stored
+here is either a cache or fine to lose on restart (a pod restart just means a
+cold cache/re-login, not an outage), matching the operator's own guidance for
+cache-only clusters.
+
+**Wiring (`proxy.yaml`):** the operator's headless Service for a cluster
+named `llm-router` is `valkey-llm-router.aiml.svc.cluster.local:6379`
+(convention is `valkey-<clustername>`, not `<clustername>-valkey`). Because
+it's Cluster mode, litellm needs `REDIS_CLUSTER_NODES` rather than plain
+`REDIS_HOST`/`REDIS_PORT` — `litellm/_redis.py`'s `get_redis_client()`
+branches on `REDIS_CLUSTER_NODES` for *every* Redis use in the app (not just
+caching), so setting it once makes PKCE storage, the response cache, and the
+auth cache all cluster-aware. One seed node is enough; the client discovers
+the rest of the topology itself via `CLUSTER SLOTS`.
+
+`litellmSettings` then wires two independent features on top of that
+connection:
+
+- `cache: true` / `cache_params` — exact-match response caching. Identical
+  `/chat/completions` and `/embeddings` requests (same model, messages,
+  params) are served from Valkey instead of re-hitting the backend
+  `llama-server`. Keys live under the `litellm.cache` namespace with a 1h TTL
+  (`cache_params.ttl`). Verify it's live with:
+  ```bash
+  curl -s https://llm.cloud.danmanners.com/cache/ping \
+    -H "Authorization: Bearer $LITELLM_MASTER_KEY"
+  ```
+- `enable_redis_auth_cache: true` — mirrors virtual-key (token) auth
+  verification results into Valkey instead of each replica keeping its own
+  in-memory-only copy. This is what actually improves "cache-hits on
+  tokens": without it, every proxy pod/worker independently re-warms its key
+  cache against Postgres after every deploy or restart, and budget/rate-limit
+  lookups fall through to the DB more often. Tune
+  `general_settings.user_api_key_cache_ttl` (default 60s) if key changes need
+  to propagate faster, or `user_api_key_cache_max_size` if there are more
+  than ~200 active keys/teams/users per worker.
+
+Both are exact-match, hash-keyed caches — a single changed token/param in a
+request is a miss. Neither needs credentials: the cluster is ClusterIP-only
+within `aiml`.
+
+**Caveat:** valkey-operator's `v1alpha1` API is explicitly marked "not ready
+for production use" upstream. It's still the best fit here (no other
+operator speaks both Valkey and Kubernetes natively), but keep an eye on
+upstream API changes, and don't lean on it for anything beyond a
+rebuildable cache.
 
 ## Admin UI
 
