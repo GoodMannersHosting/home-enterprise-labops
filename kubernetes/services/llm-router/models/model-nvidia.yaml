@@ -5,7 +5,7 @@ metadata:
   name: nvidia-llama
   namespace: aiml
 spec:
-  modelName: nvidia-llama
+  modelName: openai/nvidia-qwen3.8-turbo
   params:
     model: openai/nvidia-qwen3.8-turbo
     apiBase: http://nvidia-vllm-core.aiml.svc.cluster.local:8080/v1

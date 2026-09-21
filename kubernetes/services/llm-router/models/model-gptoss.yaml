@@ -5,7 +5,7 @@ metadata:
   name: gptoss-llama
   namespace: aiml
 spec:
-  modelName: gptoss-llama
+  modelName: openai/gpt-oss-20b-f16
   params:
     model: openai/gpt-oss-20b-f16
     apiBase: http://10.3.0.27:8080/v1
