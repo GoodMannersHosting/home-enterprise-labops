@@ -7,7 +7,7 @@ metadata:
   name: llm-router
   namespace: aiml
 spec:
-  clusterSize: 3
+  shards: 3
   replicas: 1
   resources:
     requests:
