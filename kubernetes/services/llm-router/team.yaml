@@ -9,7 +9,7 @@ spec:
   teamID: scum
   alias: scum
   models:
-    - bonsai-llama
+    - gptoss-llama
     - intel-llama
     - nvidia-llama
   members:
