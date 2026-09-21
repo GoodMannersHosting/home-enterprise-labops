@@ -77,7 +77,7 @@ extraResources:
     metadata:
       name: ollama-extname
       annotations:
-        external-dns.kubernetes.io/hostname: ollama.cloud.danmanners.com
+        external-dns.kubernetes.io/hostname: ollama.cloud.danmanners.com,chat.goodmanners.services
         external-dns.kubernetes.io/ttl: "300"
     spec:
       type: ExternalName
