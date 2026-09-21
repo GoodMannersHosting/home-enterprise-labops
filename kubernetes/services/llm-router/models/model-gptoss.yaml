@@ -2,15 +2,15 @@
 apiVersion: litellm.home-operations.com/v1alpha1
 kind: LiteLLMModel
 metadata:
-  name: bonsai-llama
+  name: gptoss-llama
   namespace: aiml
 spec:
-  modelName: bonsai-llama
+  modelName: gptoss-llama
   params:
-    model: openai/ternary-bonsai-2-27B
+    model: openai/gpt-oss-20b-f16
     apiBase: http://10.3.0.27:8080/v1
     apiKeyRef:
-      name: bonsai-llm-api-key
+      name: gptoss-llm-api-key
       key: api-key
   info:
-    maxInputTokens: 262144
+    maxInputTokens: 131072
