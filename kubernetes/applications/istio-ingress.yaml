@@ -5,7 +5,7 @@ metadata:
   name: istio-ingress
   namespace: argocd
   labels:
-    chartVersion: &chartVersion 1.30.2
+    chartVersion: &chartVersion 1.30.5
 spec:
   destination:
     namespace: istio-system
