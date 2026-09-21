@@ -14,6 +14,7 @@ spec:
   dnsNames:
     # - "*.capi-core.homelab.danmanners.com"
     - "*.cloud.danmanners.com"
+    - "*.goodmanners.services"
   issuerRef:
     name: letsencrypt-dns01
     kind: ClusterIssuer
