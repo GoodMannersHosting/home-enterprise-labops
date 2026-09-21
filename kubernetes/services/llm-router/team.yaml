@@ -9,9 +9,9 @@ spec:
   teamID: scum
   alias: scum
   models:
-    - openai/gpt-oss-20b-f16
-    - openai/intel-gemma4-26b-a4b
-    - openai/nvidia-qwen3.8-turbo
+    - gptoss-llama
+    - intel-llama
+    - nvidia-llama
   members:
     - userID: dan
       role: user
