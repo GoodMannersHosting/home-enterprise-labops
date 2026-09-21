@@ -1,0 +1,41 @@
+provider:
+  name: aws
+env:
+- name: AWS_ACCESS_KEY_ID
+  valueFrom:
+    secretKeyRef:
+      name: route53-credentials
+      key: AWS_ACCESS_KEY_ID
+- name: AWS_SECRET_ACCESS_KEY
+  valueFrom:
+    secretKeyRef:
+      name: route53-credentials
+      key: AWS_SECRET_ACCESS_KEY
+- name: AWS_SESSION_TOKEN
+  valueFrom:
+    secretKeyRef:
+      name: route53-credentials
+      key: AWS_SESSION_TOKEN
+- name: AWS_DEFAULT_REGION
+  valueFrom:
+    secretKeyRef:
+      name: route53-credentials
+      key: AWS_DEFAULT_REGION
+extraArgs:
+- --aws-zone-type=public
+- --aws-use-ec2-metadata=false
+policy: sync
+interval: 30s
+logFormat: json
+logLevel: debug
+triggerLoopOnEvent: true
+sources:
+- service
+- gateway-httproute
+- gateway-tlsroute
+- gateway-tcproute
+- gateway-udproute
+txtOwnerId: capi-core
+txtPrefix: k8s.capi-core.
+domainFilters:
+- "goodmanners.services"
