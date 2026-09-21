@@ -1,65 +1,18 @@
 nameOverride: ""
 namespaceOverride: ""
 ollama:
-  name: "ollama"
   enabled: false
-  replicaCount: 0
-  fullnameOverride: ""
-  resources:
-    requests:
-      memory: "24Gi"
-      cpu: "4"
-      nvidia.com/gpu: "1"
-    limits:
-      memory: "48Gi"
-      cpu: "6"
-      nvidia.com/gpu: "1"
-  ollama:
-    gpu:
-      enabled: true
-      type: nvidia
-    models:
-      pull: []
-      run: []
-  image:
-    tag: "0.31.1"
-    pullPolicy: "Always"
-  extraEnv:
-    - name: "OLLAMA_NUM_PARALLEL"
-      value: "2"
-    - name: "OLLAMA_FLASH_ATTENTION"
-      value: "1"
-    - name: "OLLAMA_MAX_LOADED_MODELS"
-      value: "2"
-    # - name: "OLLAMA_KV_CACHE_TYPE"
-    #   value: "q8_0"
-  runtimeClassName: nvidia
-  persistentVolume:
-    enabled: true
-    size: 300Gi
-    storageClass: ceph-block-retain
-    accessModes:
-      - ReadWriteOnce
-  service:
-    annotations:
-      gatus.home-operations.com/enabled: "true"
-      gatus.home-operations.com/endpoint: |-
-        name: Ollama (Internal)
-        conditions:
-          - "[STATUS] == 200"
-        url: http://ollama.aiml.svc.cluster.local:11434
-        method: GET
 
 pipelines:
   enabled: false
 
 # -- A list of Ollama API endpoints. These can be added in lieu of automatically installing the Ollama Helm chart, or in addition to it.
-# ollamaUrls: [ "https://ollama.cloud.danmanners.com" ]
+# ollamaUrls: [ "https://chat.goodmanners.services" ]
 clusterDomain: cluster.local
 
 image:
   repository: ghcr.io/open-webui/open-webui
-  tag: "v0.11.3"
+  tag: "v0.11.4"
   pullPolicy: "IfNotPresent"
 
 serviceAccount:
@@ -112,7 +65,7 @@ enableOpenaiApi: true
 # hostAliases:
 # - ip: "5.78.90.164"
 #   hostnames:
-#   - "keycloak.cloud.danmanners.com"
+#   - "Authentik.cloud.danmanners.com"
 
 sso:
   enabled: true
@@ -124,8 +77,8 @@ extraResources:
     metadata:
       name: ollama-extname
       annotations:
-        external-dns.alpha.kubernetes.io/hostname: ollama.cloud.danmanners.com
-        external-dns.alpha.kubernetes.io/ttl: "300"
+        external-dns.kubernetes.io/hostname: ollama.cloud.danmanners.com
+        external-dns.kubernetes.io/ttl: "300"
     spec:
       type: ExternalName
       externalName: unifi-home.homelab.danmanners.com
@@ -136,8 +89,6 @@ extraResources:
       name: aiml
       namespace: aiml
       annotations:
-        external-dns.alpha.kubernetes.io/hostname: chat.capi-core.homelab.danmanners.com
-        external-dns.alpha.kubernetes.io/ingress-hostname-source: annotation-only
         gatus.home-operations.com/enabled: "false"
     spec:
       hostnames:
@@ -165,11 +116,11 @@ extraResources:
       name: aiml-cloud
       namespace: aiml
       annotations:
-        external-dns.alpha.kubernetes.io/controller: "false"
-        external-dns.alpha.kubernetes.io/hostname: ollama.cloud.danmanners.com
-        external-dns.alpha.kubernetes.io/target: unifi-home.homelab.danmanners.com
-        external-dns.alpha.kubernetes.io/ingress-hostname-source: annotation-only
-        external-dns.alpha.kubernetes.io/ttl: "300"
+        external-dns.kubernetes.io/controller: "false"
+        external-dns.kubernetes.io/hostname: ollama.cloud.danmanners.com,chat.goodmanners.services
+        external-dns.kubernetes.io/target: unifi-home.homelab.danmanners.com
+        external-dns.kubernetes.io/ingress-hostname-source: annotation-only
+        external-dns.kubernetes.io/ttl: "300"
         gatus.home-operations.com/enabled: "true"
         gatus.home-operations.com/endpoint: |-
           name: Open WebUI
@@ -180,6 +131,7 @@ extraResources:
     spec:
       hostnames:
         - ollama.cloud.danmanners.com
+        - chat.goodmanners.services
       parentRefs:
         - kind: Gateway
           group: gateway.networking.k8s.io
@@ -198,7 +150,7 @@ extraEnvVars:
     value: "postgresql://ollama:$(POSTGRES_USER_PASSWORD)@db-rw.database.svc:5432/open-webui" #trufflehog:ignore
   - name: "ENABLE_API_KEYS"
     value: "true"
-  # OIDC / Keycloak SSO
+  # OIDC / Authentik SSO
   - name: "ENABLE_OAUTH_SIGNUP"
     value: "true"
   - name: "ENABLE_OAUTH_PERSISTENT_CONFIG"
@@ -206,7 +158,7 @@ extraEnvVars:
   - name: "OAUTH_MERGE_ACCOUNTS_BY_EMAIL"
     value: "true"
   - name: "OAUTH_PROVIDER_NAME"
-    value: "Keycloak"
+    value: "Authentik"
   - name: "OAUTH_CLIENT_ID"
     value: "openwebui"
   - name: "OAUTH_CLIENT_SECRET"
@@ -215,8 +167,8 @@ extraEnvVars:
         name: open-webui-oidc-secret
         key: clientSecret
   - name: "OPENID_PROVIDER_URL"
-    value: "https://keycloak.cloud.danmanners.com/realms/gmh/.well-known/openid-configuration"
+    value: "https://auth.goodmanners.services/application/o/open-web-ui/.well-known/openid-configuration"
   - name: "OPENID_REDIRECT_URI"
-    value: "https://ollama.cloud.danmanners.com/oauth/oidc/callback"
+    value: "https://chat.goodmanners.services/oauth/oidc/callback"
   - name: "WEBUI_URL"
-    value: "https://ollama.cloud.danmanners.com"
+    value: "https://chat.goodmanners.services"
