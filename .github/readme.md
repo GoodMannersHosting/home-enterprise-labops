@@ -1,56 +1,164 @@
-# Home Enterprise LabOps (HELO)
+# HELO: Home Enterprise LabOps
 
-I'm designing HELO (Home Enterprise LabOps) to bridge the gap between enterprise-grade engineering and real-world accessibility. For many current and future engineers, hands-on experience with enterprise-grade tooling is nearly impossible without access to a corporate tech stack. Traditional homelabs rarely replicate the complexity, constraints, or workflows of enterprise environments, making it difficult to truly prepare for modern DevOps, SRE, or Platform roles.
+**Test Big Ideas in Small Spaces.**
 
-I aim to change that with HELO by offering a self-hosted, open framework to simulate enterprise-like infrastructure in your own lab! I hope to empower engineers to experiment, break things, and build real-world skills — without needing a badge or budget from a big-name employer.
+I built HELO because enterprise-grade tooling is usually locked behind corporate firewalls. If you want to learn GitOps, service meshes, or production Kubernetes, without a badge or a budget, this is your playground.
 
-Whether diving into GitOps, high-availability clusters, or cloud-native tooling, HELO provides a structured playground to level up, on your terms.
+HELO is a self-hosted, production-like infrastructure you can spin up in your own lab. It's designed to be broken, rebuilt, and learned from. Everything is version-controlled and declarative, so you can experiment without fear.
 
-HELO: Test Big Ideas in Small Spaces.
+> **Note:** I originally had Proxmox and Cluster API baked into this. I've abandoned that work for now. The operational overhead was killing the educational value, and I want HELO to stay maintainable and focused.
 
-> [!IMPORTANT]
-> While this repository originally had Proxmox, Cluster API, and Cluster Autoscaler baked in, I've been forced to abandon that work for now. The additional complexities and operational overhead introduced too many pain points and trade-offs to be worthwhile, and I want this repository to remain maintainable, educational, and focused on its core objectives.
+## What's Actually Working
 
-## Tools and Technologies
+Here's the status of what's deployed and functioning:
 
-| Category                                | Tools & Technologies                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Infrastructure & Cluster Management** | [✅ Talos Linux](https://github.com/siderolabs/talos)<br>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| **Networking & Service Mesh**           | [✅ Cilium/Hubble](https://github.com/cilium/cilium)<br>[✅ Istio](https://istio.io/latest/)<br>[✅ Gateway API](https://gateway-api.sigs.k8s.io/)<br>[✅ External DNS](https://github.com/kubernetes-sigs/external-dns)<br>[✅ PowerDNS](https://www.powerdns.com/)                                                                                                                                                                                                                                                                                   |
-| **Security & Identity**                 | [✅ Cert-Manager](https://cert-manager.io/)<br>[✅ SOPS](https://github.com/getsops/sops)<br>[✅ age](https://github.com/FiloSottile/age)<br>[✅ Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets)<br>[⚠️ Keycloak](https://www.keycloak.org/)<br>[⚠️ OpenBao](https://openbao.org/)<br>[⚠️ Validating Admission Policies](https://kubernetes.io/docs/reference/access-authn-authz/validating-admission-policy/)<br>[❌ Mutating Admission Webhooks](https://kubernetes.io/docs/reference/access-authn-authz/mutating-admission-policy/) |
-| **GitOps & Delivery**                   | [✅ Helm](https://helm.sh/)<br>[✅ TOPF](https://postfinance.github.io/topf/main/)<br>[✅ ArgoCD](https://argo-cd.readthedocs.io/en/stable/)<br>[⚠️ GoTask](https://github.com/go-task/task)                                                                                                                                                                                                                                                                                                                                                      |
-| **Data & Storage**                      | [✅ Cloud Native Postgres](https://cloudnative-pg.io/)<br>[✅ Rook-Ceph](https://rook.io/)                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| **Container Registry**                  | [✅ Harbor](https://goharbor.io/)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| **Cloud Resource Management**           | [❌ Vault Secrets Operator](https://developer.hashicorp.com/vault/docs/deploy/kubernetes/vso)                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| **Observability & Monitoring**          | [❌ Kube Prometheus Stack](https://artifacthub.io/packages/helm/prometheus-community/kube-prometheus-stack)<br>[❌ Mimir](https://grafana.com/oss/mimir/)<br>[❌ OpenTelemetry](https://opentelemetry.io/)                                                                                                                                                                                                                                                                                                                                             |
-| **AI/ML Tooling**                       | [✅ Open WebUI](https://github.com/open-webui/open-webui)<br>[✅ Ollama](https://ollama.com/)<br>[✅ Docling](https://github.com/docling-project/docling)<br>[✅ n8n](https://n8n.io/)<br>[✅ ComfyUI](https://github.com/comfyanonymous/ComfyUI)<br>[✅ K8S-MCP](https://github.com/Flux159/mcp-server-kubernetes)                                                                                                                                                                                                                                    |
-| **CI/CD**                               | [✅ GitHub Action Runner Controller](https://github.com/actions/actions-runner-controller)                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+### Infrastructure
+
+| Tool | Status |
+|------|--------|
+| [Talos Linux](https://github.com/siderolabs/talos) | ✅ Working |
+| [Cilium + Hubble](https://github.com/cilium/cilium) | ✅ Working |
+| [Istio](https://istio.io/latest/) | ✅ Working |
+| [CoreDNS](https://github.com/coredns/coredns) | ✅ Working |
+| [Gateway API](https://gateway-api.sigs.k8s.io/) | ✅ Working |
+
+### GitOps & Deployment
+
+| Tool | Status |
+|------|--------|
+| [ArgoCD](https://argo-cd.readthedocs.io/en/stable/) | ✅ Working |
+| [Helm](https://helm.sh/) | ✅ Working |
+| [TOPF](https://postfinance.github.io/topf/main/) | ✅ Working |
+| [GitHub Action Runner Controller](https://github.com/actions/actions-runner-controller) | ✅ Working |
+
+### Networking & DNS
+
+| Tool | Status |
+|------|--------|
+| [External DNS](https://github.com/kubernetes-sigs/external-dns) | ✅ Working |
+
+### Security & Identity
+
+| Tool | Status |
+|------|--------|
+| [Cert-Manager](https://cert-manager.io/) | ✅ Working |
+| [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) | ✅ Working |
+| [External Secrets Operator](https://github.com/external-secrets/external-secrets) | ✅ Working |
+| [Keycloak](https://www.keycloak.org/) | ✅ Working |
+
+### Storage & Data
+
+| Tool | Status |
+|------|--------|
+| [Rook-Ceph](https://rook.io/) | ✅ Working |
+| [Cloud Native Postgres](https://cloudnative-pg.io/) | ✅ Working |
+
+### Observability
+
+| Tool | Status |
+|------|--------|
+| [Prometheus Operator](https://github.com/prometheus-operator/prometheus-operator) | ✅ Working |
+| [Gatus](https://gatus.io/) | ✅ Working |
+
+### AI/ML Stack
+
+| Tool | Status |
+|------|--------|
+| [Open WebUI](https://github.com/open-webui/open-webui) | ✅ Working |
+| [LiteLLM Operator](https://github.com/BerriAI/litellm) | ✅ Working |
+| [LLM Router](https://github.com/litellm-ai/llm-router) | ✅ Working |
+| [ComfyUI](https://github.com/comfyanonymous/ComfyUI) | ✅ Working |
+
+### Other Services
+
+| Tool | Status |
+|------|--------|
+| [Harbor](https://goharbor.io/) | ✅ Working |
+| [Argo Workflows](https://github.com/argoproj/argo-workflows) | ✅ Working |
+| Valheim Server | ✅ Working |
+
+### In Progress
+
+| Tool | Status |
+|------|--------|
+| Validating Admission Policies | ⚠️ In Progress |
+| [Fission](https://fission.io/) | ⚠️ In Progress |
+| Intel/NVIDIA GPU inference (llama.cpp) | ⚠️ In Progress |
+
+### Not Started
+
+| Tool | Status |
+|------|--------|
+| Mutating Admission Webhooks | ❌ Not Started |
+| [Mimir](https://grafana.com/oss/mimir/) | ❌ Not Started |
+| [OpenTelemetry](https://opentelemetry.io/) | ❌ Not Started |
+
+## Technology Decisions
+
+### Why TOPF over Proxmox/Cluster API?
+
+I spent a lot of time fighting with Proxmox and Cluster API. They're what I wanted to use and how I believe is a more apt comparison to Enterprise environments, but for homelab usage, it's unfortunately fare more complexity and effort than it's worth in educational value. [TOPF Talos Orchestrator by PostFinance](https://github.com/postfinance/topf) running on baremetal hardware gives me:
+
+- Simpler cluster lifecycle management
+- GitOps-first approach that aligns with everything else
+- Less magic, more verbosity transparency
+
+It fits better for a homelab learning environment (and when I'm exhausted from a day at the office and my brain is cooked) where understanding what's happening matters more than the abstraction of an enterprise environment.
+
+### GPU inference with llama.cpp
+
+Both the Intel and NVIDIA GPU inference workloads use llama.cpp. The directory names still say vLLM (an artifact of "I'm sure I can get that working the way I want!"). llama.cpp is simpler to deploy, works across multiple GPU architectures, and uses far less memory. For experimenting and learning in a home lab, llama.cpp is far more practical than vLLM.
+
+### Why LiteLLM + OpenWebUI for AI tooling?
+
+This combination gives me a production-like AI infrastructure:
+
+- **LiteLLM** provides a unified API across multiple model providers (OpenAI, Anthropic, local models)
+- **Open WebUI** offers a feature-rich chat interface with document processing
+- Together they simulate what a company would deploy, making it great for learning
 
 > [!NOTE]
-> ✅ = Completed or Working<br>
-> ⚠️ = In Progress or Partially Working<br>
-> ❌ = Not Started or Not Working
+> Serious shout out to [@coolguy1771](https://github.com/coolguy1771) for getting LiteLLM working and doing a _lot_ of tuning for the NVIDIA Models and deployment.
 
-## Development
+### Why Cilium with BGP?
 
-The only tools you need to have in order to get started are:
+Cilium's eBPF-based networking is fast and observable. Adding BGP integration means the cluster can dynamically advertise routes to the rest of the network, which is what you want/need in an enterprise environment. It's a great way to learn real-world networking concepts.
 
-- Homebrew (on MacOS) - [Homebrew](https://brew.sh/)
-- go-task (on MacOS) - `brew install go-task`
+## What Lives Elsewhere
 
-> [!TIP]
-> Other tools will be installed automatically when you run the `task` command.
+The following services run in my [Cloud Security Cluster](https://github.com/GoodMannersHosting/cloud-security-cluster) repo, which complements HELO with enterprise security tooling:
 
-### Set up your environment
+| Tool | Purpose |
+|------|---------|
+| [Authentik](https://goauthentik.io/) | Enterprise identity provider with SSO |
+| [OpenBao](https://openbao.org/) | Secrets management (auto-unsealed via AWS KMS) |
+| [Doco-CD](https://github.com/digitalocean/doco-cd) | GitOps for Docker Compose stacks |
+| [PowerDNS](https://www.powerdns.com/) | Authoritative and recursive DNS |
+| [DNSweaver](https://dnsweaver.net/) | DNS filtering and ad blocking |
+| [Traefik](https://traefik.io/) | Dynamic ingress with TLS |
+
+## Getting Started
+
+You'll need:
+- A Talos Linux cluster (see the infrastructure/ directory)
+- Basic familiarity with Kubernetes concepts
+- Patience. These things take time to spin up.
 
 ```bash
-# Clone the repository
+# Clone the repo
 git clone https://github.com/GoodMannersHosting/home-enterprise-labops.git
 cd home-enterprise-labops
 
-# On MacOS, make sure you have go-task installed
+# Set up your environment (MacOS)
 brew install go-task
-
-# Initalize the environment
 task
 ```
+
+From there, explore the `kubernetes/` directory to see what's deployed. Everything is version-controlled and documented.
+
+## Questions?
+
+Feel free to ping me at daniel.a.manners@gmail.com. If something doesn't make sense, that's on me.
+
+> [!TIP]
+> Please let me know what needs clarification and I'll get docs updated. Thank you!

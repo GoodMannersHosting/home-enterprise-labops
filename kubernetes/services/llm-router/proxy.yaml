@@ -18,6 +18,17 @@ spec:
   litellmSettings:
     drop_params: true
     request_timeout: 900 # intel-llama can outlast the default on long prefills
+    cache: true
+    cache_params:
+      type: redis
+      namespace: "litellm.cache"
+      ttl: 3600 # seconds; exact-match response cache
+      # No host/port here: REDIS_CLUSTER_NODES below makes litellm build a
+      # cluster-aware client for every Redis use (see env), and that takes
+      # precedence over host/port regardless.
+    # Share virtual-key (token) auth verification results across replicas/workers
+    # instead of each one warming its own in-memory copy against Postgres.
+    enable_redis_auth_cache: true
   callbacks:
     callbacks:
       - prometheus
@@ -97,11 +108,18 @@ spec:
     - name: UI_DEFAULT_LOGIN
       value: sso
     # OIDC group-to-role mapping
-    # Redis for PKCE verifier storage (shared with open-webui, no auth)
-    - name: REDIS_HOST
-      value: llm-router-valkey.aiml.svc.cluster.local
-    - name: REDIS_PORT
-      value: "6379"
+    # valkeycluster.yaml (llm-router, valkey-operator) backs every litellm
+    # Redis use: OIDC PKCE storage, the response cache, and the virtual-key
+    # auth cache above. It's Cluster-mode-only (valkey-operator has no
+    # standalone mode), so litellm needs REDIS_CLUSTER_NODES rather than
+    # plain REDIS_HOST/PORT to get a cluster-aware client everywhere
+    # (litellm/_redis.py: get_redis_client() branches on REDIS_CLUSTER_NODES
+    # for *all* redis usage, not just caching). One seed node is enough —
+    # the client discovers the rest of the topology via CLUSTER SLOTS. The
+    # headless Service name is "valkey-<clustername>", per valkey-operator's
+    # own convention, not "<clustername>-valkey".
+    - name: REDIS_CLUSTER_NODES
+      value: '[{"host": "valkey-llm-router.aiml.svc.cluster.local", "port": "6379"}]'
     - name: OIDC_GROUP_CLAIM
       value: groups
     - name: OIDC_GROUP_TO_ROLE_MAP

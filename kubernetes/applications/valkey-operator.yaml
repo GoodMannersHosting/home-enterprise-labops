@@ -1,0 +1,32 @@
+---
+# Installs the valkey-operator CRDs/controller (valkey-io/valkey-operator)
+# that kubernetes/services/llm-router/valkeycluster.yaml depends on.
+#
+# ⚠️ valkey-operator is explicitly "not ready for production use" upstream
+# (v1alpha1 API, active development). It's adopted here anyway for
+# llm-router's cache because it's the only maintained option that speaks
+# both Valkey and Kubernetes natively; keep an eye on upstream API changes
+# before relying on it for anything beyond a rebuildable cache.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: valkey-operator
+  namespace: argocd
+  labels:
+    chartVersion: &chartVersion 0.6.0
+spec:
+  destination:
+    namespace: valkey-operator-system
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+    - repoURL: https://valkey.io/valkey-helm
+      chart: valkey-operator
+      targetRevision: *chartVersion
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true
