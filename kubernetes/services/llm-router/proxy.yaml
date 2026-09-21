@@ -18,6 +18,7 @@ spec:
   litellmSettings:
     drop_params: true
     request_timeout: 900 # intel-llama can outlast the default on long prefills
+    timezone: "US/Eastern"
     cache: true
     cache_params:
       type: redis
