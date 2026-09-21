@@ -13,8 +13,8 @@ spec:
       name: gptoss-llm-api-key
       key: api-key
     additional:
-      input_cost_per_token: 0.0000000019
-      output_cost_per_token: 0.0000000333
+      input_cost_per_token: 0.000000185
+      output_cost_per_token: 0.0000032397
   info:
     maxInputTokens: 131072
     supportsFunctionCalling: true

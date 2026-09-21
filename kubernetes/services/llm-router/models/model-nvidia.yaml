@@ -13,8 +13,8 @@ spec:
       name: nvidia-llm-api-key
       key: api-key
     additional:
-      input_cost_per_token: 0.0000000083499
-      output_cost_per_token: 0.0000004545
+      input_cost_per_token: 0.0000023860
+      output_cost_per_token: 0.0000028322
   info:
     maxInputTokens: 262144
     supportsFunctionCalling: true

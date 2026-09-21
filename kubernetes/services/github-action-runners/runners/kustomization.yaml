@@ -1,5 +1,0 @@
-resources:
-- gh-app-creds.yaml
-- rbac.yaml
-- runner.yaml
-- service-account.yaml
