@@ -1,5 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
 ---
+# NVIDIA RTX 5090 with vLLM, Qwen3.8-27B-NVFP4 model.
+# 32GB VRAM is sufficient for NVFP4 weights (~14GB) plus KV cache.
 defaultPodOptions:
   automountServiceAccountToken: false
   enableServiceLinks: false
@@ -23,121 +25,25 @@ controllers:
             containerPort: &port 8080
             protocol: TCP
         image:
-          repository: ghcr.io/ggml-org/llama.cpp
-          tag: server-cuda12
+          repository: vllm/vllm
+          tag: v0.29.0
           pullPolicy: Always
         args:
-          - --hf-repo
-          - DavidAU/Qwen3.8-27B-TURBO-Fable-Cold-Fusion-735-882-Heretic-Uncensored-NEO-CODER-MAX-MTP-GGUF
-          - --hf-file
-          - Qwen3.8-27B-TurboFCFusion-735-882-Here-Uncen-NEO-CODER-MAX-MTP-Q4_K_M.gguf
-
-          # Vision
-          - --mmproj-auto
-          - --mmproj-offload
-          - --image-min-tokens
-          - "256"
-          - --image-max-tokens
+          - --model
+          - nvidia/Qwen3.8-27B-NVFP4
+          - --gpu-memory-utilization
+          - "0.90"
+          - --max-num-batched-tokens
           - "8192"
-          - --mtmd-batch-max-tokens
-          - "1024"
-
-          # GPU
-          - --gpu-layers
-          - all
-          - --flash-attn
-          - "on"
-
-          # Single slot: full context per request, no batch contention
-          - --parallel
-          - "1"
-          - --fit
-          - "on"
-          - --fit-ctx
-          - "16384"
-          - --ctx-size
+          - --max-model-len
           - "262144"
-          - --kv-unified
-          - --cont-batching
-
-          # q8_0 KV cache for 262k context. f16 would require ~128GB at this size;
-          # q8_0 fits in ~40GB with negligible quality loss.
-          - --cache-type-k
-          - q8_0
-          - --cache-type-v
-          - q8_0
-
-          # Prompt processing
-          - --batch-size
-          - "2048"
-          - --ubatch-size
-          - "512"
-
-          # Prompt reuse
-          - --cache-prompt
-          - --cache-ram
-          - "16384"
-          - --cache-reuse
-          - "256"
-          - --ctx-checkpoints
-          - "4"
-          - --checkpoint-min-step
-          - "8192"
-          - --slot-prompt-similarity
-          - "0.25"
-
-          # CPU support
-          - --threads
-          - "8"
-          - --threads-batch
-          - "8"
-          - --threads-http
-          - "8"
-
-          # Chat template and reasoning
-          - --jinja
-          - --reasoning
-          - "on"
-          # Uncapped: the template defaults to xhigh effort, and TURBO tuning
-          # already cuts thinking tokens. Truncating mid-reasoning costs quality.
-          - --reasoning-budget
-          - "-1"
-
-          # Thinking-mode sampling (Qwen recommended)
-          # Clients doing tool calls or precise coding should override to
-          # temperature 0.6-0.7, top_p 0.95 per request.
-          - --temperature
-          - "1.0"
-          - --top-k
-          - "20"
-          - --top-p
-          - "0.95"
-          - --min-p
-          - "0.0"
-          - --presence-penalty
-          - "0.0"
-          # Must stay at 1.0 (off) - raising it degrades MTP acceptance
-          - --repeat-penalty
-          - "1.0"
-
-          # Runtime
-          - --load-mode
-          - mmap
-          - --metrics
+          - --enable-chunked-prefill
+          - --disable-log-requests
         env:
-          - name: LLAMA_ARG_HOST
+          - name: VLLM_HOST_IP
             value: "0.0.0.0"
-          - name: LLAMA_ARG_PORT
+          - name: VLLM_PORT
             value: "8080"
-          - name: "LLAMA_ARG_UI"
-            value: "off"
-          - name: LD_LIBRARY_PATH
-            value: /app
-          - name: LLAMA_API_KEY
-            valueFrom:
-              secretKeyRef:
-                name: nvidia-llm-api-key
-                key: api-key
           - name: HF_HOME
             value: /cache/huggingface
         securityContext:
