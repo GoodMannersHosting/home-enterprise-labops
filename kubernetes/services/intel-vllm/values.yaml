@@ -3,7 +3,8 @@
 # Intel ARC B70 PRO with intel/llm-scaler-vllm, Gemma 4 12B-it in FP8 quantization.
 # intel/llm-scaler-vllm is Intel's optimized vLLM fork for Arc/Battlemage GPUs.
 # Gemma 4 12B FP8 weights ~12GB; max-model-len capped at 90K per Intel reference commands.
-# HF_TOKEN is required: google/gemma-4-12B-it is a gated model.
+# --hf-overrides forces model_type=gemma4: HF checkpoint was renamed gemma4->gemma4_unified
+# but the transformers bundled in this image only knows the older name.
 defaultPodOptions:
   automountServiceAccountToken: false
   enableServiceLinks: false
@@ -61,6 +62,8 @@ controllers:
           - --tool-call-parser
           - pythonic
           - --enable-prefix-caching
+          - --hf-overrides
+          - '{"model_type": "gemma4"}'
           - --trust-remote-code
 
         env:
@@ -70,11 +73,7 @@ controllers:
             value: spawn
           - name: HF_HOME
             value: /cache/huggingface
-          - name: HF_TOKEN
-            valueFrom:
-              secretKeyRef:
-                name: hf-token
-                key: token
+
         securityContext: {}
         resources:
           requests:
