@@ -1,0 +1,30 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: smartctl-exporter
+  namespace: argocd
+  labels:
+    chartVersion: &chartVersion 0.17.1
+spec:
+  destination:
+    namespace: monitoring
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+    - repoURL: &repo https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: main
+      ref: values
+    - repoURL: ghcr.io/prometheus-community/charts
+      chart: prometheus-smartctl-exporter
+      targetRevision: *chartVersion
+      helm:
+        valueFiles:
+          - $values/kubernetes/services/smartctl-exporter/values.yaml
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true
