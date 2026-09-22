@@ -1,9 +1,8 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
 ---
-# llama-server on Intel Arc B70 (intellectual). OpenAI-compatible API; not vLLM despite the service name.
-# Model: HauhauCS Gemma4-26B-A4B-QAT-Uncensored (Balanced), Q4_K_M + BF16 mmproj + MTP speculative draft.
-# Backend: Vulkan (ghcr.io/ggml-org/llama.cpp:server-vulkan). GPU offload confirmed working via gpu.intel.com/xe.
-# SYCL (server-intel) untested for this model/build; see README before switching.
+# Intel ARC B70 PRO with vLLM SYCL, Gemma 4 12B Unified model in FP8 quantization.
+# 16GB VRAM: 12B * 1 byte (FP8) = ~12GB weights + KV cache fits.
+# Gemma 4 12B supports 256K context, multimodal (text/image/audio), and is encoder-free.
 defaultPodOptions:
   automountServiceAccountToken: false
   enableServiceLinks: false
@@ -22,49 +21,6 @@ controllers:
     type: deployment
     replicas: 1
     revisionHistoryLimit: 2
-    initContainers:
-      download-model:
-        image:
-          repository: curlimages/curl
-          tag: "8.11.1"
-          pullPolicy: IfNotPresent
-        # /root is 0700 root:root in the base image; curlimages/curl's default
-        # non-root user can't even traverse into it, regardless of the permissions
-        # on the mounted PVC subdirectory beneath it. Run as root here (matching
-        # how the "core" container already implicitly runs as root with no
-        # runAsUser override) rather than fighting the base image's home dir perms.
-        securityContext:
-          runAsUser: 0
-          runAsNonRoot: false
-        command:
-          - /bin/sh
-          - -c
-          - |
-            set -eu
-            DEST=/root/.cache/huggingface
-
-            fetch() {
-              url="$1"
-              out="$DEST/$2"
-              if [ -s "$out" ]; then
-                echo "already present: $out"
-                return 0
-              fi
-              echo "downloading: $out"
-              curl -fL --retry 5 --retry-delay 5 -o "$out.part" "$url"
-              mv "$out.part" "$out"
-            }
-
-            fetch "https://huggingface.co/HauhauCS/Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-MTP/resolve/main/Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-Q4_K_M.gguf" "Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-Q4_K_M.gguf"
-            fetch "https://huggingface.co/HauhauCS/Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-MTP/resolve/main/mmproj-Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-BF16.gguf" "mmproj-Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-BF16.gguf"
-            fetch "https://huggingface.co/HauhauCS/Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-MTP/resolve/main/mtp-gemma-4-26B-A4B-it.gguf" "mtp-gemma-4-26B-A4B-it.gguf"
-        resources:
-          requests:
-            cpu: "250m"
-            memory: "256Mi"
-          limits:
-            cpu: "1000m"
-            memory: "512Mi"
     containers:
       core:
         ports:
@@ -72,86 +28,38 @@ controllers:
             containerPort: &port 8080
             protocol: TCP
         image:
-          repository: ghcr.io/ggml-org/llama.cpp
-          tag: server-vulkan
+          repository: vllm/vllm-openai
+          tag: v0.29.0-x86_64
           pullPolicy: Always
-        # Image ENTRYPOINT is /app/llama-server; do not override command with sh.
         args:
           - --model
-          - /root/.cache/huggingface/Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-Q4_K_M.gguf
-          - --mmproj
-          - /root/.cache/huggingface/mmproj-Gemma4-26B-A4B-QAT-Uncensored-HauhauCS-Balanced-BF16.gguf
-          - --no-mmproj-offload
-          - --spec-draft-model
-          - /root/.cache/huggingface/mtp-gemma-4-26B-A4B-it.gguf
-          - --spec-type
-          - draft-mtp
-          # Performance Settings
-          - --gpu-layers
-          - "999"
-          - --fit
-          - "on"
-          - --fit-ctx
-          - "32768"
-          - --ctx-size
-          - "204800"
-          - --ctx-checkpoints
-          - "16"
-          - --flash-attn
-          - "on"
-          - --cache-type-k
-          - q5_0
-          - --cache-type-v
-          - q5_0
-          - --cpu-strict
-          - "1"
-          # Single-user chat.
-          - --parallel
-          - "1"
-          - --cache-ram
-          - "0"
-          - --reasoning
-          - "on"
-          - --reasoning-budget
-          - "-1"
-          - --batch-size
-          - "4096"
-          - --ubatch-size
-          - "1024"
-          - --threads
-          - "16"
-          - --cache-prompt
-          - --load-mode
-          - mmap
-          # Tunings — per HauhauCS Balanced model card recommendations
-          - --temperature
-          - "0.6"
-          - --top-k
-          - "64"
-          - --top-p
-          - "0.9"
-          - --min-p
-          - "0.05"
-          - --repeat-penalty
-          - "1.1"
-          - --jinja
+          - google/gemma-4-12B-it
+          - --quantization
+          - fp8
+          - --gpu-memory-utilization
+          - "0.95"
+          - --max-num-batched-tokens
+          - "2048"
+          - --max-model-len
+          - "131072"
+          - --enable-chunked-prefill
+          - --disable-log-requests
         env:
-          # Bind via env only — image sets LLAMA_ARG_HOST; duplicating --host triggers a startup warning.
-          - name: LLAMA_ARG_HOST
+          - name: VLLM_HOST_IP
             value: "0.0.0.0"
-          - name: LLAMA_ARG_PORT
+          - name: VLLM_PORT
             value: "8080"
-          - name: GGML_VK_MMVQ_SHMEM_STAGING
-            value: "1"
+          - name: HF_HOME
+            value: /cache/huggingface
         securityContext: {}
         resources:
           requests:
-            cpu: "10000m"
-            memory: "24Gi"
+            cpu: "4000m"
+            memory: "8Gi"
             gpu.intel.com/xe: "1"
           limits:
-            cpu: "10000m"
-            memory: "48Gi"
+            cpu: "8000m"
+            memory: "16Gi"
             gpu.intel.com/xe: "1"
 
 service:
