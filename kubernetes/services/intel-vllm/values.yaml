@@ -52,6 +52,8 @@ controllers:
           - --tensor-parallel-size
           - "1"
           - --enforce-eager
+          - --served-model-name
+          - intel-ministral-8b-fp8
           - --trust-remote-code
 
         env:
