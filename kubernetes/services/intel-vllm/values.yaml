@@ -3,9 +3,21 @@
 # Intel ARC B70 PRO with intel/llm-scaler-vllm, Gemma 4 12B-it in FP8 quantization.
 # intel/llm-scaler-vllm is Intel's optimized vLLM fork for Arc/Battlemage GPUs.
 # Gemma 4 12B FP8 weights ~12GB; max-model-len capped at 90K per Intel reference commands.
-# --hf-overrides forces model_type=gemma4 so the bundled transformers uses the old
-# non-heterogeneous code path that Intel's get_head_size() expects. The HF checkpoint
-# was updated to gemma4_unified (per-layer API) after the image was built.
+#
+# google/gemma-4-12B-it is NOT the same architecture as the other Gemma 4 models:
+# its model_type is `gemma4_unified` (Gemma4UnifiedForConditionalGeneration), the
+# encoder-free variant, which HF added in transformers 5.10. The 0.26.0-b2 image
+# already implements Gemma4UnifiedForConditionalGeneration in its vLLM fork, but it
+# ships transformers 5.8.0, whose config registry only knows `gemma4`. AutoConfig
+# therefore rejects the checkpoint before vLLM ever sees it.
+# See https://github.com/intel/llm-scaler/issues/705
+#
+# Fix: the init container below overlays transformers 5.10.2 onto PYTHONPATH.
+# --no-deps is required so the image's pinned huggingface-hub/tokenizers/numpy
+# (which torch + the vLLM fork are built against) are left untouched.
+# Do NOT replace this with `--hf-overrides '{"model_type":"gemma4"}'`: vLLM applies
+# hf_overrides *after* AutoConfig.from_pretrained(), so it cannot fix a model_type
+# the installed transformers cannot resolve in the first place.
 defaultPodOptions:
   automountServiceAccountToken: false
   enableServiceLinks: false
@@ -24,6 +36,26 @@ controllers:
     type: deployment
     replicas: 1
     revisionHistoryLimit: 2
+    initContainers:
+      transformers-overlay:
+        # Same image as `core` so pip targets the identical Python 3.12 and the
+        # layer is already present on the node (no extra pull).
+        image:
+          repository: intel/llm-scaler-vllm
+          tag: 0.26.0-b2
+          pullPolicy: IfNotPresent
+        command:
+          - /bin/sh
+          - -c
+          - pip install --quiet --no-deps --target /transformers-overlay "transformers==5.10.2"
+        securityContext: {}
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "512Mi"
+          limits:
+            cpu: "1000m"
+            memory: "2Gi"
     containers:
       core:
         ports:
@@ -63,8 +95,6 @@ controllers:
           - --tool-call-parser
           - gemma4
           - --enable-prefix-caching
-          - --hf-overrides
-          - '{"model_type": "gemma4"}'
           - --trust-remote-code
 
         env:
@@ -74,6 +104,25 @@ controllers:
             value: spawn
           - name: HF_HOME
             value: /cache/huggingface
+          # Must precede the venv so transformers 5.10.2 shadows the bundled 5.8.0.
+          - name: PYTHONPATH
+            value: /transformers-overlay
+          # Without this the ~12GB weight pull runs anonymously; vLLM logs
+          # "You are sending unauthenticated requests to the HF Hub" and the
+          # download is rate-limited.
+          - name: HF_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: hf-secret
+                key: token
+          # Bearer auth for the OpenAI-compatible API. llm-router already sends
+          # this same secret (see llm-router/models/model-intel.yaml); without it
+          # the LoadBalancer on 172.31.0.35 is unauthenticated.
+          - name: VLLM_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: intel-llm-api-key
+                key: api-key
 
 
         securityContext: {}
@@ -139,4 +188,15 @@ persistence:
         core:
           - path: /dev/shm
             readOnly: false
+  transformers-overlay:
+    enabled: true
+    type: emptyDir
+    advancedMounts:
+      main:
+        transformers-overlay:
+          - path: /transformers-overlay
+            readOnly: false
+        core:
+          - path: /transformers-overlay
+            readOnly: true
 
