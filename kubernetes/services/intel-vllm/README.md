@@ -8,9 +8,9 @@ directly from the [intel/llm-scaler README §3.3](https://github.com/intel/llm-s
 
 | Item | Value |
 |------|--------|
-| Hugging Face repo | `mistralai/Ministral-8B-Instruct-2410` |
+| Hugging Face repo | `google/gemma-4-12B-it` |
 | Quantization | FP8 online (`--quantization fp8`) |
-| Context | `131072` (`--max-model-len`) |
+| Context | `90000` (`--max-model-len`) |
 | Image | `intel/llm-scaler-vllm:0.26.0-b2` |
 
 ## Endpoints
@@ -51,7 +51,7 @@ curl -s http://intel-llm.cloud.danmanners.com/v1/models \
 ```
 
 First sync can take a long time while the model downloads from Hugging Face
-(~4-5 GB for Qwen3-4B-Instruct).
+(~12 GB for Gemma 4 12B-it).
 
 ## Argo CD
 

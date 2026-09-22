@@ -7,7 +7,7 @@ metadata:
 spec:
   modelName: intel-llama
   params:
-    model: openai/intel-ministral-8b-fp8
+    model: openai/intel-gemma-4-12b-fp8
     apiBase: http://intel-vllm-core.aiml.svc.cluster.local:8080/v1
     apiKeyRef:
       name: intel-llm-api-key
@@ -16,5 +16,5 @@ spec:
       input_cost_per_token: 0.00000249
       output_cost_per_token: 0.00000249
   info:
-    maxInputTokens: 131072
+    maxInputTokens: 90000
     supportsFunctionCalling: true
