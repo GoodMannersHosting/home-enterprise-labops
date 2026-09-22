@@ -1,4 +1,0 @@
-namespace: monitoring
-resources:
-  - external.svc.yaml
-  - httproute.yaml

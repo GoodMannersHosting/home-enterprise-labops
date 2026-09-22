@@ -1,0 +1,31 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: observability-pipeline-rules
+  namespace: monitoring
+spec:
+  groups:
+    - name: observability-pipeline.rules
+      rules:
+        - alert: AlloyComponentUnhealthy
+          annotations:
+            description: Alloy {{ $labels.app }} has {{ $value }} unhealthy components.
+            summary: Alloy has unhealthy components.
+          expr: |-
+            alloy_component_controller_running_components{
+              k8s_cluster_name="helo",
+              health_type="unhealthy"
+            } > 0
+          for: 15m
+          labels:
+            severity: critical
+        - alert: MimirRuleReloadFailed
+          annotations:
+            description: A Mimir ruler replica failed to reload rule configuration for tenant {{ $labels.user }}.
+            summary: Mimir failed to load alert rules.
+          expr: |-
+            cortex_ruler_config_last_reload_successful{user="helo"} == 0
+          for: 10m
+          labels:
+            severity: critical
