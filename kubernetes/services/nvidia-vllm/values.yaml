@@ -25,8 +25,8 @@ controllers:
             containerPort: &port 8080
             protocol: TCP
         image:
-          repository: vllm/vllm
-          tag: v0.29.0-x86_64
+          repository: vllm/vllm-openai
+          tag: v0.29.0-x86_64-x86_64
           pullPolicy: Always
         args:
           - --model
