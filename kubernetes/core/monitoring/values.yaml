@@ -1,10 +1,21 @@
+# Grafana, the Prometheus server, Alertmanager, and the bundled
+# kube-state-metrics/node-exporter subcharts are disabled here: metrics/logs/
+# traces now ship to mimir.cloud.witl.xyz, loki.cloud.witl.xyz, and
+# tempo.cloud.witl.xyz via the k8s-monitoring (Alloy) app instead - see
+# ../k8s-monitoring/. Only the operator + CRDs stay, since ServiceMonitor/
+# PodMonitor/PrometheusRule are still used throughout this repo and Alloy
+# scrapes/syncs them directly (prometheusOperatorObjects / mimir.rules.kubernetes).
+grafana:
+  enabled: false
 prometheus:
-  prometheusSpec:
-    storageSpec:
-      volumeClaimTemplate:
-        spec:
-          storageClassName: ceph-block-retain
-          accessModes: ["ReadWriteOnce"]
-          resources:
-            requests:
-              storage: 50Gi
+  enabled: false
+alertmanager:
+  enabled: false
+kubeStateMetrics:
+  enabled: false
+nodeExporter:
+  enabled: false
+prometheusOperator:
+  enabled: true
+crds:
+  enabled: true

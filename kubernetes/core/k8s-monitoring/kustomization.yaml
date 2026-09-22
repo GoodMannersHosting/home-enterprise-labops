@@ -1,0 +1,6 @@
+namespace: monitoring
+resources:
+  - externalsecret.observability-m2m.yaml
+  - alertmanager-global-config.secret.yaml
+  - prometheusrule.yaml
+  - rbac-mimir-rules.yaml
