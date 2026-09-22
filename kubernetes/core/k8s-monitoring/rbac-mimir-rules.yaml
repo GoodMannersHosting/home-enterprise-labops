@@ -1,8 +1,11 @@
 ---
 # RBAC for mimir.rules.kubernetes and mimir.alerts.kubernetes (see
-# values.yaml, collectors.alloy-singleton): Alloy must list/watch Namespaces,
-# PrometheusRules, AlertmanagerConfigs, and Secrets (to resolve token/userKey
-# etc. in receiver configs).
+# values.yaml, collectors.alloy-singleton): matches Grafana's documented RBAC
+# for these components (namespaces + prometheusrules/alertmanagerconfigs
+# only - https://grafana.com/docs/alloy/latest/reference/components/mimir/).
+# No cluster-wide Secret access: neither component resolves secretKeyRef
+# itself, and the current alertmanager-global-config uses a credential-free
+# null receiver, so there's nothing for it to read yet.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -10,9 +13,6 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["namespaces"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: [""]
-    resources: ["secrets"]
     verbs: ["get", "list", "watch"]
   - apiGroups: ["monitoring.coreos.com"]
     resources: ["prometheusrules"]
