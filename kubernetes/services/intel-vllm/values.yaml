@@ -3,8 +3,8 @@
 # Intel ARC B70 PRO with intel/llm-scaler-vllm, Gemma 4 12B-it in FP8 quantization.
 # intel/llm-scaler-vllm is Intel's optimized vLLM fork for Arc/Battlemage GPUs.
 # Gemma 4 12B FP8 weights ~12GB; max-model-len capped at 90K per Intel reference commands.
-# --hf-overrides forces model_type=gemma4: HF checkpoint was renamed gemma4->gemma4_unified
-# but the transformers bundled in this image only knows the older name.
+# An init container upgrades transformers into /site-packages-overlay (emptyDir) so that
+# gemma4_unified is recognised. PYTHONPATH prepends that directory at runtime.
 defaultPodOptions:
   automountServiceAccountToken: false
   enableServiceLinks: false
@@ -23,6 +23,16 @@ controllers:
     type: deployment
     replicas: 1
     revisionHistoryLimit: 2
+    initContainers:
+      upgrade-transformers:
+        image:
+          repository: python
+          tag: "3.12-slim"
+        command:
+          - sh
+          - -c
+          - pip install "transformers>=4.52.0" --upgrade --target /site-packages-overlay --quiet
+        securityContext: {}
     containers:
       core:
         ports:
@@ -62,8 +72,6 @@ controllers:
           - --tool-call-parser
           - pythonic
           - --enable-prefix-caching
-          - --hf-overrides
-          - '{"model_type": "gemma4"}'
           - --trust-remote-code
 
         env:
@@ -73,6 +81,8 @@ controllers:
             value: spawn
           - name: HF_HOME
             value: /cache/huggingface
+          - name: PYTHONPATH
+            value: /site-packages-overlay
 
         securityContext: {}
         resources:
@@ -136,4 +146,15 @@ persistence:
       main:
         core:
           - path: /dev/shm
+            readOnly: false
+  site-packages-overlay:
+    enabled: true
+    type: emptyDir
+    advancedMounts:
+      main:
+        upgrade-transformers:
+          - path: /site-packages-overlay
+            readOnly: false
+        core:
+          - path: /site-packages-overlay
             readOnly: false
