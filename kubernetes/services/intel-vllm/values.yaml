@@ -61,7 +61,7 @@ controllers:
           - intel-gemma-4-12b-fp8
           - --enable-auto-tool-choice
           - --tool-call-parser
-          - pythonic
+          - gemma4
           - --enable-prefix-caching
           - --hf-overrides
           - '{"model_type": "gemma4"}'
