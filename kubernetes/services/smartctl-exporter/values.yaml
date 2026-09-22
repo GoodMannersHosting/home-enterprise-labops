@@ -1,5 +1,9 @@
 serviceMonitor:
   enabled: true
+  additionalLabels:
+    release: monitoring
 
 prometheusRules:
   enabled: true
+  additionalLabels:
+    release: monitoring
