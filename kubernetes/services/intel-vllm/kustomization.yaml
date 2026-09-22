@@ -3,5 +3,6 @@ kind: Kustomization
 namespace: aiml
 
 resources:
+  - externalsecret.hf-token.yaml
   - secret.intel-llm-api-key.yaml
   - servicemonitor.yaml
