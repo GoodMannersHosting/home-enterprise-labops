@@ -1,8 +1,8 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
 ---
-# Intel ARC B70 PRO with intel/llm-scaler-vllm, Gemma 4 12B in FP8 quantization.
+# Intel ARC B70 PRO with intel/llm-scaler-vllm, Ministral 8B in FP8 quantization.
 # intel/llm-scaler-vllm is Intel's optimized vLLM fork for Arc/Battlemage GPUs.
-# Flags mirror the reference command from intel/llm-scaler README §3.3.
+# Ministral-8B supports 128K context; 8B FP8 weights ~8GB leaves ample KV cache room.
 defaultPodOptions:
   automountServiceAccountToken: false
   enableServiceLinks: false
@@ -32,14 +32,12 @@ controllers:
           tag: 0.26.0-b2
           pullPolicy: Always
         args:
-          - google/gemma-4-12B-it
+          - mistralai/Ministral-8B-Instruct-2410
           - --host
           - 0.0.0.0
           - --port
           - "8080"
           - --dtype
-          - float16
-          - --mamba-ssm-cache-dtype
           - float16
           - --quantization
           - fp8
@@ -48,7 +46,7 @@ controllers:
           - --max-num-batched-tokens
           - "8192"
           - --max-model-len
-          - "90000"
+          - "32768"
           - --block-size
           - "64"
           - --tensor-parallel-size
