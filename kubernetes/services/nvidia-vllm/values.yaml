@@ -26,7 +26,8 @@ controllers:
             protocol: TCP
         image:
           repository: vllm/vllm-openai
-          tag: v0.29.0-x86_64-cu129-x86_64
+          tag: v0.29.0-x86_64-cu129
+          digest: sha256:3e10e8189823e0f7ae4620c271bcdaaf64127ec7d0edc351591a508498b7684a
           pullPolicy: Always
         args:
           - --model
