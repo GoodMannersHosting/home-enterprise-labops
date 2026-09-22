@@ -1,8 +1,8 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
 ---
-# Intel ARC B70 PRO with vLLM SYCL, Gemma 4 12B Unified model in FP8 quantization.
-# 16GB VRAM: 12B * 1 byte (FP8) = ~12GB weights + KV cache fits.
-# Gemma 4 12B supports 256K context, multimodal (text/image/audio), and is encoder-free.
+# Intel ARC B70 PRO with intel/llm-scaler-vllm, Gemma 4 12B in FP8 quantization.
+# intel/llm-scaler-vllm is Intel's optimized vLLM fork for Arc/Battlemage GPUs.
+# Flags mirror the reference command from intel/llm-scaler README §3.3.
 defaultPodOptions:
   automountServiceAccountToken: false
   enableServiceLinks: false
@@ -28,27 +28,40 @@ controllers:
             containerPort: &port 8080
             protocol: TCP
         image:
-          repository: vllm/vllm-openai
-          tag: v0.29.0-x86_64
+          repository: intel/llm-scaler-vllm
+          tag: 0.26.0-b2
           pullPolicy: Always
         args:
           - --model
           - google/gemma-4-12B-it
+          - --host
+          - 0.0.0.0
+          - --port
+          - "8080"
+          - --dtype
+          - float16
+          - --mamba-ssm-cache-dtype
+          - float16
           - --quantization
           - fp8
-          - --gpu-memory-utilization
-          - "0.95"
+          - --gpu-memory-util
+          - "0.90"
           - --max-num-batched-tokens
-          - "2048"
+          - "8192"
           - --max-model-len
-          - "131072"
-          - --enable-chunked-prefill
+          - "90000"
+          - --block-size
+          - "64"
+          - --tensor-parallel-size
+          - "1"
+          - --enforce-eager
+          - --trust-remote-code
           - --disable-log-requests
         env:
-          - name: VLLM_HOST_IP
-            value: "0.0.0.0"
-          - name: VLLM_PORT
-            value: "8080"
+          - name: VLLM_ALLOW_LONG_MAX_MODEL_LEN
+            value: "1"
+          - name: VLLM_WORKER_MULTIPROC_METHOD
+            value: spawn
           - name: HF_HOME
             value: /cache/huggingface
         securityContext: {}
@@ -102,10 +115,7 @@ persistence:
     advancedMounts:
       main:
         core:
-          - path: /root/.cache/huggingface
-            readOnly: false
-        download-model:
-          - path: /root/.cache/huggingface
+          - path: /cache/huggingface
             readOnly: false
   shm:
     enabled: true

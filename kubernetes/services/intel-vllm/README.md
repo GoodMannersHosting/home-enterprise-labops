@@ -1,20 +1,17 @@
-# intel-vllm (vLLM SYCL on Intel Arc B70 PRO)
+# intel-vllm (intel/llm-scaler-vllm on Intel Arc B70 PRO)
 
-OpenAI-compatible **vLLM** on `intellectual` using `gpu.intel.com/xe` and the
-SYCL backend. Runs the standard `vllm/vllm` image with sym_int4 quantization.
+OpenAI-compatible inference on `intellectual` using `gpu.intel.com/xe` and
+Intel's optimized vLLM fork (`intel/llm-scaler-vllm`). Flags are taken
+directly from the [intel/llm-scaler README §3.3](https://github.com/intel/llm-scaler/blob/main/vllm/README.md/#33-reference-commands-for-running-gemma-4-models-and-diffusiongemma).
 
 ## Model
 
 | Item | Value |
 |------|--------|
-| Hugging Face repo | `meta-models/Muse-Glimmer-30B` |
-| Quantization | sym_int4 (~15GB weights) |
-| Context | `32768` (`--max-model-len`) |
-| Image | `vllm/vllm-openai:v0.29.0-x86_64` |
-
-vLLM downloads the model on startup to the `HF_HOME` cache directory
-(`/cache/huggingface`) on the PVC. sym_int4 quantization fits the 30B model
-in the ARC B70 PRO's 16GB VRAM.
+| Hugging Face repo | `google/gemma-4-12B-it` |
+| Quantization | FP8 online (`--quantization fp8`) |
+| Context | `90000` (`--max-model-len`) |
+| Image | `intel/llm-scaler-vllm:0.26.0-b2` |
 
 ## Endpoints
 

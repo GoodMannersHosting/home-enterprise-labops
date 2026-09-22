@@ -1,14 +1,14 @@
 # llm-router
 
-A single OpenAI-compatible endpoint in front of every llama.cpp (`llama-server`)
-deployment in the cluster, via [litellm-operator](https://github.com/home-operations/litellm-operator).
+A single OpenAI-compatible endpoint in front of both vLLM backends in the
+cluster, via [litellm-operator](https://github.com/home-operations/litellm-operator).
 Instead of clients juggling `nvidia-vllm`'s and `intel-vllm`'s separate
 LoadBalancer IPs and API keys, they hit one host with one key and pick a
 backend by `model` name.
 
-Despite the app names, **neither backend is actually vLLM** — both
-`nvidia-vllm` and `intel-vllm` run `ghcr.io/ggml-org/llama.cpp`'s
-`llama-server`. See `../intel-vllm/README.md` for why the name stuck.
+Both backends run vLLM:
+- `nvidia-vllm`: `vllm/vllm-openai:v0.29.0` with nvidia/Qwen3.8-27B-NVFP4 (RTX 5090)
+- `intel-vllm`: `intel/llm-scaler-vllm:0.26.0-b2` with google/gemma-4-12B-it FP8 (Arc B70 PRO)
 
 ## Prerequisite
 
