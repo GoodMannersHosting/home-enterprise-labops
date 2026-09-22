@@ -8,7 +8,7 @@ backend by `model` name.
 
 Both backends run vLLM:
 - `nvidia-vllm`: `vllm/vllm-openai:v0.29.0` with nvidia/Qwen3.8-27B-NVFP4 (RTX 5090)
-- `intel-vllm`: `intel/llm-scaler-vllm:0.26.0-b2` with google/gemma-4-12B-it FP8 (Arc B70 PRO)
+- `intel-vllm`: `intel/llm-scaler-vllm:0.26.0-b2` with mistralai/Ministral-8B-Instruct-2410 FP8 (Arc B70 PRO)
 
 ## Prerequisite
 
