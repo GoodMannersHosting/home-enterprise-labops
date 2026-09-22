@@ -32,7 +32,6 @@ controllers:
           tag: 0.26.0-b2
           pullPolicy: Always
         args:
-          - --model
           - google/gemma-4-12B-it
           - --host
           - 0.0.0.0
@@ -56,7 +55,7 @@ controllers:
           - "1"
           - --enforce-eager
           - --trust-remote-code
-          - --disable-log-requests
+
         env:
           - name: VLLM_ALLOW_LONG_MAX_MODEL_LEN
             value: "1"
