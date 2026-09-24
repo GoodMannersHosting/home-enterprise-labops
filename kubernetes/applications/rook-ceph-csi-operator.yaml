@@ -5,7 +5,7 @@ metadata:
   name: ceph-csi-operator
   namespace: argocd
   labels:
-    csiChartVersion: &csiChartVersion 1.0.3
+    csiChartVersion: &csiChartVersion 1.0.5
   annotations:
     argocd.argoproj.io/sync-wave: "3"
 spec:
