@@ -5,7 +5,7 @@ metadata:
   name: rook-ceph
   namespace: argocd
   labels:
-    chartVersion: &chartVersion v1.20.1
+    chartVersion: &chartVersion v1.20.7
     csiChartVersion: &csiChartVersion 1.0.3
 spec:
   destination:
