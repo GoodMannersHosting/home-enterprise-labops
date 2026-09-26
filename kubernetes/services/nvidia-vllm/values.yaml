@@ -52,6 +52,8 @@ controllers:
           - "131072"
           - --kv-cache-dtype
           - fp8
+          - --long-prefill-token-threshold
+          - "2048"
           - --served-model-name
           - nvidia-qwen3-32b-nvfp4
           - --enable-chunked-prefill
