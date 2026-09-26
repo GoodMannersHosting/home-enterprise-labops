@@ -49,7 +49,7 @@ controllers:
           - --gpu-memory-utilization
           - "0.9325"
           - --max-num-batched-tokens
-          - "32768"
+          - "16384"
           - --max-model-len
           - "131072"
           - --kv-cache-dtype
@@ -57,7 +57,7 @@ controllers:
           - --long-prefill-token-threshold
           - "2048"
           - --tensor-parallel-size
-          - "4"
+          - "1"
           - --served-model-name
           - nvidia-qwen3-32b-nvfp4
           - --enable-chunked-prefill
