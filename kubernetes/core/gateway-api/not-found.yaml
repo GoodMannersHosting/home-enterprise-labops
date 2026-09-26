@@ -1,0 +1,107 @@
+# Tiny backend that serves a friendly 404 page for hostnames that have no
+# matching HTTPRoute on the gwapi Gateway (see catchall-404.yaml).
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: not-found-config
+  namespace: default
+  labels:
+    app.kubernetes.io/name: not-found
+data:
+  nginx.conf: |
+    pid /tmp/nginx.pid;
+    worker_processes 1;
+    error_log /dev/stderr warn;
+    events {
+      worker_connections 64;
+    }
+    http {
+      access_log off;
+      client_body_temp_path /tmp/client-body;
+      proxy_temp_path /tmp/proxy;
+      fastcgi_temp_path /tmp/fastcgi;
+      uwsgi_temp_path /tmp/uwsgi;
+      scgi_temp_path /tmp/scgi;
+      server {
+        listen 8080;
+        server_tokens off;
+        default_type text/plain;
+        return 404 "404 Not Found\n\nHost \"$host\" does not have a service on this gateway.\n";
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: not-found
+  namespace: default
+  labels:
+    app.kubernetes.io/name: not-found
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: not-found
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: not-found
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
+      containers:
+        - name: nginx
+          image: docker.io/library/nginx:alpine
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+            - name: tmp
+              mountPath: /tmp
+            - name: cache
+              mountPath: /var/cache/nginx
+      volumes:
+        - name: config
+          configMap:
+            name: not-found-config
+        - name: tmp
+          emptyDir: {}
+        - name: cache
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: not-found
+  namespace: default
+  labels:
+    app.kubernetes.io/name: not-found
+spec:
+  selector:
+    app.kubernetes.io/name: not-found
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+      protocol: TCP

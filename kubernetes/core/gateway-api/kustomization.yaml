@@ -1,6 +1,9 @@
 resources:
   - gateway.yaml
   - gwapi-gw-options.yaml
+  - not-found.yaml
+  - catchall-404.yaml
+  - security-headers.yaml
   - meticulous-tcp-gateway.yaml
   - meticulous-tcp-gw-options.yaml
   - cert-wildcard.yaml

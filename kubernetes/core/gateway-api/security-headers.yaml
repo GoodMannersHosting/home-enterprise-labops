@@ -1,0 +1,41 @@
+# Adds security response headers to every response served through the gwapi
+# Gateway, equivalent to a gateway-wide ResponseHeaderModifier (HSTS is a
+# response header, so no RequestHeaderModifier is involved).
+#
+# Bound to the Gateway via targetRefs (Istio 1.30+); the GATEWAY context with
+# no virtualHost match applies the patch to all virtual hosts on all
+# gwapi listeners. TCP/UDP passthrough listeners are unaffected.
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: gateway-security-headers
+  namespace: default
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: gwapi
+  configPatches:
+    - applyTo: VIRTUAL_HOST
+      match:
+        context: GATEWAY
+      patch:
+        operation: MERGE
+        value:
+          response_headers_to_add:
+            - header:
+                key: Strict-Transport-Security
+                value: max-age=31536000; includeSubDomains
+              append_action: OVERWRITE
+            - header:
+                key: X-Content-Type-Options
+                value: nosniff
+              append_action: OVERWRITE
+            - header:
+                key: X-Frame-Options
+                value: SAMEORIGIN
+              append_action: OVERWRITE
+            - header:
+                key: Referrer-Policy
+                value: strict-origin-when-cross-origin
+              append_action: OVERWRITE

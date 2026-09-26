@@ -40,3 +40,99 @@ endpoints:
     interval: 1m
     conditions:
       - "[STATUS] == 200"
+  - name: Gateway (TCP 443)
+    url: "tcp://172.31.0.10:443"
+    interval: 1m
+    conditions:
+      - "[CONNECTED] == true"
+  # Bare UDP checks are connectionless: [CONNECTED] only proves the target IP
+  # is routable, not that the game process is listening. The Palworld Steam A2A
+  # check below additionally sends the 24-byte magic packet and requires a
+  # challenge reply, so it is a real liveness check.
+  - name: Palworld (UDP 8211)
+    url: "udp://172.31.0.10:8211"
+    interval: 5m
+    conditions:
+      - "[CONNECTED] == true"
+  - name: Palworld (Steam A2A UDP 27015)
+    url: "udp://172.31.0.10:27015"
+    interval: 5m
+    body: "\xfe\xfd\xfa\xef\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    conditions:
+      - "[CONNECTED] == true"
+      - "len([BODY]) > 0"
+  - name: Valheim (UDP 2456)
+    url: "udp://172.31.0.32:2456"
+    interval: 5m
+    conditions:
+      - "[CONNECTED] == true"
+  - name: Valheim (UDP 2457)
+    url: "udp://172.31.0.32:2457"
+    interval: 5m
+    conditions:
+      - "[CONNECTED] == true"
+  - name: Valheim2 (UDP 2556)
+    url: "udp://172.31.0.37:2556"
+    interval: 5m
+    conditions:
+      - "[CONNECTED] == true"
+  - name: Valheim2 (UDP 2557)
+    url: "udp://172.31.0.37:2557"
+    interval: 5m
+    conditions:
+      - "[CONNECTED] == true"
+  - name: Windrose (TCP 7777)
+    url: "tcp://172.31.0.33:7777"
+    interval: 5m
+    conditions:
+      - "[CONNECTED] == true"
+  - name: 9A Windrose (TCP 7778)
+    url: "tcp://172.31.0.34:7778"
+    interval: 5m
+    conditions:
+      - "[CONNECTED] == true"
+  - name: DNS Palworld
+    url: "1.1.1.1" # Address of the DNS server to use
+    interval: 5m
+    dns:
+      query-name: "palworld.cloud.danmanners.com"
+      query-type: "A"
+    conditions:
+      - "[BODY] == pat(*.*.*.*)"
+      - "[DNS_RCODE] == NOERROR"
+  - name: DNS Valheim
+    url: "1.1.1.1"
+    interval: 5m
+    dns:
+      query-name: "valheim.cloud.danmanners.com"
+      query-type: "A"
+    conditions:
+      - "[BODY] == pat(*.*.*.*)"
+      - "[DNS_RCODE] == NOERROR"
+  - name: DNS Valheim2
+    url: "1.1.1.1"
+    interval: 5m
+    dns:
+      query-name: "valheim2.cloud.danmanners.com"
+      query-type: "A"
+    conditions:
+      - "[BODY] == pat(*.*.*.*)"
+      - "[DNS_RCODE] == NOERROR"
+  - name: DNS Windrose
+    url: "1.1.1.1"
+    interval: 5m
+    dns:
+      query-name: "windrose.cloud.danmanners.com"
+      query-type: "A"
+    conditions:
+      - "[BODY] == pat(*.*.*.*)"
+      - "[DNS_RCODE] == NOERROR"
+  - name: DNS 9A Windrose
+    url: "1.1.1.1"
+    interval: 5m
+    dns:
+      query-name: "9a-windrose.cloud.danmanners.com"
+      query-type: "A"
+    conditions:
+      - "[BODY] == pat(*.*.*.*)"
+      - "[DNS_RCODE] == NOERROR"

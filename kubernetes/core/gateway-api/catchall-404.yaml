@@ -1,0 +1,148 @@
+# Catch-all HTTPRoutes so hostnames without a matching service get a friendly
+# 404 from the not-found backend instead of Istio's default response.
+#
+# Gateway API hostname precedence means the exact-hostname routes used by real
+# services always win; only unknown hosts reach these wildcard routes. They
+# attach to both the port-80 (http*) and port-443 (https*) listeners of each
+# zone; UDP/TLS-passthrough listeners cannot serve HTTPRoutes and are ignored.
+#
+# Wildcard hostnames create no external-dns records, and the gatus sidecar
+# (auto-httproute) is disabled for them because a wildcard hostname is not a
+# probeable URL.
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: catchall-404-capi-core
+  namespace: default
+  labels:
+    app.kubernetes.io/name: not-found
+  annotations:
+    external-dns.alpha.kubernetes.io/controller: "false"
+    gatus.home-operations.com/enabled: "false"
+spec:
+  hostnames:
+    - "*.capi-core.homelab.danmanners.com"
+  parentRefs:
+    - kind: Gateway
+      group: gateway.networking.k8s.io
+      name: gwapi
+      namespace: default
+  rules:
+    - name: catchall
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: not-found
+          port: 80
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: catchall-404-cloud
+  namespace: default
+  labels:
+    app.kubernetes.io/name: not-found
+  annotations:
+    external-dns.alpha.kubernetes.io/controller: "false"
+    gatus.home-operations.com/enabled: "false"
+spec:
+  hostnames:
+    - "*.cloud.danmanners.com"
+  parentRefs:
+    - kind: Gateway
+      group: gateway.networking.k8s.io
+      name: gwapi
+      namespace: default
+  rules:
+    - name: catchall
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: not-found
+          port: 80
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: catchall-404-goodmanners
+  namespace: default
+  labels:
+    app.kubernetes.io/name: not-found
+  annotations:
+    external-dns.alpha.kubernetes.io/controller: "false"
+    gatus.home-operations.com/enabled: "false"
+spec:
+  hostnames:
+    - "*.goodmanners.services"
+  parentRefs:
+    - kind: Gateway
+      group: gateway.networking.k8s.io
+      name: gwapi
+      namespace: default
+  rules:
+    - name: catchall
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: not-found
+          port: 80
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+---
+# End-to-end gateway probe: the exact hostname beats the catch-all wildcards,
+# external-dns (gateway-httproute source) publishes an A record for it pinned
+# to the gwapi LB IP, and the gatus sidecar turns the annotation into an
+# endpoint that checks DNS record + LB + TLS termination + route programming +
+# the catch-all backend in one shot. Expect HTTP 404 from the not-found svc.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: gateway-404-probe
+  namespace: default
+  labels:
+    app.kubernetes.io/name: not-found
+  annotations:
+    external-dns.alpha.kubernetes.io/target: 172.31.0.10
+    external-dns.alpha.kubernetes.io/ttl: "300"
+    gatus.home-operations.com/enabled: "true"
+    gatus.home-operations.com/endpoint: |-
+      name: Gateway (404 probe)
+      conditions:
+        - "[STATUS] == 404"
+      url: https://gateway-404.cloud.danmanners.com/
+      method: GET
+spec:
+  hostnames:
+    - gateway-404.cloud.danmanners.com
+  parentRefs:
+    - kind: Gateway
+      group: gateway.networking.k8s.io
+      name: gwapi
+      namespace: default
+      sectionName: https-cloud
+  rules:
+    - name: probe
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: not-found
+          port: 80
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
