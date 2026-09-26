@@ -55,6 +55,17 @@ controllers:
           # larger batches simply fall back to the piecewise/eager path.
           - --max-cudagraph-capture-size
           - "128"
+          # nvidia/Qwen3.8-27B-NVFP4 is a hybrid Mamba/attention model: each
+          # concurrent decode sequence needs one dedicated Mamba SSM-state
+          # cache block (separate from the paged attention KV cache), and
+          # only a limited number of those blocks fit in the memory budget.
+          # The default max_num_seqs (256) exceeds that pool, so CUDA graph
+          # capture refuses to start. Capping it here (comfortably below the
+          # observed ~121-block ceiling) is what the engine itself
+          # recommends; raise --gpu-memory-utilization instead if more
+          # concurrent decode slots are needed.
+          - --max-num-seqs
+          - "96"
         env:
           - name: VLLM_HOST_IP
             value: "0.0.0.0"
