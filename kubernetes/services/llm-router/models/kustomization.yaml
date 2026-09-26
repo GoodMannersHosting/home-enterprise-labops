@@ -6,6 +6,7 @@ kind: Kustomization
 # level. Every resource below sets its own metadata.namespace: aiml instead.
 
 resources:
-  - model-nvidia.yaml
-  - model-intel.yaml
+  - model-foundation.yaml
   - model-gptoss.yaml
+  - model-intel.yaml
+  - model-nvidia.yaml

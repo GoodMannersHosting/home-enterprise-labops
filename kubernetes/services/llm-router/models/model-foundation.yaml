@@ -1,0 +1,18 @@
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMModel
+metadata:
+  name: apple-foundation
+  namespace: aiml
+spec:
+  modelName: apple-foundation
+  params:
+    model: openai/foundation
+    apiBase: http://10.3.0.27:9999/v1
+    apiKey: "not-needed"
+    additional:
+      input_cost_per_token: 0.000000185
+      output_cost_per_token: 0.0000032397
+  info:
+    maxInputTokens: 4096
+    supportsFunctionCalling: true
