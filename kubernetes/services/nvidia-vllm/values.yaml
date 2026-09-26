@@ -37,12 +37,24 @@ controllers:
           - --max-num-batched-tokens
           - "8192"
           - --max-model-len
-          - "204800"
+          - "131072"
           - --kv-cache-dtype
           - fp8
           - --served-model-name
           - nvidia-qwen3-32b-nvfp4
           - --enable-chunked-prefill
+          # CUDA-graph capture/profiling allocates a KV cache buffer sized to
+          # min(max_num_seqs, max_cudagraph_capture_size) *before* the real KV
+          # cache is sized. The default cap (512 on this non-datacenter
+          # Blackwell GPU) needs ~12GB for that buffer alone, which OOMs on a
+          # 32GB card once model weights + CUDA/compile overhead (~22GB) are
+          # accounted for. Capping it here keeps full CUDA graphs (and thus
+          # --max-num-batched-tokens/--max-model-len unchanged) while shrinking
+          # the profiling buffer to a size that actually fits. 128 still covers
+          # realistic decode concurrency for a single-GPU homelab deployment;
+          # larger batches simply fall back to the piecewise/eager path.
+          - --max-cudagraph-capture-size
+          - "128"
         env:
           - name: VLLM_HOST_IP
             value: "0.0.0.0"
@@ -50,6 +62,17 @@ controllers:
             value: "8080"
           - name: HF_HOME
             value: /cache/huggingface
+          # hf-xet (bundled with huggingface_hub) already gives fast, chunked
+          # concurrent downloads by default; this just raises its concurrency
+          # ceiling. HF_TOKEN avoids anonymous-request rate limiting (and is
+          # required for gated models), same as intel-vllm.
+          - name: HF_XET_HIGH_PERFORMANCE
+            value: "1"
+          - name: HF_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: hf-secret
+                key: token
         securityContext:
           allowPrivilegeEscalation: false
         probes:
