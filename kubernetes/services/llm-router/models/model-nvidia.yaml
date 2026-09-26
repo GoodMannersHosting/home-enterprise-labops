@@ -7,7 +7,7 @@ metadata:
 spec:
   modelName: nvidia-llama
   params:
-    model: openai/nvidia-llama
+    model: openai/nvidia-qwen3-32b-nvfp4
     apiBase: http://nvidia-vllm-core.aiml.svc.cluster.local:8080/v1
     apiKeyRef:
       name: nvidia-llm-api-key
