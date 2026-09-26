@@ -89,7 +89,7 @@ controllers:
       main:
         image:
           repository: docker.io/chrislusf/seaweedfs
-          tag: "4.37"
+          tag: "4.47"
           pullPolicy: IfNotPresent
         command:
           - weed
