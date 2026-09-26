@@ -71,6 +71,11 @@ controllers:
             value: "0.0.0.0"
           - name: VLLM_PORT
             value: "8080"
+          - name: VLLM_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: nvidia-llm-api-key
+                key: api-key
           - name: HF_HOME
             value: /cache/huggingface
           # hf-xet (bundled with huggingface_hub) already gives fast, chunked
