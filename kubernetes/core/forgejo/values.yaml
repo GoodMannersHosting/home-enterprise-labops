@@ -181,7 +181,7 @@ controllers:
             protocol: TCP
         image:
           repository: getmeili/meilisearch
-          tag: "v1.48.3"
+          tag: "v1.54.0"
           pullPolicy: "IfNotPresent"
         securityContext:
           allowPrivilegeEscalation: false
