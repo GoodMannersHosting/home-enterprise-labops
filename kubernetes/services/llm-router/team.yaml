@@ -12,6 +12,7 @@ spec:
     - gptoss-llama
     - intel-llama
     - nvidia-llama
+    - apple-foundation
   members:
     - userID: dan
       role: user
