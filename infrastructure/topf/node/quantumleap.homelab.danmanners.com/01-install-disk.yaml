@@ -2,4 +2,4 @@ apiVersion: v1alpha1
 kind: UnattendedInstallConfig
 provisioning:
   diskSelector:
-    match: disk.wwid == "nvme.10ec-5450424632333034323130303730373030333533-5445414d20544d3846503632353647-00000001"
+    match: disk.wwid == "eui.0000000625053993caf25b04100000a7"
