@@ -14,3 +14,7 @@ history/
 .helm-*.rc
 .helm-*.err
 .helm-*.yaml
+
+# Things not to screw up and push
+kubeconfig
+infrastructure/topf/output/*.homelab.danmanners.com.yaml
