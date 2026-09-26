@@ -47,7 +47,7 @@ controllers:
           - --seed
           - "0"
           - --gpu-memory-utilization
-          - "0.9325"
+          - "0.9625"
           - --max-num-batched-tokens
           - "16384"
           - --max-model-len
