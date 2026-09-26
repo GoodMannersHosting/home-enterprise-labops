@@ -32,6 +32,18 @@ controllers:
         args:
           - --model
           - nvidia/Qwen3.8-27B-NVFP4
+          # VLLM_HOST_IP/VLLM_PORT (previously set below) do NOT control the
+          # API server's bind address -- those env vars are only used for
+          # internal distributed/IPC communication between the API server and
+          # engine-core processes. The actual HTTP server host/port are CLI
+          # args only, defaulting to host=all-interfaces, port=8000. Since
+          # neither was set, the server was listening on 8000 while the
+          # container port/Service/probes all expect 8080 -- hence
+          # "connection refused" on every port-forward/curl to 8080.
+          - --host
+          - "0.0.0.0"
+          - --port
+          - "8080"
           - --gpu-memory-utilization
           - "0.9325"
           - --max-num-batched-tokens
@@ -67,10 +79,6 @@ controllers:
           - --max-num-seqs
           - "96"
         env:
-          - name: VLLM_HOST_IP
-            value: "0.0.0.0"
-          - name: VLLM_PORT
-            value: "8080"
           - name: VLLM_API_KEY
             valueFrom:
               secretKeyRef:
