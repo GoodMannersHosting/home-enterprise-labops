@@ -37,7 +37,9 @@ controllers:
           - --max-num-batched-tokens
           - "8192"
           - --max-model-len
-          - "262144"
+          - "204800"
+          - --kv-cache-dtype
+          - fp8
           - --served-model-name
           - nvidia-qwen3-32b-nvfp4
           - --enable-chunked-prefill
