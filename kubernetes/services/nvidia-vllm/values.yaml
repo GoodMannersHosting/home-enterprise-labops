@@ -49,7 +49,7 @@ controllers:
           - --gpu-memory-utilization
           - "0.945"
           - --max-num-batched-tokens
-          - "8192"
+          - "16384"
           - --max-model-len
           - "184320"
           - --kv-cache-dtype
