@@ -47,11 +47,11 @@ controllers:
           - --seed
           - "0"
           - --gpu-memory-utilization
-          - "0.945"
+          - "0.955"
           - --max-num-batched-tokens
-          - "16384"
+          - "12288"
           - --max-model-len
-          - "184320"
+          - "143360"
           - --kv-cache-dtype
           - fp8_e4m3
           - --long-prefill-token-threshold
