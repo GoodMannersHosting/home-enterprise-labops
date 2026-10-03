@@ -15,6 +15,7 @@ spec:
   generalSettings:
     background_health_checks: true
     health_check_interval: 300
+    otel: true
   litellmSettings:
     drop_params: true
     request_timeout: 900 # intel-llama can outlast the default on long prefills
@@ -33,6 +34,7 @@ spec:
   callbacks:
     callbacks:
       - prometheus
+      - otel
   resources:
     requests:
       cpu: 100m
@@ -121,6 +123,16 @@ spec:
     # own convention, not "<clustername>-valkey".
     - name: REDIS_CLUSTER_NODES
       value: '[{"host": "valkey-llm-router.aiml.svc.cluster.local", "port": "6379"}]'
+    # Traces go to the alloy-receiver collector in ../../core/k8s-monitoring
+    # (applicationObservability feature), not straight to Grafana Cloud Tempo:
+    # that collector already holds the oauth2 creds Tempo needs, so the proxy
+    # only ever talks to an unauthenticated in-cluster OTLP/HTTP endpoint.
+    - name: OTEL_EXPORTER_OTLP_ENDPOINT
+      value: http://k8s-monitoring-alloy-receiver.monitoring.svc.cluster.local:4318
+    - name: OTEL_EXPORTER_OTLP_PROTOCOL
+      value: http/protobuf
+    - name: OTEL_SERVICE_NAME
+      value: llm-router
     - name: OIDC_GROUP_CLAIM
       value: groups
     - name: OIDC_GROUP_TO_ROLE_MAP

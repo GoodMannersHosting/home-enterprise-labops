@@ -62,6 +62,22 @@ destinations:
 #
 # Features
 #
+applicationObservability:
+  enabled: true
+  collector: alloy-receiver
+  receivers:
+    otlp:
+      http:
+        enabled: true
+        port: 4318
+  # Scoped to traces only: cluster/host/integration metrics already flow through
+  # alloy-metrics -> Mimir, and pod logs through alloy-logs -> Loki. Leaving these
+  # on would need an otlp-ecosystem destination for metrics/logs (ours - mimir/loki -
+  # aren't otlp), which fails chart validation at render time.
+  metrics:
+    enabled: false
+  logs:
+    enabled: false
 clusterMetrics:
   enabled: true
   collector: alloy-metrics
@@ -187,6 +203,12 @@ collectors:
           - name: alertmanager-global
             secret:
               secretName: alertmanager-global-config
+  # Receives OTLP from in-cluster apps (currently just llm-router) and forwards
+  # to the tempo destination above, which already carries the oauth2 creds for
+  # Grafana Cloud Tempo - apps never need their own OTLP auth. Plain `deployment`
+  # preset: this isn't scraped by anything itself, just a receive-and-forward hop.
+  alloy-receiver:
+    presets: [deployment]
   alloy-logs:
     presets: [clustered, daemonset]
     alloy:

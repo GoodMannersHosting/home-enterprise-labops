@@ -292,3 +292,16 @@ Swap `model` for `intel-llama` to hit the Arc B70 box instead.
 - **Uptime**: added as a static entry in `../../core/gatus/resources/config.yaml`
   rather than the usual `gatus.home-operations.com/*` annotation, because the
   operator owns this `HTTPRoute` and doesn't expose an annotations field on it.
+- **Traces**: `proxy.yaml` enables litellm's `otel` callback
+  ([OpenTelemetry v2](https://docs.litellm.ai/docs/observability/opentelemetry_v2))
+  via `litellmSettings.callbacks` + `generalSettings.otel: true`, and points
+  `OTEL_EXPORTER_OTLP_ENDPOINT` at the `alloy-receiver` collector
+  (`applicationObservability` feature in `../../core/k8s-monitoring/values.yaml`)
+  instead of Grafana Cloud Tempo directly — that collector already holds the
+  oauth2 credentials Tempo needs (see its `tempo` destination), so the proxy
+  only ever talks to an unauthenticated in-cluster OTLP/HTTP endpoint
+  (`k8s-monitoring-alloy-receiver.monitoring.svc.cluster.local:4318`). Traces
+  land in Grafana Cloud Tempo under the `llm-router` service name
+  (`OTEL_SERVICE_NAME`). The `alloy-receiver` collector is traces-only
+  (`applicationObservability.metrics/logs.enabled: false`) since cluster
+  metrics/logs already flow through the other collectors above.
