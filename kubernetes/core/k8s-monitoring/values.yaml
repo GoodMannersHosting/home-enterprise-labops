@@ -52,10 +52,6 @@ destinations:
           - tenant
           - tempo:write
         endpointParams:
-          # otelcol.auth.oauth2 (used by the otlp-type tempo destination) types
-          # endpoint_params as map(list(string)), unlike the oauth2 block
-          # prometheus.remote_write/loki.write use for mimir/loki, which accepts
-          # a plain string here - hence the list.
           grant_type: [client_credentials]
     secret:
       create: false
