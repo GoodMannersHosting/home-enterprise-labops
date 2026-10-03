@@ -88,8 +88,6 @@ nodeLogs:
 podLogsViaKubernetesApi:
   enabled: true
   collector: alloy-logs
-applicationObservability:
-  enabled: false
 autoInstrumentation:
   enabled: false
 annotationAutodiscovery:
