@@ -180,7 +180,7 @@ controllers:
         dependsOn: wait-nats
         image:
           repository: docker.io/natsio/nats-box
-          tag: "0.19.7"
+          tag: "0.20.0"
           pullPolicy: IfNotPresent
         command:
           - sh
@@ -404,7 +404,7 @@ controllers:
         dependsOn: wait-nats
         image:
           repository: docker.io/natsio/nats-box
-          tag: "0.19.7"
+          tag: "0.20.0"
           pullPolicy: IfNotPresent
         command:
           - sh
