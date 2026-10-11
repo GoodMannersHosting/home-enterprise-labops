@@ -79,9 +79,9 @@ controllers:
           - --gpu-memory-util
           - "0.90"
           - --max-num-batched-tokens
-          - "8192"
+          - "4096"
           - --max-model-len
-          - "262144"
+          - "101376"
           - --block-size
           - "64"
           - --tensor-parallel-size

@@ -15,6 +15,7 @@ spec:
     additional:
       input_cost_per_token: 0.00000249
       output_cost_per_token: 0.00000249
+      thinking_always_on: false
   info:
     maxInputTokens: 786432
     supportsFunctionCalling: true
