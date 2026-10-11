@@ -47,3 +47,14 @@ nodes:
     ip: 172.21.0.21
     role: worker
     schematicId: "@schematics/armstrong.yaml"
+  # Something is wrong with the rendering, don't know what yet.
+  # https://factory.talos.dev/?arch=amd64&platform=metal&schematic-id=a96441e6619ba33517206a29b877d81c12f8979bfbbd2c6850dd89bd393727df&target=metal&version=1.14.1
+  # Correct Schematic ID: a96441e6619ba33517206a29b877d81c12f8979bfbbd2c6850dd89bd393727df
+  - host: parenttrap.homelab.danmanners.com
+    ip: 172.21.0.22
+    role: worker
+    schematicId: "@schematics/intel-npu.yaml"
+  - host: rootbeer.homelab.danmanners.com
+    ip: 172.21.0.23
+    role: worker
+    schematicId: "@schematics/intel.yaml"

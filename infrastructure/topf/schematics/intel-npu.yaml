@@ -1,0 +1,22 @@
+customization:
+  extraKernelArgs:
+    - apparmor=0
+    - init_on_alloc=0
+    - init_on_free=0
+    - mitigations=off
+    - security=none
+    - selinux=0
+    - talos.auditd.disabled=1
+  systemExtensions:
+    officialExtensions:
+      - siderolabs/binfmt-misc
+      - siderolabs/i915
+      - siderolabs/intel-ice-firmware
+      - siderolabs/intel-npu
+      - siderolabs/intel-ucode
+      - siderolabs/mei
+      - siderolabs/nvme-cli
+      - siderolabs/thunderbolt
+      - siderolabs/util-linux-tools
+      - siderolabs/wasmedge
+      - siderolabs/xe

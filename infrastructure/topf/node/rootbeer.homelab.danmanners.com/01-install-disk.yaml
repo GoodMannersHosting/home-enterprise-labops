@@ -1,0 +1,5 @@
+apiVersion: v1alpha1
+kind: UnattendedInstallConfig
+provisioning:
+  diskSelector:
+    match: disk.wwid == "naa.50026b7785acb5ee"
