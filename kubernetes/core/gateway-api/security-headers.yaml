@@ -26,16 +26,16 @@ spec:
             - header:
                 key: Strict-Transport-Security
                 value: max-age=31536000; includeSubDomains
-              append_action: OVERWRITE
+              append_action: APPEND_IF_NOT_PRESENT
             - header:
                 key: X-Content-Type-Options
                 value: nosniff
-              append_action: OVERWRITE
+              append_action: APPEND_IF_NOT_PRESENT
             - header:
                 key: X-Frame-Options
                 value: SAMEORIGIN
-              append_action: OVERWRITE
+              append_action: APPEND_IF_NOT_PRESENT
             - header:
                 key: Referrer-Policy
                 value: strict-origin-when-cross-origin
-              append_action: OVERWRITE
+              append_action: APPEND_IF_NOT_PRESENT
