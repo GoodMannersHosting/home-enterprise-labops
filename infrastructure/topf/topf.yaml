@@ -58,3 +58,7 @@ nodes:
     ip: 172.21.0.23
     role: worker
     schematicId: "@schematics/intel.yaml"
+  - host: threadbare.homelab.danmanners.com
+    ip: 172.21.0.24
+    role: worker
+    schematicId: "@schematics/intel.yaml"
