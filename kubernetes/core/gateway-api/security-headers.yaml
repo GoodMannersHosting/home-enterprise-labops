@@ -23,19 +23,22 @@ spec:
         operation: MERGE
         value:
           response_headers_to_add:
+            # append_action must be numeric here: this istiod's EnvoyFilter
+            # webhook (legacy jsonpb) rejects string enum names.
+            # 0=APPEND, 1=APPEND_IF_NOT_PRESENT
             - header:
                 key: Strict-Transport-Security
                 value: max-age=31536000; includeSubDomains
-              append_action: APPEND_IF_NOT_PRESENT
+              append_action: 1
             - header:
                 key: X-Content-Type-Options
                 value: nosniff
-              append_action: APPEND_IF_NOT_PRESENT
+              append_action: 1
             - header:
                 key: X-Frame-Options
                 value: SAMEORIGIN
-              append_action: APPEND_IF_NOT_PRESENT
+              append_action: 1
             - header:
                 key: Referrer-Policy
                 value: strict-origin-when-cross-origin
-              append_action: APPEND_IF_NOT_PRESENT
+              append_action: 1
