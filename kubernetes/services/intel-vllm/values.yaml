@@ -67,7 +67,7 @@ controllers:
           tag: 0.26.0-b2
           pullPolicy: Always
         args:
-          - huihui-ai/Huihui-Qwen3-Coder-30B-A3B-Instruct-abliterated
+          - cyankiwi/Qwen3-Coder-30B-A3B-Instruct-AWQ-4bit
           - --host
           - 0.0.0.0
           - --port
@@ -88,7 +88,7 @@ controllers:
           - "1"
           - --enforce-eager
           - --served-model-name
-          - intel-qwen3-coder-1m
+          - intel-qwen3-coder
           - --enable-auto-tool-choice
           - --tool-call-parser
           - qwen3_coder
