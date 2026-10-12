@@ -57,3 +57,11 @@ label, pod creation fails and the DaemonSet stays at 0/1.
 `grafana.dashboards` is disabled — the cluster has no in-cluster Grafana
 to load the dashboard ConfigMap. If one is added, enable it and point
 `grafana.namespace` at the Grafana install.
+
+[`grafana-dashboard.json`](grafana-dashboard.json) is the upstream
+dashboard ([`json/dashboard.json`](https://github.com/intel/xpumanager/blob/main/xpumd/charts/xpumd/json/dashboard.json),
+Grafana v12 Dashboard API format) converted to the classic copy/paste
+dashboard model (`schemaVersion 39`) — paste it into Grafana's
+*Import dashboard* JSON box. It expects a Prometheus datasource variable
+named `Metrics` (preselected: `Prometheus`) and a `node` label from
+`hw_gpu_info`, which the xpumd prometheus exporter provides.
