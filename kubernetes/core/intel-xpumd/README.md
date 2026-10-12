@@ -43,6 +43,15 @@ plugin's node-feature-rules overlay) matches **8 nodes**, but only
 others only expose CPU iGPUs (PCI 0300-xxxx). A daemon pod on those nodes
 would run with a failing Sysman init and collect nothing.
 
+## Namespace PSA labels
+
+The namespace carries `pod-security.kubernetes.io/{enforce,audit,warn}:
+privileged` (see `namespace.yaml`). The Talos cluster enables a
+cluster-wide PodSecurity admission default of **baseline** for unlabeled
+namespaces (only `kube-system` is exempt), and baseline rejects the
+`PERFMON` capability and hostPath volumes this daemon needs — without the
+label, pod creation fails and the DaemonSet stays at 0/1.
+
 ## Grafana dashboards
 
 `grafana.dashboards` is disabled — the cluster has no in-cluster Grafana

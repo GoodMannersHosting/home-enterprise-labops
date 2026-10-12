@@ -14,6 +14,9 @@ spec:
   sources:
     - repoURL: &repo https://github.com/GoodMannersHosting/home-enterprise-labops.git
       targetRevision: &targetRevision main
+      path: kubernetes/core/intel-xpumd
+    - repoURL: *repo
+      targetRevision: *targetRevision
       ref: values
     - repoURL: ghcr.io/intel/xpumanager/charts
       chart: xpumd
@@ -27,4 +30,3 @@ spec:
       selfHeal: true
     syncOptions:
       - ServerSideApply=true
-      - CreateNamespace=true
