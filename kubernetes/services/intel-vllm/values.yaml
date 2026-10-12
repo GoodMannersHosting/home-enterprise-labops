@@ -1,17 +1,26 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
 ---
 # Intel ARC B70 PRO (32GB) with intel/llm-scaler-vllm,
-# cyankiwi/Qwen3-Coder-30B-A3B-Instruct-AWQ-4bit.
+# Qwen/Qwen3.6-35B-A3B (Qwen3_5MoeForConditionalGeneration).
 # intel/llm-scaler-vllm is Intel's optimized vLLM fork for Arc/Battlemage GPUs.
 #
-# Qwen3-Coder-30B-A3B is a 30B MoE (~3B active). BF16 weights are ~60GB and do
-# not fit a 32GB card (online FP8 ~30GB leaves no KV headroom), so the AWQ
-# 4-bit checkpoint (~17GB weights) is used. vLLM auto-detects the quantization
-# from the checkpoint (compressed-tensors WNA16); no --quantization flag.
+# Qwen3.6-35B-A3B is a 35B MoE (~3B active) with hybrid Gated DeltaNet + full
+# attention (one full-attention layer per 4). The BF16 checkpoint is ~72GB, so
+# a single 32GB card must run 4-bit: online symmetric INT4
+# (--quantization sym_int4, llm-scaler's documented path for this model; the
+# ~36GB FP8 checkpoint does not fit either). Weights are quantized from the
+# cached BF16 checkpoint at every startup.
 #
-# --max-model-len 32768 is the model's native context (256K only via YaRN).
-# At 96 KiB KV/token the 0.95 memory budget leaves ~124K tokens of KV, so the
-# 32K cap still allows ~3 concurrent full-length requests.
+# KV is cheap on the hybrid stack (20 KiB/token: 10 full-attention layers,
+# 2 KV heads, head_dim 256), so --max-model-len 131072 still allows several
+# concurrent full-length sequences; the native 262144 also fits if needed.
+#
+# MTP speculative decoding (--speculative-config qwen3_5_mtp, 4 draft tokens)
+# is verified by llm-scaler on this exact model.
+#
+# Thinking mode is ON by default in this model's chat template; clients that
+# need fast, non-thinking responses (e.g. VSCode autocomplete via Continue)
+# pass chat_template_kwargs: {enable_thinking: false}.
 defaultPodOptions:
   automountServiceAccountToken: false
   enableServiceLinks: false
@@ -41,19 +50,29 @@ controllers:
           tag: 0.26.0-b2
           pullPolicy: Always
         args:
-          - cyankiwi/Qwen3-Coder-30B-A3B-Instruct-AWQ-4bit
+          - Qwen/Qwen3.6-35B-A3B
           - --host
           - 0.0.0.0
           - --port
           - "8080"
           - --dtype
           - float16
+          # Online 4-bit: the only variant of this model that fits one 32GB
+          # card. BF16 weights (~72GB) are cached on the PVC and quantized at
+          # load time (llm-scaler §2.2 / §3.2).
+          - --quantization
+          - sym_int4
+          # DeltaNet (linear-attention) state in FP16 (llm-scaler reference).
+          - --mamba-ssm-cache-dtype
+          - float16
+          # Skip the vision tower (~2GB) — text-only workloads.
+          - --language-model-only
           - --gpu-memory-util
           - "0.95"
           - --max-num-batched-tokens
           - "8192"
           - --max-model-len
-          - "32768"
+          - "131072"
           - --max-num-seqs
           - "8"
           - --block-size
@@ -62,18 +81,25 @@ controllers:
           - "1"
           - --enforce-eager
           - --served-model-name
-          - intel-qwen3-coder
+          - intel-qwen36
           - --enable-auto-tool-choice
           - --tool-call-parser
           - qwen3_coder
           - --enable-prefix-caching
           - --trust-remote-code
+          # 1-layer MTP head, verified on Qwen3.6-35B-A3B by llm-scaler §3.6.
+          - --speculative-config
+          - '{"method":"qwen3_5_mtp","num_speculative_tokens":4}'
         env:
           - name: VLLM_WORKER_MULTIPROC_METHOD
             value: spawn
           - name: HF_HOME
             value: /cache/huggingface
-          # Without this the ~17GB weight pull runs anonymously; vLLM logs
+          # llm-scaler §3.2: the dynamic INT4 kernels live in this shared
+          # library. The docs point at dist-packages; this image is a venv.
+          - name: VLLM_QUANTIZE_Q40_LIB
+            value: /opt/venv/lib/python3.12/site-packages/vllm_int4_for_multi_arc.so
+          # Without this the ~72GB weight pull runs anonymously; vLLM logs
           # "You are sending unauthenticated requests to the HF Hub" and the
           # download is rate-limited.
           - name: HF_TOKEN
