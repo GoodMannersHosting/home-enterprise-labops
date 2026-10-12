@@ -1,23 +1,17 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
 ---
-# Intel ARC B70 PRO with intel/llm-scaler-vllm, Gemma 4 12B-it in FP8 quantization.
+# Intel ARC B70 PRO (32GB) with intel/llm-scaler-vllm,
+# cyankiwi/Qwen3-Coder-30B-A3B-Instruct-AWQ-4bit.
 # intel/llm-scaler-vllm is Intel's optimized vLLM fork for Arc/Battlemage GPUs.
-# Gemma 4 12B FP8 weights ~12GB; max-model-len capped at 90K per Intel reference commands.
 #
-# google/gemma-4-12B-it is NOT the same architecture as the other Gemma 4 models:
-# its model_type is `gemma4_unified` (Gemma4UnifiedForConditionalGeneration), the
-# encoder-free variant, which HF added in transformers 5.10. The 0.26.0-b2 image
-# already implements Gemma4UnifiedForConditionalGeneration in its vLLM fork, but it
-# ships transformers 5.8.0, whose config registry only knows `gemma4`. AutoConfig
-# therefore rejects the checkpoint before vLLM ever sees it.
-# See https://github.com/intel/llm-scaler/issues/705
+# Qwen3-Coder-30B-A3B is a 30B MoE (~3B active). BF16 weights are ~60GB and do
+# not fit a 32GB card (online FP8 ~30GB leaves no KV headroom), so the AWQ
+# 4-bit checkpoint (~17GB weights) is used. vLLM auto-detects the quantization
+# from the checkpoint (compressed-tensors WNA16); no --quantization flag.
 #
-# Fix: the init container below overlays transformers 5.10.2 onto PYTHONPATH.
-# --no-deps is required so the image's pinned huggingface-hub/tokenizers/numpy
-# (which torch + the vLLM fork are built against) are left untouched.
-# Do NOT replace this with `--hf-overrides '{"model_type":"gemma4"}'`: vLLM applies
-# hf_overrides *after* AutoConfig.from_pretrained(), so it cannot fix a model_type
-# the installed transformers cannot resolve in the first place.
+# --max-model-len 32768 is the model's native context (256K only via YaRN).
+# At 96 KiB KV/token the 0.95 memory budget leaves ~124K tokens of KV, so the
+# 32K cap still allows ~3 concurrent full-length requests.
 defaultPodOptions:
   automountServiceAccountToken: false
   enableServiceLinks: false
@@ -36,26 +30,6 @@ controllers:
     type: deployment
     replicas: 1
     revisionHistoryLimit: 2
-    initContainers:
-      transformers-overlay:
-        # Same image as `core` so pip targets the identical Python 3.12 and the
-        # layer is already present on the node (no extra pull).
-        image:
-          repository: intel/llm-scaler-vllm
-          tag: 0.26.0-b2
-          pullPolicy: IfNotPresent
-        command:
-          - /bin/sh
-          - -c
-          - pip install --quiet --no-deps --target /transformers-overlay "transformers==5.10.2"
-        securityContext: {}
-        resources:
-          requests:
-            cpu: "200m"
-            memory: "512Mi"
-          limits:
-            cpu: "1000m"
-            memory: "2Gi"
     containers:
       core:
         ports:
@@ -74,14 +48,14 @@ controllers:
           - "8080"
           - --dtype
           - float16
-          - --mamba-ssm-cache-dtype
-          - float16
           - --gpu-memory-util
-          - "0.90"
+          - "0.95"
           - --max-num-batched-tokens
-          - "4096"
+          - "8192"
           - --max-model-len
-          - "101376"
+          - "32768"
+          - --max-num-seqs
+          - "8"
           - --block-size
           - "64"
           - --tensor-parallel-size
@@ -95,18 +69,11 @@ controllers:
           - --enable-prefix-caching
           - --trust-remote-code
         env:
-          - name: VLLM_XPU_ENABLE_XPU_GRAPH
-            value: "1"
-          - name: VLLM_ALLOW_LONG_MAX_MODEL_LEN
-            value: "1"
           - name: VLLM_WORKER_MULTIPROC_METHOD
             value: spawn
           - name: HF_HOME
             value: /cache/huggingface
-          # Must precede the venv so transformers 5.10.2 shadows the bundled 5.8.0.
-          - name: PYTHONPATH
-            value: /transformers-overlay
-          # Without this the ~12GB weight pull runs anonymously; vLLM logs
+          # Without this the ~17GB weight pull runs anonymously; vLLM logs
           # "You are sending unauthenticated requests to the HF Hub" and the
           # download is rate-limited.
           - name: HF_TOKEN
@@ -186,15 +153,5 @@ persistence:
         core:
           - path: /dev/shm
             readOnly: false
-  transformers-overlay:
-    enabled: true
-    type: emptyDir
-    advancedMounts:
-      main:
-        transformers-overlay:
-          - path: /transformers-overlay
-            readOnly: false
-        core:
-          - path: /transformers-overlay
-            readOnly: true
+
 

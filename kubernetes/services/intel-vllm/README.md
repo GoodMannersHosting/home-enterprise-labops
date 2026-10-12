@@ -1,48 +1,36 @@
 # intel-vllm (intel/llm-scaler-vllm on Intel Arc B70 PRO)
 
 OpenAI-compatible inference on `intellectual` using `gpu.intel.com/xe` and
-Intel's optimized vLLM fork (`intel/llm-scaler-vllm`). Flags are taken
-directly from the [intel/llm-scaler README §3.3](https://github.com/intel/llm-scaler/blob/main/vllm/README.md/#33-reference-commands-for-running-gemma-4-models-and-diffusiongemma).
+Intel's optimized vLLM fork (`intel/llm-scaler-vllm`). Flags follow the
+single-GPU Arc reference commands in the [intel/llm-scaler README](https://github.com/intel/llm-scaler/blob/main/vllm/README.md)
+(`--enforce-eager`, `--block-size 64`, `--tensor-parallel-size 1`).
 
 ## Model
 
 | Item | Value |
 |------|--------|
-| Hugging Face repo | `google/gemma-4-12B-it` |
-| Architecture | `gemma4_unified` / `Gemma4UnifiedForConditionalGeneration` |
-| Quantization | FP8 online (`--quantization fp8`) |
-| Context | `90000` (`--max-model-len`) |
+| Hugging Face repo | `cyankiwi/Qwen3-Coder-30B-A3B-Instruct-AWQ-4bit` |
+| Architecture | `Qwen3MoeForCausalLM` (30B MoE, ~3B active) |
+| Quantization | AWQ 4-bit, auto-detected from the checkpoint (`compressed-tensors` WNA16) |
+| Context | `32768` (`--max-model-len`, native; 256K only via YaRN) |
 | Image | `intel/llm-scaler-vllm:0.26.0-b2` (latest tag as of 2026-09) |
 
-### transformers overlay (upstream bug workaround)
+### Why AWQ 4-bit
 
-`google/gemma-4-12B-it` is the *encoder-free* Gemma 4 variant: its `model_type`
-is `gemma4_unified`, not `gemma4`, and HF only registered that config in
-**transformers 5.10**. The `0.26.0-b2` image already implements
-`Gemma4UnifiedForConditionalGeneration` in its vLLM fork, but ships
-**transformers 5.8.0**, so `AutoConfig.from_pretrained()` rejects the checkpoint
-before vLLM is reached:
+The B70 PRO has 32 GiB. BF16 weights for this model are ~60 GB and even
+online FP8 (~30 GB) leaves no KV-cache headroom, so the AWQ 4-bit checkpoint
+(~17 GB weights) is used. vLLM reads the quantization from the checkpoint's
+config — there is deliberately **no** `--quantization` flag (Intel documents
+this for pre-quantized AWQ/GPTQ models).
 
-```
-ValueError: The checkpoint you are trying to load has model type `gemma4_unified`
-but Transformers does not recognize this architecture.
-```
+### Context sizing
 
-Tracked upstream as [intel/llm-scaler#705](https://github.com/intel/llm-scaler/issues/705).
-
-The `transformers-overlay` init container works around this by installing
-`transformers==5.10.2` into an `emptyDir` that is prepended to `PYTHONPATH`.
-`--no-deps` is deliberate: it leaves the image's pinned `huggingface-hub`,
-`tokenizers` and `numpy` in place, which torch and the vLLM fork are built
-against. Installing *with* deps breaks the runtime.
-
-> `--hf-overrides '{"model_type":"gemma4"}'` does **not** work and was removed.
-> vLLM applies `hf_overrides` *after* `AutoConfig.from_pretrained()`, so it
-> cannot rescue a `model_type` the installed transformers cannot resolve.
-> It is also semantically wrong — `gemma4` is a different architecture with
-> vision/audio encoder towers that this checkpoint does not have.
-
-Drop the init container once Intel ships an image with transformers ≥ 5.10.
+Qwen3-30B-A3B KV cache is 96 KiB/token (48 layers × 4 KV heads × 128 dim,
+FP16). At `--gpu-memory-util 0.95` the KV pool is ~12 GiB (~124K tokens), so
+the 32K cap allows ~3 concurrent full-length requests. Raising
+`--max-model-len` toward the 256K YaRN maximum is possible but drops
+concurrency to 1 at 100K+; if that is ever needed, pair it with
+`--kv-cache-dtype fp8_e4m3` (llm-scaler §3.5) to double KV capacity.
 
 ## Endpoints
 
@@ -85,10 +73,10 @@ curl -s http://intel-llm.cloud.danmanners.com/v1/models \
 ```
 
 First sync can take a long time while the model downloads from Hugging Face
-(~12 GB for Gemma 4 12B-it).
+(~17 GB for the AWQ checkpoint).
 
-> **Note:** `google/gemma-4-12B-it` is a gated model. You must accept Google's
-> license on HuggingFace and store the token in OpenBao before deploying:
+> **Note:** `HF_TOKEN` (from `hf-secret` in OpenBao) keeps the download
+> authenticated and out of the anonymous rate limit:
 > ```bash
 > bao login -method=oidc role=keeper-admin
 > bao kv put dan/aiml/hf-token token=hf_xxxxxxxxxxxx
@@ -105,8 +93,9 @@ automatically, no manual sync needed.
 - vLLM uses continuous batching for efficient multi-request handling.
 - `--enable-prefix-caching` reuses KV cache across requests sharing a prefix
   (e.g. a common system prompt).
-- Flags follow Intel's reference command for this model, which pins
-  `--max-model-len 90000`, `--block-size 64` and `--tensor-parallel-size 1`.
+- `--max-num-batched-tokens 8192` and `--max-num-seqs 8` follow the
+  llm-scaler reference values; the KV pool, not the seq cap, is the real
+  concurrency limit.
 
 ## Troubleshooting
 
@@ -118,10 +107,6 @@ automatically, no manual sync needed.
   Subsequent restarts use the cached copy on the PVC.
 - **OOM errors:** Reduce `--max-model-len` or `--max-num-batched-tokens` if VRAM
   pressure is observed.
-- **`model type gemma4_unified` not recognized:** the `transformers-overlay`
-  init container did not run or `PYTHONPATH` is unset. Confirm with:
-  ```bash
-  kubectl exec -n aiml deploy/intel-vllm -- \
-    python3 -c "import transformers; print(transformers.__version__)"
-  # expect 5.10.2, not 5.8.0
-  ```
+- **`The model 'X' does not exist` (404):** clients must send
+  `model: "intel-qwen3-coder"`. The Hugging Face repo name and any previous
+  model names (e.g. `intel-gemma-4-12b-fp8`) are not served.
