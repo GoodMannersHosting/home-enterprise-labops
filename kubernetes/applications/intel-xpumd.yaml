@@ -1,0 +1,30 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: intel-xpumd
+  namespace: argocd
+  labels:
+    chartVersion: &chartVersion 2.2.0
+spec:
+  destination:
+    namespace: intel-xpu
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+    - repoURL: &repo https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: &targetRevision main
+      ref: values
+    - repoURL: ghcr.io/intel/xpumanager/charts
+      chart: xpumd
+      targetRevision: *chartVersion
+      helm:
+        valueFiles:
+          - $values/kubernetes/core/intel-xpumd/values.yaml
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true

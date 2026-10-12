@@ -1,0 +1,41 @@
+# Intel XPU Manager Daemon (xpumd) — Intel's GPU monitoring daemon for the
+# ARC B70 PRO on node `intellectual`.
+#
+# Chart: oci://ghcr.io/intel/xpumanager/charts (xpumd)
+# Docs: https://github.com/intel/xpumanager
+#
+# gpuAccess=plugin: the Intel GPU device plugin (v0.36.0, see ../intel-gpu/)
+# runs with the default "single" monitoring mode, exposing the combined
+# `gpu.intel.com/monitoring` resource (1 per node). The per-KMD
+# `xe_monitoring` / `i915_monitoring` resources are 0 unless the plugin runs
+# with --monitoring-mode=split, so `gpuAccess=xe` would leave the pod
+# Pending.
+gpuAccess: plugin
+
+nodeSelector:
+  # `intel.feature.node.kubernetes.io/gpu=true` (NFD) matches 8 nodes, but
+  # only `intellectual` has a discrete Intel GPU (ARC B70 PRO, PCI
+  # 0380-a780); the rest only have CPU iGPUs and would run a useless
+  # daemon.
+  kubernetes.io/hostname: intellectual
+
+# Add the prometheus exporter (0.0.0.0:8080) on top of the default local
+# intel_xpu_info exporter (unix/gRPC socket), and create the Service +
+# ServiceMonitor so the in-cluster Alloy scrapes it into Mimir.
+config:
+  service:
+    pipelines:
+      metrics:
+        exporters: [intel_xpu_info, prometheus]
+
+prometheus:
+  monitor: true
+  # Release name of the kube-prometheus-stack chart (see
+  # applications/monitoring.yaml). Only the prometheus-operator runs
+  # in-cluster; Alloy scrapes ServiceMonitors cluster-wide, the label just
+  # follows cluster convention.
+  release: monitoring
+
+# grafana.dashboards is left disabled: there is no in-cluster Grafana to
+# consume the dashboard ConfigMap. Enable it (with grafana.namespace set to
+# wherever the dashboards get loaded) if an in-cluster Grafana is added.
