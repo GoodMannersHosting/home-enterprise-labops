@@ -136,7 +136,7 @@ persistence:
     type: persistentVolumeClaim
     storageClass: ceph-block-retain
     accessMode: ReadWriteOnce
-    size: 100Gi
+    size: 200Gi
     retain: true
     advancedMounts:
       main:

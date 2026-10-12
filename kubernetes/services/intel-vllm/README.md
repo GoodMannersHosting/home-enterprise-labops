@@ -82,6 +82,23 @@ First sync can take a long time while the model downloads from Hugging Face
 > bao kv put dan/aiml/hf-token token=hf_xxxxxxxxxxxx
 > ```
 
+## Storage
+
+The Hugging Face model cache lives on a 200 GiB PVC
+(`persistence.cache`, storage class `ceph-block-retain`). The Qwen3.6-35B-A3B
+BF16 checkpoint is ~72 GB and is loaded and quantized online at every
+startup, so the full-size cache is kept on the volume.
+
+The RBD is ext4, and ceph-csi does **not** grow the filesystem when the PVC
+is resized — it only expands the RBD image. After a `persistence.cache.size`
+change is synced, grow the filesystem online from any pod that mounts the
+volume:
+
+```bash
+kubectl exec -n aiml deploy/intel-vllm -- resize2fs /cache/huggingface
+kubectl exec -n aiml deploy/intel-vllm -- df -hT /cache/huggingface
+```
+
 ## Argo CD
 
 Application: [`kubernetes/applications/intel-vllm.yaml`](../../applications/intel-vllm.yaml)
