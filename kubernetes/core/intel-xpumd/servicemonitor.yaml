@@ -1,0 +1,31 @@
+---
+# ServiceMonitor for the xpumd prometheus exporter (:8080).
+#
+# Shipped here instead of from the chart's own template because the chart
+# (xpumd 2.2.0) hardcodes `interval: 5s` with no `scrapeTimeout`, and the
+# in-cluster alloy-metrics collector (see ../k8s-monitoring/) fills a missing
+# scrapeTimeout with its `global.scrapeTimeout` default of 10s. 10s > 5s is an
+# invalid scrape config, so alloy-metrics drops the ServiceMonitor and no
+# `intel-xpu` targets are scraped. Setting an explicit scrapeTimeout (4s <= 5s)
+# here makes the scrape config valid; `prometheus.monitor: false` in values.yaml
+# disables the chart's broken ServiceMonitor.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: intel-xpumd
+  labels:
+    release: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: intel-xpumd
+      app.kubernetes.io/name: xpumd
+  endpoints:
+    - port: http
+      interval: 5s
+      scrapeTimeout: 4s
+      relabelings:
+        - action: replace
+          sourceLabels:
+            - __meta_kubernetes_pod_node_name
+          targetLabel: node

@@ -14,8 +14,8 @@ Runs as a DaemonSet on the GPU node and collects Intel GPU metrics
 (utilization, memory, power, temperature, frequency, health) through the
 Level-Zero Sysman API. By default it only serves the local
 `intel_xpu_info` exporter; here the **prometheus exporter** is enabled on
-`:8080` and a `ServiceMonitor` (release label `monitoring`) is created, so
-the in-cluster [Alloy](../k8s-monitoring/) scrapes it into Mimir.
+`:8080` and a `Service` is created (`service.create: true`), so the in-cluster
+[Alloy](../k8s-monitoring/) can scrape it into Mimir.
 
 ## Why `gpuAccess: plugin`
 
@@ -51,6 +51,25 @@ cluster-wide PodSecurity admission default of **baseline** for unlabeled
 namespaces (only `kube-system` is exempt), and baseline rejects the
 `PERFMON` capability and hostPath volumes this daemon needs — without the
 label, pod creation fails and the DaemonSet stays at 0/1.
+
+## Why the ServiceMonitor lives in this directory
+
+The chart's own `ServiceMonitor` template (`templates/servicemonitor.yaml`,
+xpumd 2.2.0) hardcodes `interval: 5s` with **no** `scrapeTimeout`, and the
+chart exposes no value to set either. The in-cluster `alloy-metrics`
+collector fills a missing `scrapeTimeout` with its `global.scrapeTimeout`
+default of `10s` (see [../k8s-monitoring/values.yaml](../k8s-monitoring/values.yaml));
+`10s > 5s` is an invalid scrape config, so `alloy-metrics` drops the ServiceMonitor
+and no `intel-xpu` targets are scraped (its logs show
+`error generating scrapeconfig from serviceMonitor ... scrape timeout greater
+than scrape interval`).
+
+`prometheus.monitor: false` in [values.yaml](values.yaml) disables the chart's
+broken `ServiceMonitor`, and [servicemonitor.yaml](servicemonitor.yaml) ships a
+replacement with an explicit `scrapeTimeout: 4s` (`<= interval: 5s`) so the
+scrape config is valid. If the chart ever gains `scrapeTimeout`/`interval`
+values (or raises the hardcoded interval to `>= 10s`), the chart's
+`ServiceMonitor` can be re-enabled and this file removed.
 
 ## Grafana dashboards
 

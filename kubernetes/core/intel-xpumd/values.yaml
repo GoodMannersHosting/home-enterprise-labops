@@ -20,20 +20,33 @@ nodeSelector:
   kubernetes.io/hostname: intellectual
 
 # Add the prometheus exporter (0.0.0.0:8080) on top of the default local
-# intel_xpu_info exporter (unix/gRPC socket), and create the Service +
-# ServiceMonitor so the in-cluster Alloy scrapes it into Mimir.
+# intel_xpu_info exporter (unix/gRPC socket), and create the Service so the
+# in-cluster Alloy scrapes it into Mimir.
 config:
   service:
     pipelines:
       metrics:
         exporters: [intel_xpu_info, prometheus]
 
+# Keep the exporter reachable. The chart's Service template renders when
+# `service.create` OR `prometheus.monitor` is true; with `monitor: false`
+# below, set `service.create: true` so the Service is still created.
+service:
+  create: true
+
 prometheus:
-  monitor: true
+  # Disable the chart's ServiceMonitor. Its template hardcodes `interval: 5s`
+  # with no `scrapeTimeout`; the in-cluster alloy-metrics collector fills the
+  # missing timeout with its default scrapeTimeout (10s, see
+  # ../k8s-monitoring/values.yaml `global.scrapeTimeout`), and 10s > 5s is an
+  # invalid scrape config, so the ServiceMonitor is dropped and nothing is
+  # scraped. A valid ServiceMonitor (interval 5s, scrapeTimeout 4s) is shipped
+  # from servicemonitor.yaml in this directory instead.
+  monitor: false
   # Release name of the kube-prometheus-stack chart (see
   # applications/monitoring.yaml). Only the prometheus-operator runs
   # in-cluster; Alloy scrapes ServiceMonitors cluster-wide, the label just
-  # follows cluster convention.
+  # follows cluster convention and is applied on servicemonitor.yaml.
   release: monitoring
 
 # grafana.dashboards is left disabled: there is no in-cluster Grafana to
