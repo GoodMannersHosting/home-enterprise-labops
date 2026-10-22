@@ -86,33 +86,6 @@ extraResources:
   - apiVersion: gateway.networking.k8s.io/v1
     kind: HTTPRoute
     metadata:
-      name: aiml
-      namespace: aiml
-      annotations:
-        gatus.home-operations.com/enabled: "false"
-    spec:
-      hostnames:
-        - chat.capi-core.homelab.danmanners.com
-      parentRefs:
-        - kind: Gateway
-          group: gateway.networking.k8s.io
-          name: gwapi
-          namespace: default
-          sectionName: https
-      rules: &openwebui-rules
-        - backendRefs:
-            - group: ""
-              kind: Service
-              name: ollama-open-webui
-              port: 80
-              weight: 1
-          matches:
-            - path:
-                type: PathPrefix
-                value: /
-  - apiVersion: gateway.networking.k8s.io/v1
-    kind: HTTPRoute
-    metadata:
       name: aiml-cloud
       namespace: aiml
       annotations:
@@ -138,7 +111,17 @@ extraResources:
           name: gwapi
           namespace: default
           sectionName: https-cloud
-      rules: *openwebui-rules
+      rules: &openwebui-rules
+        - backendRefs:
+            - group: ""
+              kind: Service
+              name: ollama-open-webui
+              port: 80
+              weight: 1
+          matches:
+            - path:
+                type: PathPrefix
+                value: /
 
 extraEnvVars:
   - name: "POSTGRES_USER_PASSWORD"
