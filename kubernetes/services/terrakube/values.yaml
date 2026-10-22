@@ -191,6 +191,8 @@ minio:
   console:
     enabled: false
   defaultBuckets: "terrakube"
+  deploymentUpdate:
+    type: Replace
   persistence:
     enabled: true
     storageClass: ceph-block-retain
