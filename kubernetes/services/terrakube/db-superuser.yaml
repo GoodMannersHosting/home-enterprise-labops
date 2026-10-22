@@ -1,0 +1,11 @@
+---
+# Reflector copy of the shared PostgreSQL superuser secret from the database
+# namespace (see kubernetes/core/database). Used by db-init-job.yaml to
+# create the terrakube role/database.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-superuser
+  annotations:
+    reflector.v1.k8s.emberstack.com/reflects: database/database-superuser
+type: Opaque

@@ -1,0 +1,76 @@
+---
+# Creates the `terrakube` role and database on the shared cluster PostgreSQL
+# (db-rw.database.svc), following the same postgres-init pattern used by
+# open-webui/keycloak. The postgres-init image is idempotent, so re-runs
+# (e.g. after a namespace rebuild) are safe.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: terrakube-db-init
+  labels:
+    app.kubernetes.io/name: terrakube-db-init
+spec:
+  backoffLimit: 5
+  ttlSecondsAfterFinished: 600
+  activeDeadlineSeconds: 300
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: terrakube-db-init
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wait-for-db
+          image:
+            repository: docker.io/library/busybox
+            tag: "1.38"
+          command:
+            - /bin/sh
+            - -c
+            - |
+              until nc -z "${POSTGRES_HOST}" 5432; do
+                echo "Waiting for database to be ready..."
+                sleep 5
+              done
+              echo "Database is ready!"
+          env:
+            - name: POSTGRES_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: terrakube-db-creds
+                  key: POSTGRES_HOST
+          resources:
+            requests:
+              cpu: "10m"
+              memory: 16Mi
+            limits:
+              cpu: "50m"
+              memory: 64Mi
+      containers:
+        - name: init-db
+          image:
+            repository: ghcr.io/home-operations/postgres-init
+            tag: "17.6"
+          env:
+            - name: INIT_POSTGRES_DBNAME
+              value: terrakube
+            - name: INIT_POSTGRES_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: terrakube-db-creds
+                  key: POSTGRES_HOST
+            - name: INIT_POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: terrakube-db-creds
+                  key: POSTGRES_USER
+            - name: INIT_POSTGRES_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: terrakube-db-creds
+                  key: POSTGRES_PASS
+            - name: INIT_POSTGRES_SUPER_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: db-superuser
+                  key: password

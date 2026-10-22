@@ -1,0 +1,261 @@
+# Terrakube (Terraform/OpenTofu run platform) — values for the official chart
+# (charts.terrakube.io/terrakube). See kubernetes/applications/terrakube.yaml
+# for the ArgoCD wiring and kubernetes/services/terrakube/README.md for the
+# one-time setup (Authentik app + OpenBao secrets).
+#
+# Everything secret (API/executor/registry signing keys, DB password, MinIO
+# root creds, DEX connector client) lives in OpenBao under dan/terrakube/ and
+# is materialised into this namespace by the ExternalSecrets in this
+# directory — no secret values in git.
+name: "terrakube"
+
+# --- Security / auth wiring --------------------------------------------------
+security:
+  # DEX is the auth layer; the chart's bundled OpenLDAP is not used.
+  useOpenLDAP: false
+  # Users in this (Authentik) group get admin rights in the UI.
+  adminGroup: "terrakube-admins"
+  # Static DEX client id the UI/CLI use (must match the `id` in
+  # dex.staticClients below, and AppClientId/DexClientId in OpenBao).
+  dexClientId: "terrakube"
+  dexClientScope: "email openid profile offline_access groups"
+  dexIssuerUri: "https://terrakube-api.cloud.danmanners.com/dex"
+
+# --- DEX (OIDC in front of Authentik) -----------------------------------------
+dex:
+  enabled: true
+  # The chart's placeholder `terrakube-dex-secrets` (gcp-credentials) is not
+  # created; an ExternalSecret in this directory provides client-id and
+  # client-secret keys instead.
+  existingSecret: true
+  # The connector client id/secret are injected as env vars and referenced
+  # via DEX's built-in env expansion ($VAR) in the connector config below.
+  envVars:
+    - name: DEX_CLIENT_ID
+      valueFrom:
+        secretKeyRef:
+          name: terrakube-dex-secrets
+          key: client-id
+    - name: DEX_CLIENT_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: terrakube-dex-secrets
+          key: client-secret
+  # Drop the chart's gcp-credentials volume (it references the skipped
+  # placeholder secret, which no longer exists).
+  volumes: []
+  volumeMounts: []
+  config:
+    # NOTE: `issuer` also drives the API ConfigMap (DexIssuerUri) and the UI
+    # env-config.js (REACT_APP_AUTHORITY) in the chart templates.
+    issuer: https://terrakube-api.cloud.danmanners.com/dex
+    # Memory storage is fine for a lab SSO deployment: DEX is single-replica
+    # and its state (issued tokens/sessions) is disposable — users just
+    # re-authenticate after a restart.
+    storage:
+      type: memory
+    web:
+      http: 0.0.0.0:5556
+      allowedOrigins:
+        - "https://terrakube-ui.cloud.danmanners.com"
+    oauth2:
+      responseTypes: ["code", "token", "id_token"]
+      skipApprovalScreen: true
+    connectors:
+      - type: oidc
+        id: authentik
+        name: GMH (Authentik)
+        config:
+          # One-time: create the `terrakube` app in Authentik with the
+          # redirect URI https://terrakube-api.cloud.danmanners.com/dex/callback
+          # (see README.md in this directory).
+          issuer: https://auth.goodmanners.services/application/o/terrakube/
+          clientID: $DEX_CLIENT_ID
+          clientSecret: $DEX_CLIENT_SECRET
+          redirectURI: https://terrakube-api.cloud.danmanners.com/dex/callback
+          scopes:
+            - openid
+            - profile
+            - email
+            - groups
+          # Terrakube's admin group check reads the `groups` claim, which the
+          # OIDC connector refuses to emit unless explicitly enabled.
+          insecureEnableGroups: true
+    staticClients:
+      - id: terrakube
+        name: Terrakube
+        redirectURIs:
+          - "https://terrakube-ui.cloud.danmanners.com"
+        public: true
+
+# --- App version pin -----------------------------------------------------------
+# Chart 4.7.12 (latest) pins appVersion 2.33.1 via `default .Chart.AppVersion`;
+# the latest stable Terrakube release is 2.33.3 (2.33.2/2.33.3 are patch fixes
+# only). The `version:` overrides below bump all four component images — drop
+# them once a chart ships with 2.33.3.
+
+# --- Database: shared cluster PostgreSQL (db-rw.database.svc) ------------------
+api:
+  version: "2.33.3"
+  # terrakube-api-secrets comes from the terrakube-api ExternalSecret.
+  existingSecret: true
+  enabled: true
+  replicaCount: "1"
+  defaultDatabase: false
+  defaultRedis: true
+  # Demo organisation/workspace data is not loaded; start clean.
+  loadSampleData: false
+  # Lets the API manage its own batch jobs in this namespace (used by
+  # ephemeral workspaces; harmless otherwise).
+  serviceAccountName: terrakube-api
+  rbac:
+    create: true
+  properties:
+    databaseType: "POSTGRESQL"
+    databaseHostname: "db-rw.database.svc"
+    databaseName: "terrakube"
+    databaseUser: "terrakube"
+    databasePort: "5432"
+    databaseSslMode: "disable"
+    redisPort: "6379"
+  # Block startup until the shared PostgreSQL is reachable (role/database
+  # creation itself happens in db-init-job.yaml; the startup probe covers
+  # any remaining race).
+  initContainers:
+    - name: wait-for-db
+      image:
+        repository: docker.io/library/busybox
+        tag: "1.38"
+      command:
+        - /bin/sh
+        - -c
+        - |
+          until nc -z "${POSTGRES_HOST}" 5432; do
+            echo "Waiting for database to be ready..."
+            sleep 5
+          done
+          echo "Database is ready!"
+      env:
+        - name: POSTGRES_HOST
+          valueFrom:
+            secretKeyRef:
+              name: terrakube-db-creds
+              key: POSTGRES_HOST
+      resources:
+        requests:
+          cpu: "10m"
+          memory: 16Mi
+        limits:
+          cpu: "50m"
+          memory: 64Mi
+
+# --- Executor / registry -------------------------------------------------------
+executor:
+  version: "2.33.3"
+  enabled: true
+  # terrakube-executor-secrets comes from the terrakube-executor ExternalSecret.
+  existingSecret: true
+  # One executor pod runs one job at a time; size up if concurrent runs grow.
+  replicaCount: "1"
+
+registry:
+  version: "2.33.3"
+  enabled: true
+  # terrakube-registry-secrets comes from the terrakube-registry ExternalSecret.
+  existingSecret: true
+  replicaCount: "1"
+
+ui:
+  version: "2.33.3"
+
+# --- Storage: bundled MinIO (no S3/RGW object store in this cluster) -----------
+storage:
+  defaultStorage: true
+  default:
+    region: "us-east-1"
+    # Empty endpoint -> chart derives http://terrakube-minio:9000 from the
+    # release name.
+    endpoint: ""
+
+minio:
+  # Root credentials come from the terrakube-minio-auth ExternalSecret.
+  auth:
+    existingSecret: terrakube-minio-auth
+    rootUserSecretKey: rootUser
+    rootPasswordSecretKey: rootPassword
+  console:
+    enabled: false
+  defaultBuckets: "terrakube"
+  persistence:
+    enabled: true
+    storageClass: ceph-block-retain
+    size: 20Gi
+
+# --- Redis: bundled Valkey (job queue/cache only, cluster-internal) ------------
+valkey:
+  # No auth: Valkey is not exposed outside the cluster and the API/executor
+  # TerrakubeRedisPassword values in OpenBao are empty strings to match.
+  auth:
+    enabled: false
+
+# --- Ingress: Gateway API routes on the shared gwapi gateway --------------------
+ingress:
+  # UI/registry URLs are rendered with the https scheme in env-config.js.
+  useTls: true
+  controller: gatewayapi
+  gatewayapi:
+    apiVersion: v1
+    enabled: true
+    gateways:
+      - kind: Gateway
+        group: gateway.networking.k8s.io
+        name: gwapi
+        namespace: default
+        sectionName: https-cloud
+  ui:
+    enabled: true
+    domain: "terrakube-ui.cloud.danmanners.com"
+    path: "/"
+    # This cluster uses the Gateway API, not nginx.
+    ingressClassName: ""
+    annotations:
+      # null overrides drop the chart's nginx-specific defaults (values.yaml
+      # maps deep-merge, so they can't be removed any other way).
+      nginx.ingress.kubernetes.io/use-regex: null
+      external-dns.kubernetes.io/hostname: terrakube-ui.cloud.danmanners.com
+      external-dns.kubernetes.io/ttl: "300"
+      gatus.home-operations.com/enabled: "true"
+      gatus.home-operations.com/endpoint: |-
+        name: Terrakube UI
+        conditions:
+          - "[STATUS] == 200"
+        url: http://terrakube-ui-service.terrakube.svc.cluster.local:8080/
+        method: GET
+  api:
+    enabled: true
+    domain: "terrakube-api.cloud.danmanners.com"
+    path: "/"
+    ingressClassName: ""
+    annotations:
+      nginx.ingress.kubernetes.io/use-regex: null
+      nginx.ingress.kubernetes.io/proxy-set-headers: null
+      external-dns.kubernetes.io/hostname: terrakube-api.cloud.danmanners.com
+      external-dns.kubernetes.io/ttl: "300"
+  registry:
+    enabled: true
+    domain: "terrakube-reg.cloud.danmanners.com"
+    path: "/"
+    ingressClassName: ""
+    annotations:
+      nginx.ingress.kubernetes.io/use-regex: null
+      nginx.ingress.kubernetes.io/proxy-set-headers: null
+      external-dns.kubernetes.io/hostname: terrakube-reg.cloud.danmanners.com
+      external-dns.kubernetes.io/ttl: "300"
+  # DEX is served under /dex on the API hostname (see httproute-api.yaml in
+  # the chart); the DEX issuer URL is https://<api-domain>/dex.
+  dex:
+    enabled: true
+    path: /dex
+  # The executor only talks to the API over the cluster network; no route.
+  executor:
+    enabled: false
