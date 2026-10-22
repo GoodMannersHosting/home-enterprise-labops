@@ -188,6 +188,13 @@ minio:
     enabled: true
     storageClass: ceph-block-retain
     size: 20Gi
+  # The namespace is in Istio ambient mode, so ztunnel delivers traffic to MinIO
+  # over HBONE on 15008 rather than 9000. Without this, every S3 call times out.
+  networkPolicy:
+    extraIngress:
+      - ports:
+          - port: 15008
+            protocol: TCP
 
 # --- Redis: bundled Valkey (job queue/cache only, cluster-internal) ------------
 valkey:
