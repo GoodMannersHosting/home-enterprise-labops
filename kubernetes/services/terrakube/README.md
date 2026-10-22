@@ -76,7 +76,8 @@ In `https://auth.goodmanners.services` (same provider as the `argo-cd` /
 ### 2. OpenBao secrets
 
 ```bash
-export VAULT_ADDR=https://keeper.goodmanners.services
+export BAO_ADDR=https://keeper.goodmanners.services
+export BAO_NAMESPACE=homelab-dan   # the `secret/` KV v2 mount lives in this namespace
 bao login -method=oidc role=keeper-admin
 
 # Random values (generate once, reuse across the secrets below)
@@ -86,7 +87,7 @@ MINIO_USER="terrakube"
 MINIO_PASS=$(openssl rand -base64 18)
 DB_PASS=$(openssl rand -base64 18)
 
-bao write secret/dan/terrakube/api \
+bao kv put secret/dan/terrakube/api \
   "PatSecret=${PAT}" \
   "InternalSecret=${INTERNAL}" \
   "DexClientId=terrakube" \
@@ -95,7 +96,7 @@ bao write secret/dan/terrakube/api \
   "AwsStorageAccessKey=${MINIO_USER}" \
   "AwsStorageSecretKey=${MINIO_PASS}"
 
-bao write secret/dan/terrakube/executor \
+bao kv put secret/dan/terrakube/executor \
   "InternalSecret=${INTERNAL}" \
   "TerrakubeRedisPassword=" \
   "AwsTerraformStateAccessKey=${MINIO_USER}" \
@@ -103,22 +104,22 @@ bao write secret/dan/terrakube/executor \
   "AwsTerraformOutputAccessKey=${MINIO_USER}" \
   "AwsTerraformOutputSecretKey=${MINIO_PASS}"
 
-bao write secret/dan/terrakube/registry \
+bao kv put secret/dan/terrakube/registry \
   "PatSecret=${PAT}" \
   "InternalSecret=${INTERNAL}" \
   "AppClientId=terrakube" \
   "AwsStorageAccessKey=${MINIO_USER}" \
   "AwsStorageSecretKey=${MINIO_PASS}"
 
-bao write secret/dan/terrakube/minio \
+bao kv put secret/dan/terrakube/minio \
   "rootUser=${MINIO_USER}" \
   "rootPassword=${MINIO_PASS}"
 
-bao write secret/dan/terrakube/dex \
+bao kv put secret/dan/terrakube/dex \
   "client-id=<AUTHENTIK_CLIENT_ID>" \
   "client-secret=<AUTHENTIK_CLIENT_SECRET>"
 
-bao write secret/dan/terrakube/postgres \
+bao kv put secret/dan/terrakube/postgres \
   "POSTGRES_HOST=db-rw.database.svc" \
   "POSTGRES_USER=terrakube" \
   "POSTGRES_PASS=${DB_PASS}"
