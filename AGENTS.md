@@ -42,6 +42,7 @@ graph TD
 | intel-vllm | intel-vllm | Intel GPU inference backend |
 | PowerDNS | powerdns | Internal authoritative DNS |
 | Gatus | monitoring | Service health monitoring |
+| Terrakube | terrakube | Terraform/OpenTofu run platform (OIDC via DEX + Authentik) |
 
 ## LLM Infrastructure
 
