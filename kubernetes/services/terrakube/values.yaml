@@ -108,6 +108,13 @@ api:
   # Lets the API manage its own batch jobs in this namespace (used by
   # ephemeral workspaces; harmless otherwise).
   serviceAccountName: terrakube-api
+  resources:
+    requests:
+      cpu: "10m"
+      memory: 8Gi
+    limits:
+      cpu: "4000m"
+      memory: 8Gi
   rbac:
     create: true
   properties:
