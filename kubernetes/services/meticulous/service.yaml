@@ -4,8 +4,8 @@ kind: Service
 metadata:
   name: meticulous-external-name
   annotations:
-    external-dns.alpha.kubernetes.io/hostname: ci.cloud.danmanners.com
-    external-dns.alpha.kubernetes.io/ttl: "300"
+    external-dns.kubernetes.io/hostname: ci.cloud.danmanners.com
+    external-dns.kubernetes.io/ttl: "300"
 spec:
   type: ExternalName
   externalName: unifi-home.homelab.danmanners.com

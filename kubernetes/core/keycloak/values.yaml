@@ -189,15 +189,14 @@ service:
     type: ExternalName
     externalName: unifi-home.homelab.danmanners.com
     annotations:
-      external-dns.alpha.kubernetes.io/hostname: keycloak.cloud.danmanners.com
-      external-dns.alpha.kubernetes.io/ttl: "300"
+      external-dns.kubernetes.io/hostname: keycloak.cloud.danmanners.com
+      external-dns.kubernetes.io/ttl: "300"
 
 route:
   cloud:
     enabled: true
     kind: HTTPRoute
     annotations:
-      external-dns.alpha.kubernetes.io/controller: "false"
       gatus.home-operations.com/enabled: "true"
       gatus.home-operations.com/endpoint: |-
         name: Keycloak

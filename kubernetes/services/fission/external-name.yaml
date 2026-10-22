@@ -7,8 +7,8 @@ kind: Service
 metadata:
   name: fission-external-name
   annotations:
-    external-dns.alpha.kubernetes.io/hostname: functions.cloud.danmanners.com
-    external-dns.alpha.kubernetes.io/ttl: "300"
+    external-dns.kubernetes.io/hostname: functions.cloud.danmanners.com
+    external-dns.kubernetes.io/ttl: "300"
 spec:
   type: ExternalName
   externalName: unifi-home.homelab.danmanners.com

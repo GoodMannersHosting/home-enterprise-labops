@@ -93,8 +93,8 @@ service:
     externalName: unifi-home.homelab.danmanners.com
     ports: {}
     annotations:
-      external-dns.alpha.kubernetes.io/hostname: status.cloud.danmanners.com
-      external-dns.alpha.kubernetes.io/ttl: "300"
+      external-dns.kubernetes.io/hostname: status.cloud.danmanners.com
+      external-dns.kubernetes.io/ttl: "300"
 
 serviceAccount:
   gatus:
@@ -129,7 +129,6 @@ route:
     enabled: true
     kind: HTTPRoute
     annotations:
-      external-dns.alpha.kubernetes.io/controller: "false"
       gatus.home-operations.com/enabled: "false"
     parentRefs:
       - group: gateway.networking.k8s.io

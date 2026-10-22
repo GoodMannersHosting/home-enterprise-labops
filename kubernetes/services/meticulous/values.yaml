@@ -568,7 +568,7 @@ route:
     enabled: true
     kind: HTTPRoute
     annotations:
-      external-dns.alpha.kubernetes.io/controller: "false"
+      external-dns.kubernetes.io/controller: "false"
     parentRefs:
       - kind: Gateway
         group: gateway.networking.k8s.io

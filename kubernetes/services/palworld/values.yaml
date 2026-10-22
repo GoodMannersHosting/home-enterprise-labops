@@ -230,15 +230,15 @@ service:
     type: ExternalName
     externalName: unifi-home.homelab.danmanners.com
     annotations:
-      external-dns.alpha.kubernetes.io/hostname: palworld.cloud.danmanners.com
-      external-dns.alpha.kubernetes.io/ttl: "300"
+      external-dns.kubernetes.io/hostname: palworld.cloud.danmanners.com
+      external-dns.kubernetes.io/ttl: "300"
 
 route:
   core:
     enabled: true
     kind: HTTPRoute
     annotations:
-      external-dns.alpha.kubernetes.io/controller: "false"
+      external-dns.kubernetes.io/controller: "false"
       gatus.home-operations.com/enabled: "false"
     parentRefs:
       - group: gateway.networking.k8s.io

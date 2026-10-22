@@ -18,7 +18,7 @@ metadata:
   labels:
     app.kubernetes.io/name: not-found
   annotations:
-    external-dns.alpha.kubernetes.io/controller: "false"
+    external-dns.kubernetes.io/controller: "false"
     gatus.home-operations.com/enabled: "false"
 spec:
   hostnames:
@@ -49,7 +49,7 @@ metadata:
   labels:
     app.kubernetes.io/name: not-found
   annotations:
-    external-dns.alpha.kubernetes.io/controller: "false"
+    external-dns.kubernetes.io/controller: "false"
     gatus.home-operations.com/enabled: "false"
 spec:
   hostnames:
@@ -80,7 +80,7 @@ metadata:
   labels:
     app.kubernetes.io/name: not-found
   annotations:
-    external-dns.alpha.kubernetes.io/controller: "false"
+    external-dns.kubernetes.io/controller: "false"
     gatus.home-operations.com/enabled: "false"
 spec:
   hostnames:
@@ -116,8 +116,8 @@ metadata:
   labels:
     app.kubernetes.io/name: not-found
   annotations:
-    external-dns.alpha.kubernetes.io/target: 172.31.0.10
-    external-dns.alpha.kubernetes.io/ttl: "300"
+    external-dns.kubernetes.io/target: 172.31.0.10
+    external-dns.kubernetes.io/ttl: "300"
     gatus.home-operations.com/enabled: "true"
     gatus.home-operations.com/endpoint: |-
       name: Gateway (404 probe)
