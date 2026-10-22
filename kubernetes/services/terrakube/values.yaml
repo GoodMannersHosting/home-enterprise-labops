@@ -123,9 +123,7 @@ api:
   # any remaining race).
   initContainers:
     - name: wait-for-db
-      image:
-        repository: docker.io/library/busybox
-        tag: "1.38"
+      image: docker.io/library/busybox:1.38
       command:
         - /bin/sh
         - -c
