@@ -1,0 +1,210 @@
+# Legacy / orphan routes: live in the cluster but not owned by any ArgoCD
+# application (their source apps — smort, n8n, the original fission demo, the
+# aiml router — were retired or moved to other repos). Adopted here so that
+# they are managed by GitOps and, crucially, by external-dns v0.15+ which
+# only reads the `external-dns.kubernetes.io/*` (beta) annotations:
+#
+#   - redirect-https-* : HTTP->HTTPS redirects. MUST stay excluded from
+#     external-dns, otherwise they would publish A records for hostnames
+#     whose records are owned elsewhere (notably ollama.cloud, whose record
+#     is a CNAME to the homelab edge).
+#   - smort-*, fission/hello, aiml/router : these routes OWN their DNS
+#     records via TXT ownership (smort.cloud, functions.cloud, llm.cloud),
+#     so they are deliberately NOT excluded — excluding them would make
+#     external-dns delete those records on the next sync.
+#
+# Delete a route from this file when its backend is removed.
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: redirect-https-capi-core
+  namespace: default
+  annotations:
+    external-dns.kubernetes.io/controller: "false"
+spec:
+  hostnames:
+    - chat.capi-core.homelab.danmanners.com
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: gwapi
+      namespace: default
+      sectionName: http
+  rules:
+    - name: redirect-https
+      filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: redirect-https-cloud
+  namespace: default
+  annotations:
+    external-dns.kubernetes.io/controller: "false"
+spec:
+  hostnames:
+    - argocd.cloud.danmanners.com
+    - git.cloud.danmanners.com
+    - harbor.cloud.danmanners.com
+    - keycloak.cloud.danmanners.com
+    - llm.cloud.danmanners.com
+    - n8n.cloud.danmanners.com
+    - ollama.cloud.danmanners.com
+    - pdns.cloud.danmanners.com
+    - smort.cloud.danmanners.com
+    - status.cloud.danmanners.com
+    - workflows.cloud.danmanners.com
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: gwapi
+      namespace: default
+  rules:
+    - name: redirect-https
+      filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: redirect-https-goodmanners
+  namespace: default
+  annotations:
+    external-dns.kubernetes.io/controller: "false"
+spec:
+  hostnames:
+    - chat.goodmanners.services
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: gwapi
+      namespace: default
+      sectionName: http-goodmanners
+  rules:
+    - name: redirect-https
+      filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: smort-core
+  namespace: smort
+spec:
+  hostnames:
+    - smort.cloud.danmanners.com
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: gwapi
+      namespace: default
+      sectionName: https-cloud
+  rules:
+    - name: smort-api
+      backendRefs:
+        - name: smort-core
+          port: 80
+      matches:
+        - path:
+            type: PathPrefix
+            value: /api
+    - name: smort-ws
+      backendRefs:
+        - name: smort-core
+          port: 80
+      matches:
+        - path:
+            type: PathPrefix
+            value: /ws
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: smort-web-ui
+  namespace: smort
+spec:
+  hostnames:
+    - smort.cloud.danmanners.com
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: gwapi
+      namespace: default
+      sectionName: https-cloud
+  rules:
+    - name: smort-web-ui
+      backendRefs:
+        - name: smort-web-ui
+          port: 80
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: hello
+  namespace: fission
+spec:
+  hostnames:
+    - functions.cloud.danmanners.com
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: gwapi
+      namespace: default
+  rules:
+    - backendRefs:
+        - name: router
+          port: 80
+      matches:
+        - path:
+            type: PathPrefix
+            value: /hello
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: router
+  namespace: aiml
+spec:
+  hostnames:
+    - llm.cloud.danmanners.com
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: gwapi
+      namespace: default
+      sectionName: https-cloud
+  rules:
+    - backendRefs:
+        - name: router
+          port: 4000
+      matches:
+        - path:
+            type: PathPrefix
+            value: /

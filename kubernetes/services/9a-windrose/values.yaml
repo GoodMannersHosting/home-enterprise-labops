@@ -113,8 +113,8 @@ service:
     type: ExternalName
     externalName: unifi-home.homelab.danmanners.com
     annotations:
-      external-dns.alpha.kubernetes.io/hostname: 9a-windrose.cloud.danmanners.com
-      external-dns.alpha.kubernetes.io/ttl: "300"
+      external-dns.kubernetes.io/hostname: 9a-windrose.cloud.danmanners.com
+      external-dns.kubernetes.io/ttl: "300"
 
 persistence:
   server-files:

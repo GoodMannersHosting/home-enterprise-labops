@@ -278,15 +278,14 @@ service:
     type: ExternalName
     externalName: unifi-home.homelab.danmanners.com
     annotations:
-      external-dns.alpha.kubernetes.io/hostname: *domain
-      external-dns.alpha.kubernetes.io/ttl: "300"
+      external-dns.kubernetes.io/hostname: *domain
+      external-dns.kubernetes.io/ttl: "300"
 
 route:
   api:
     enabled: true
     kind: HTTPRoute
     annotations:
-      external-dns.alpha.kubernetes.io/controller: "false"
       gatus.home-operations.com/enabled: "false"
       gatus.home-operations.com/endpoint: |-
         name: Forgejo

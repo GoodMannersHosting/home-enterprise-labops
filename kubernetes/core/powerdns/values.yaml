@@ -208,15 +208,14 @@ service:
     type: ExternalName
     externalName: unifi-home.homelab.danmanners.com
     annotations:
-      external-dns.alpha.kubernetes.io/hostname: pdns.cloud.danmanners.com
-      external-dns.alpha.kubernetes.io/ttl: "300"
+      external-dns.kubernetes.io/hostname: pdns.cloud.danmanners.com
+      external-dns.kubernetes.io/ttl: "300"
 
 route:
   api:
     enabled: true
     kind: HTTPRoute
     annotations:
-      external-dns.alpha.kubernetes.io/controller: "false"
       gatus.home-operations.com/enabled: "true"
       gatus.home-operations.com/endpoint: |-
         name: PowerDNS

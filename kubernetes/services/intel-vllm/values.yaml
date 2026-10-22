@@ -147,8 +147,8 @@ service:
     externalTrafficPolicy: Cluster
     annotations:
       lbipam.cilium.io/ips: "172.31.0.35"
-      external-dns.alpha.kubernetes.io/hostname: intel-llm.cloud.danmanners.com
-      external-dns.alpha.kubernetes.io/ttl: "300"
+      external-dns.kubernetes.io/hostname: intel-llm.cloud.danmanners.com
+      external-dns.kubernetes.io/ttl: "300"
     ports:
       http:
         enabled: true

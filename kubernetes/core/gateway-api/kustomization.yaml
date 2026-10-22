@@ -3,6 +3,7 @@ resources:
   - gwapi-gw-options.yaml
   - not-found.yaml
   - catchall-404.yaml
+  - legacy-routes.yaml
   - security-headers.yaml
   # Meticulous TCP gateway deferred until Meticulous ships:
   # - meticulous-tcp-gateway.yaml
