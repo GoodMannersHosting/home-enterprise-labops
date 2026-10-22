@@ -31,7 +31,7 @@ Authentik app `terrakube` → token with `groups` claim → Terrakube API
 Public endpoints (certs from the `*.cloud.danmanners.com` wildcard, DNS via
 external-dns, health via Gatus on the UI route):
 
-- UI: `https://terrakube-ui.cloud.danmanners.com`
+- UI: `https://terrakube.cloud.danmanners.com`
 - API (+ DEX under `/dex`): `https://terrakube-api.cloud.danmanners.com`
 - Registry: `https://terrakube-reg.cloud.danmanners.com`
 
@@ -145,7 +145,7 @@ kubectl get pods -n terrakube
 kubectl logs -n terrakube -l app=terrakube-api --tail=50   # look for "Started ApplicationServer"
 kubectl get externalsecret -n terrakube                    # all Ready
 curl -fsS https://terrakube-api.cloud.danmanners.com/.well-known/openid-configuration
-# UI: https://terrakube-ui.cloud.danmanners.com -> "Sign in with GMH (Authentik)"
+# UI: https://terrakube.cloud.danmanners.com -> "Sign in with GMH (Authentik)"
 ```
 
 ## Operations

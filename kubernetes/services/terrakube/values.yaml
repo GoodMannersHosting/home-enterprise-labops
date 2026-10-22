@@ -57,7 +57,7 @@ dex:
     web:
       http: 0.0.0.0:5556
       allowedOrigins:
-        - "https://terrakube-ui.cloud.danmanners.com"
+        - "https://terrakube.cloud.danmanners.com"
     oauth2:
       responseTypes: ["code", "token", "id_token"]
       skipApprovalScreen: true
@@ -85,7 +85,7 @@ dex:
       - id: terrakube
         name: Terrakube
         redirectURIs:
-          - "https://terrakube-ui.cloud.danmanners.com"
+          - "https://terrakube.cloud.danmanners.com"
         public: true
 
 # --- App version pin -----------------------------------------------------------
@@ -212,7 +212,7 @@ ingress:
         sectionName: https-cloud
   ui:
     enabled: true
-    domain: "terrakube-ui.cloud.danmanners.com"
+    domain: "terrakube.cloud.danmanners.com"
     path: "/"
     # This cluster uses the Gateway API, not nginx.
     ingressClassName: ""
@@ -220,7 +220,7 @@ ingress:
       # null overrides drop the chart's nginx-specific defaults (values.yaml
       # maps deep-merge, so they can't be removed any other way).
       nginx.ingress.kubernetes.io/use-regex: null
-      external-dns.kubernetes.io/hostname: terrakube-ui.cloud.danmanners.com
+      external-dns.kubernetes.io/hostname: terrakube.cloud.danmanners.com
       external-dns.kubernetes.io/ttl: "300"
       gatus.home-operations.com/enabled: "true"
       gatus.home-operations.com/endpoint: |-
