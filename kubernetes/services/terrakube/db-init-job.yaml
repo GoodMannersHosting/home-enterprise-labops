@@ -21,9 +21,7 @@ spec:
       restartPolicy: OnFailure
       initContainers:
         - name: wait-for-db
-          image:
-            repository: docker.io/library/busybox
-            tag: "1.38"
+          image: docker.io/library/busybox:1.38
           command:
             - /bin/sh
             - -c
@@ -48,9 +46,7 @@ spec:
               memory: 64Mi
       containers:
         - name: init-db
-          image:
-            repository: ghcr.io/home-operations/postgres-init
-            tag: "17.6"
+          image: ghcr.io/home-operations/postgres-init:17.6
           env:
             - name: INIT_POSTGRES_DBNAME
               value: terrakube
