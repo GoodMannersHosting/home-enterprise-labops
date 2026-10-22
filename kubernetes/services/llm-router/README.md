@@ -246,14 +246,11 @@ kubectl annotate externalsecret litellm-db-credentials -n database \
 | **In-cluster** | `http://router.aiml.svc.cluster.local:4000/v1` |
 | **LAN / public** | `https://llm.cloud.danmanners.com/v1` |
 
-DNS resolves directly to the Cilium Gateway's LB IP (`172.31.0.10`) via the
-standard `gateway-httproute` external-dns source — no CNAME indirection.
-(A previous version of this file routed through
-`unifi-home.homelab.danmanners.com` — same trick `grafana`/`harbor`/`argocd`/
-`argo-workflows` still use — to work around a site-to-site VPN routing bug on
-the far end's `core-router`: reply traffic for the VTI tunnel's inner subnet
-was falling through to a WAN default route instead of back into the tunnel.
-Fixed on the router side; no longer needed here.)
+DNS is a CNAME to `unifi-home.homelab.danmanners.com` (the home WAN
+address), so the endpoint is reachable from the internet. That's set by the
+`external-dns.kubernetes.io/target` annotation on `httproute.yaml`. The
+LiteLLMProxy's own `route:` is left unset because the operator's generated
+HTTPRoute can't carry annotations.
 
 ### Auth
 

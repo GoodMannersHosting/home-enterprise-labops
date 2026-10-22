@@ -1,0 +1,29 @@
+---
+# Replaces the LiteLLMProxy's generated route so external-dns can publish
+# llm.cloud.danmanners.com on the home WAN address.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: router-public
+  namespace: aiml
+  annotations:
+    external-dns.kubernetes.io/target: unifi-home.homelab.danmanners.com
+    external-dns.kubernetes.io/ttl: "300"
+spec:
+  hostnames:
+    - llm.cloud.danmanners.com
+  parentRefs:
+    - kind: Gateway
+      group: gateway.networking.k8s.io
+      name: gwapi
+      namespace: default
+      sectionName: https-cloud
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - kind: Service
+          name: router
+          port: 4000

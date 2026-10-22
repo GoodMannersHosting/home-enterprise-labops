@@ -133,12 +133,6 @@ spec:
       value: groups
     - name: OIDC_GROUP_TO_ROLE_MAP
       value: '{"llm-admin":"proxy_admin","llm-user":"internal_user_viewer"}'
-  route:
-    hostnames:
-      - llm.cloud.danmanners.com
-    parentRefs:
-      - kind: Gateway
-        group: gateway.networking.k8s.io
-        name: gwapi
-        namespace: default
-        sectionName: https-cloud
+  # No `route:` here. The operator's generated HTTPRoute can't carry
+  # annotations, so httproute.yaml defines it instead (for the public
+  # external-dns target).

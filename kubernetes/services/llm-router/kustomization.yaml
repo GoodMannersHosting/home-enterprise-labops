@@ -13,6 +13,7 @@ resources:
   - valkeycluster.yaml
   - sso-credentials.yaml
   - proxy.yaml
+  - httproute.yaml
   - models # Model CRD Resources
   - team.yaml
   - virtualkeys.yaml
