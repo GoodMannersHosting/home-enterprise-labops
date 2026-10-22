@@ -229,8 +229,6 @@ ingress:
       nginx.ingress.kubernetes.io/use-regex: null
       external-dns.kubernetes.io/hostname: terrakube-ui.cloud.danmanners.com
       # Public via the home WAN address (see api below).
-      external-dns.kubernetes.io/alias: "true"
-      external-dns.kubernetes.io/target: unifi-home.homelab.danmanners.com
       external-dns.kubernetes.io/ttl: "300"
       gatus.home-operations.com/enabled: "true"
       gatus.home-operations.com/endpoint: |-
@@ -249,8 +247,6 @@ ingress:
       nginx.ingress.kubernetes.io/proxy-set-headers: null
       external-dns.kubernetes.io/hostname: terrakube-api.cloud.danmanners.com
       # Public via the home WAN address so GitHub can deliver VCS webhooks.
-      external-dns.kubernetes.io/alias: "true"
-      external-dns.kubernetes.io/target: unifi-home.homelab.danmanners.com
       external-dns.kubernetes.io/ttl: "300"
   registry:
     enabled: true
@@ -262,8 +258,6 @@ ingress:
       nginx.ingress.kubernetes.io/proxy-set-headers: null
       external-dns.kubernetes.io/hostname: terrakube-reg.cloud.danmanners.com
       # Public via the home WAN address (see api above).
-      external-dns.kubernetes.io/alias: "true"
-      external-dns.kubernetes.io/target: unifi-home.homelab.danmanners.com
       external-dns.kubernetes.io/ttl: "300"
   # DEX is served under /dex on the API hostname (see httproute-api.yaml in
   # the chart); the DEX issuer URL is https://<api-domain>/dex.

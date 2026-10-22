@@ -3,6 +3,8 @@ kind: Gateway
 metadata:
   name: gwapi
   namespace: default
+  annotations:
+    external-dns.kubernetes.io/target: unifi-home.homelab.danmanners.com
 spec:
   gatewayClassName: istio
   infrastructure:
