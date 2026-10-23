@@ -1,0 +1,48 @@
+# Adapted from onedr0p/home-ops kubernetes/apps/network/unifi-dns
+fullnameOverride: unifi-dns
+provider:
+  name: webhook
+  webhook:
+    image:
+      repository: ghcr.io/home-operations/external-dns-unifi-webhook
+      tag: 0.10.14@sha256:2d56637e230de7eaeda83388a79ec633c94910e77503141bc6a1a5492eecdd7e
+    env:
+    - name: UNIFI_HOST
+      # TODO: confirm the UniFi console URL
+      value: https://172.21.0.1
+    - name: UNIFI_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: unifi-dns-secret
+          key: api-key
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: http-webhook
+      initialDelaySeconds: 10
+      timeoutSeconds: 5
+    readinessProbe:
+      httpGet:
+        path: /readyz
+        port: http-webhook
+      initialDelaySeconds: 10
+      timeoutSeconds: 5
+extraArgs:
+- --crd-source-apiversion=externaldns.k8s.io/v1alpha1
+- --crd-source-kind=DNSEndpoint
+interval: 30s
+logFormat: json
+logLevel: info
+triggerLoopOnEvent: true
+policy: sync
+# No `service` source: the ExternalName services exist for the public view
+# and would publish CNAMEs to the WAN name here. Internal-only records
+# (gateway target, game servers) come from DNSEndpoints in this directory.
+sources:
+- crd
+- gateway-httproute
+- gateway-tlsroute
+txtOwnerId: capi-core-internal
+txtPrefix: k8s.capi-core-internal.%{record_type}-
+domainFilters:
+- "cloud.danmanners.com"

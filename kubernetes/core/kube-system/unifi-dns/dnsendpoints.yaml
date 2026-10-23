@@ -1,0 +1,43 @@
+---
+# Target for every HTTPRoute/TLSRoute on gwapi (see the target annotation in
+# gateway-api/gateway.yaml). Publicly this name is a CNAME to the WAN name.
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: gwapi-internal
+spec:
+  endpoints:
+    - dnsName: gwapi.cloud.danmanners.com
+      recordType: A
+      recordTTL: 300
+      targets:
+        - 172.31.0.10
+---
+# Game servers have their own LoadBalancer IPs and no routes, so they need
+# explicit internal records.
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: gaming-internal
+spec:
+  endpoints:
+    - dnsName: valheim.cloud.danmanners.com
+      recordType: A
+      recordTTL: 300
+      targets:
+        - 172.31.0.32
+    - dnsName: valheim2.cloud.danmanners.com
+      recordType: A
+      recordTTL: 300
+      targets:
+        - 172.31.0.37
+    - dnsName: windrose.cloud.danmanners.com
+      recordType: A
+      recordTTL: 300
+      targets:
+        - 172.31.0.33
+    - dnsName: 9a-windrose.cloud.danmanners.com
+      recordType: A
+      recordTTL: 300
+      targets:
+        - 172.31.0.34

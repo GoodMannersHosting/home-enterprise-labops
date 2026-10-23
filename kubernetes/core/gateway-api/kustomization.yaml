@@ -1,5 +1,6 @@
 resources:
   - gateway.yaml
+  - gwapi-extname.yaml
   - gwapi-gw-options.yaml
   - not-found.yaml
   - catchall-404.yaml
