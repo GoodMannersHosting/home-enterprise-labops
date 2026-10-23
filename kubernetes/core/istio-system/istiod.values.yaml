@@ -1,1 +1,5 @@
 profile: ambient
+meshConfig:
+  # Emit Envoy access logs to stdout so ingress traffic (gwapi gateway
+  # pods, sidecars) is visible via kubectl logs. Disabled by default.
+  accessLogFile: /dev/stdout

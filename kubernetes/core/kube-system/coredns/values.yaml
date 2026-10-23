@@ -29,6 +29,18 @@ servers:
     configBlock: |-
       pods insecure
       fallthrough in-addr.arpa ip6.arpa
+  # Answer the internal gwapi LB IP for public hostnames instead of
+  # forwarding to upstream DNS. The terrakube API/registry fetch DEX JWKs
+  # from terrakube-api.cloud.danmanners.com; if that name ever resolves to
+  # the public WAN IP (Unifi/PowerDNS flap), the fetch hairpins through
+  # Unifi's NAT loopback and intermittently times out, breaking JWT
+  # validation (2026-10-22 incident).
+  - name: hosts
+    configBlock: |-
+      fallthrough
+      172.31.0.10 terrakube-api.cloud.danmanners.com
+      172.31.0.10 terrakube-ui.cloud.danmanners.com
+      172.31.0.10 terrakube-reg.cloud.danmanners.com
   - name: forward
     parameters: . /etc/resolv.conf
   - name: cache
