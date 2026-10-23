@@ -71,17 +71,6 @@ sso:
   enabled: true
 
 extraResources:
-  # Create the public Ollama Web UI service
-  - apiVersion: v1
-    kind: Service
-    metadata:
-      name: ollama-extname
-      annotations:
-        external-dns.kubernetes.io/hostname: ollama.cloud.danmanners.com,chat.goodmanners.services
-        external-dns.kubernetes.io/ttl: "300"
-    spec:
-      type: ExternalName
-      externalName: unifi-home.homelab.danmanners.com
   # Create the Gateway API HTTPRoute for the public Ollama Web UI service
   - apiVersion: gateway.networking.k8s.io/v1
     kind: HTTPRoute
@@ -89,10 +78,6 @@ extraResources:
       name: aiml-cloud
       namespace: aiml
       annotations:
-        external-dns.kubernetes.io/controller: "false"
-        external-dns.kubernetes.io/hostname: ollama.cloud.danmanners.com,chat.goodmanners.services
-        external-dns.kubernetes.io/target: unifi-home.homelab.danmanners.com
-        external-dns.kubernetes.io/ingress-hostname-source: annotation-only
         external-dns.kubernetes.io/ttl: "300"
         gatus.home-operations.com/enabled: "true"
         gatus.home-operations.com/endpoint: |-

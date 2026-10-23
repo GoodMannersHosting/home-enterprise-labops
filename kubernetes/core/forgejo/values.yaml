@@ -271,16 +271,6 @@ service:
         targetPort: redis
         protocol: TCP
 
-  extname:
-    enabled: true
-    primary: false
-    controller: api
-    type: ExternalName
-    externalName: unifi-home.homelab.danmanners.com
-    annotations:
-      external-dns.kubernetes.io/hostname: *domain
-      external-dns.kubernetes.io/ttl: "300"
-
 route:
   api:
     enabled: true

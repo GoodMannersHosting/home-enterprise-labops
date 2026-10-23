@@ -3,4 +3,3 @@ resources:
   - namespace.yaml
   - cicd-namespace.yaml
   - oidc-secret.yaml
-  - external-dns.yaml

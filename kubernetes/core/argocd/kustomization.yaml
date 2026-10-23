@@ -4,7 +4,6 @@ kind: Kustomization
 resources:
   - repo
   - namespace.yaml
-  - external-dns.yaml
   - tlsroute.yaml
   - app-of-apps.yaml
   - argo-appproject.yaml
