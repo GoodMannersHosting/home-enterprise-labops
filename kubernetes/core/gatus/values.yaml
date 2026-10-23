@@ -85,16 +85,6 @@ service:
         port: 80
         targetPort: 80
         protocol: TCP
-  extname:
-    enabled: true
-    primary: false
-    controller: main
-    type: ExternalName
-    externalName: unifi-home.homelab.danmanners.com
-    ports: {}
-    annotations:
-      external-dns.kubernetes.io/hostname: status.cloud.danmanners.com
-      external-dns.kubernetes.io/ttl: "300"
 
 serviceAccount:
   gatus:

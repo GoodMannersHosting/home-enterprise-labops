@@ -4,7 +4,9 @@ metadata:
   name: gwapi
   namespace: default
   annotations:
-    external-dns.kubernetes.io/target: unifi-home.homelab.danmanners.com
+    # Split horizon: publicly a CNAME to unifi-home (gwapi-extname.yaml),
+    # internally an A record to 172.31.0.10 in UniFi (kube-system/unifi-dns).
+    external-dns.kubernetes.io/target: gwapi.cloud.danmanners.com
 spec:
   gatewayClassName: istio
   infrastructure:

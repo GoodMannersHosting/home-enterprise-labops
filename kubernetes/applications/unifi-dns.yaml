@@ -1,0 +1,35 @@
+---
+# Internal (split-horizon) view of cloud.danmanners.com, written into UniFi local DNS.
+# The public view is the `external-dns` app (PowerDNS on keeper).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: unifi-dns
+  namespace: argocd
+  labels:
+    chartVersion: &chartVersion 1.22.0
+spec:
+  destination:
+    namespace: kube-system
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+    - repoURL: &repo https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: main
+      path: kubernetes/core/kube-system/unifi-dns
+    - repoURL: *repo
+      targetRevision: main
+      ref: values
+    - repoURL: https://kubernetes-sigs.github.io/external-dns/
+      chart: external-dns
+      targetRevision: *chartVersion
+      helm:
+        releaseName: unifi-dns
+        valueFiles:
+          - $values/kubernetes/core/kube-system/unifi-dns/values.yaml
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

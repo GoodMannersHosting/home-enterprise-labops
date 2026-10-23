@@ -1,0 +1,15 @@
+---
+# Public record for the gwapi target name. The internal (UniFi) view answers
+# this name with 172.31.0.10 instead; see kube-system/unifi-dns.
+apiVersion: v1
+kind: Service
+metadata:
+  name: gwapi-extname
+  namespace: default
+  annotations:
+    external-dns.kubernetes.io/hostname: gwapi.cloud.danmanners.com
+    external-dns.kubernetes.io/ttl: "300"
+spec:
+  externalName: unifi-home.homelab.danmanners.com
+  sessionAffinity: None
+  type: ExternalName
