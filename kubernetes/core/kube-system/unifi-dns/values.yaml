@@ -8,8 +8,7 @@ provider:
       tag: 0.10.14@sha256:2d56637e230de7eaeda83388a79ec633c94910e77503141bc6a1a5492eecdd7e
     env:
     - name: UNIFI_HOST
-      # TODO: confirm the UniFi console URL
-      value: https://172.21.0.1
+      value: https://10.3.0.1
     - name: UNIFI_API_KEY
       valueFrom:
         secretKeyRef:
