@@ -37,10 +37,10 @@ servers:
   # validation (2026-10-22 incident).
   - name: hosts
     configBlock: |-
-      fallthrough
       172.31.0.10 terrakube-api.cloud.danmanners.com
       172.31.0.10 terrakube-ui.cloud.danmanners.com
       172.31.0.10 terrakube-reg.cloud.danmanners.com
+      fallthrough
   - name: forward
     parameters: . /etc/resolv.conf
   - name: cache
