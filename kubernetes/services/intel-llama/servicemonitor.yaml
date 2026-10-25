@@ -1,0 +1,19 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: intel-llama
+  namespace: aiml
+  labels:
+    release: monitoring # required by the monitoring Prometheus's serviceMonitorSelector
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/service: intel-llama-core
+  namespaceSelector:
+    matchNames:
+      - aiml
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s

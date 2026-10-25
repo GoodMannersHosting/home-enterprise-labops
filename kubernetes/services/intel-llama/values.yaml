@@ -1,0 +1,189 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+---
+# llama.cpp (SYCL/Level-Zero) serving RecursiveSI/flint on the ARC B70 PRO
+# (32GB) on node `intellectual`. A separate deployment from ../intel-vllm
+# (same GPU, same API key, its own endpoint); see that directory for rollback.
+#
+# Flint is a 39.8B MoE (~2.5B active per token), 49 layers (2 dense + 47 MoE),
+# 35 sliding-window (513-token) + 14 full-attention layers, native 262144
+# context. The BF16 checkpoint (~80GB) and Recursive's official SGLang kit
+# (NVIDIA-only, >=141GB) do not fit this card, so we serve the community GGUF
+# unsloth/flint-GGUF:UD-Q3_K_XL (18.5GB) through llama.cpp.
+#
+# Image: ghcr.io/snailium/llama.cpp-sycl-intel-b70/llama-sycl-b70 — a
+# community-maintained llama.cpp SYCL image built specifically for the Arc
+# Pro B70 (Battlemage): oneAPI 2026 stack, AOT kernels for the bmg-g31 device
+# arch, the oneDNN/XMX flash-attention path, and the driver "version
+# triangle" libigc fix. The pinned tag is llama.cpp b11849, the first build
+# in their pipeline to include Flint support (ggml-org/llama.cpp#30928,
+# merged 2026-10-21); the `:stable` tag (v0.5.0) predates it. Bump the tag
+# when the maintainer promotes a Flint-capable stable (announced in the
+# repo's GitHub issues).
+#
+# Memory budget at full 262144 context, single slot:
+#   weights (UD-Q3_K_XL)   ~18.5 GB
+#   KV, full-attention     ~3.7 GiB (14 layers, q8_0)
+#   KV, sliding-window     ~20 MiB (35 layers keep only the last 513 tokens)
+#   runtime/compute        a few GiB (batch 2048 / ubatch 1024)
+#   total                  ~25-26 GB of 32 GB
+# q8_0 KV is deliberate: community measurement shows q4_0 KV raises KLD by
+# ~67% on code for this model, while q8_0 costs ~6% and half the f16 memory.
+#
+# Sampling defaults are Recursive's: temp 1.0, top-p 0.95, top-k 20.
+# Thinking is model-driven per turn (no server toggle); clients should give
+# hard problems an output budget of >=32k tokens and preserve reasoning
+# content.
+defaultPodOptions:
+  automountServiceAccountToken: false
+  enableServiceLinks: false
+  restartPolicy: Always
+  dnsPolicy: ClusterFirst
+  nodeSelector:
+    kubernetes.io/hostname: intellectual
+    intel.feature.node.kubernetes.io/gpu: "true"
+  securityContext:
+    fsGroup: 1000
+    fsGroupChangePolicy: OnRootMismatch
+
+controllers:
+  main:
+    enabled: true
+    type: deployment
+    # Only ONE deployment may hold gpu.intel.com/xe on this node. Rolling back
+    # to ../intel-vllm: set its replicas to 1 and this one to 0 (never both 1).
+    replicas: 1
+    revisionHistoryLimit: 2
+    containers:
+      core:
+        ports:
+          - name: http
+            containerPort: &port 8080
+            protocol: TCP
+        image:
+          repository: ghcr.io/snailium/llama.cpp-sycl-intel-b70/llama-sycl-b70
+          tag: server-dev-b11849-c26.35.39758.10-20261024-0252
+          pullPolicy: IfNotPresent
+        # llama-server takes the API key as an argument, not an env var, so a
+        # small startup script passes it through from the env.
+        args:
+          - bash
+          - -c
+          - |
+            set -euo pipefail
+            exec llama-server \
+              --api-key "${API_KEY}" \
+              --host 0.0.0.0 \
+              --port 8080 \
+              --hf-repo "unsloth/flint-GGUF:UD-Q3_K_XL" \
+              --jinja \
+              --alias llama \
+              --ctx-size 262144 \
+              --n-gpu-layers 999 \
+              --parallel 1 \
+              --batch 2048 \
+              --ubatch 1024 \
+              --flash-attn on \
+              --cache-type-k q8_0 \
+              --cache-type-v q8_0 \
+              --temp 1 \
+              --top-p 0.95 \
+              --top-k 20
+        env:
+          # Mandatory B70/SYCL runtime environment per the image maintainer's
+          # golden config: ONEAPI_DEVICE_SELECTOR picks the dGPU, and
+          # SYCL_CACHE_PERSISTENT=1 SIGSEGVs on Xe2 during first JIT.
+          - name: ONEAPI_DEVICE_SELECTOR
+            value: level_zero:0
+          - name: SYCL_CACHE_PERSISTENT
+            value: "0"
+          - name: ZES_ENABLE_SYSMAN
+            value: "1"
+          - name: HF_HOME
+            value: /cache/huggingface
+          # Without this the 18.5GB GGUF pull runs anonymously and is
+          # rate-limited. Same secret as ../intel-vllm (materialized by
+          # ../nvidia-vllm/externalsecret.hf-secret.yaml).
+          - name: HF_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: hf-secret
+                key: token
+          # Bearer auth for the OpenAI-compatible API — the same secret
+          # ../intel-vllm uses, so client tokens keep working across the swap;
+          # without it the LoadBalancer on 172.31.0.61 is unauthenticated.
+          - name: API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: intel-llm-api-key
+                key: api-key
+
+        securityContext: {}
+        resources:
+          requests:
+            cpu: "4000m"
+            memory: "8Gi"
+            gpu.intel.com/xe: "1"
+          limits:
+            cpu: "8000m"
+            memory: "16Gi"
+            gpu.intel.com/xe: "1"
+
+service:
+  core:
+    enabled: true
+    controller: main
+    primary: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        port: *port
+        targetPort: http
+        protocol: TCP
+  public:
+    enabled: true
+    controller: main
+    primary: false
+    type: LoadBalancer
+    externalTrafficPolicy: Cluster
+    annotations:
+      # New LB services use the 172.31.0.60-69 pool (header comment in
+      # ../../core/gateway-api/meticulous-tcp-gateway.yaml); .60 is the
+      # meticulous TCP gateway, so this takes .61.
+      lbipam.cilium.io/ips: "172.31.0.61"
+      external-dns.kubernetes.io/hostname: llama.cloud.danmanners.com
+      external-dns.kubernetes.io/ttl: "300"
+    ports:
+      http:
+        enabled: true
+        port: *port
+        targetPort: http
+        protocol: TCP
+
+persistence:
+  # unsloth/flint-GGUF:UD-Q3_K_XL is ~18.5GB; headroom for trying other quants
+  # later (e.g. UD-Q4_K_XL at 25GB — would still fit at 262k with less KV
+  # headroom).
+  cache:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-block-retain
+    accessMode: ReadWriteOnce
+    size: 100Gi
+    retain: true
+    advancedMounts:
+      main:
+        core:
+          - path: /cache/huggingface
+            readOnly: false
+  # SYCL/USM can use shared memory; keep the same headroom ../intel-vllm used.
+  shm:
+    enabled: true
+    type: emptyDir
+    medium: Memory
+    sizeLimit: 16Gi
+    advancedMounts:
+      main:
+        core:
+          - path: /dev/shm
+            readOnly: false
