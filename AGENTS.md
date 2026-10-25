@@ -39,7 +39,8 @@ graph TD
 | OpenBao | openbao | Secrets management |
 | Llama Router | llm-router | Multi-backend LLM routing |
 | nvidia-vllm | nvidia-vllm | NVIDIA GPU inference backend |
-| intel-vllm | intel-vllm | Intel GPU inference backend |
+| intel-llama | intel-llama | llama.cpp (SYCL) serving Recursive Flint on the Intel ARC B70 PRO |
+| intel-vllm | intel-vllm | Intel GPU inference backend (parked at `replicas: 0`; rollback for intel-llama) |
 | PowerDNS | powerdns | Internal authoritative DNS |
 | Gatus | monitoring | Service health monitoring |
 | Terrakube | terrakube | Terraform/OpenTofu run platform (OIDC via DEX + Authentik) |
@@ -50,7 +51,7 @@ The labops repo hosts the company's self-hosted LLM infrastructure:
 
 - **Llama Router**: HTTP-based routing between multiple inference backends
 - **NVIDIA vLLM**: RTX 5090 backend ($1.89/M input, $2.34/M output tokens)
-- **Intel vLLM**: ARC B70 PRO backend for lighter workloads
+- **Intel llama.cpp (intel-llama)**: ARC B70 PRO backend — Recursive Flint (39.8B MoE, ~2.5B active) via the `unsloth/flint-GGUF:UD-Q3_K_XL` GGUF at full 262k context. The vLLM/Qwen3.6 setup is kept as `intel-vllm`, parked at `replicas: 0` for rollback
 - **Model cost tracking**: Per-model cost per token configuration
 
 See `kubernetes/services/llm-router/` for deployment details.

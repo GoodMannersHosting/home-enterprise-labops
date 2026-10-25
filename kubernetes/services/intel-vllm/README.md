@@ -5,6 +5,13 @@ Intel's optimized vLLM fork (`intel/llm-scaler-vllm`). Flags follow the
 single-GPU Arc reference commands in the [intel/llm-scaler README](https://github.com/intel/llm-scaler/blob/main/vllm/README.md)
 (`--enforce-eager`, `--block-size 64`, `--tensor-parallel-size 1`).
 
+> **Parked (2026-10-24).** This deployment runs at `replicas: 0` — the ARC
+> B70 PRO now serves
+> [RecursiveSI/flint](https://huggingface.co/RecursiveSI/flint) via llama.cpp
+> in [`../intel-llama`](../intel-llama) (same API key, new endpoint). Set
+> `replicas: 1` here (and scale `intel-llama` to 0) to roll back; the Qwen3.6
+> cache is untouched on the PVC.
+
 ## Model
 
 | Item | Value |

@@ -37,7 +37,11 @@ controllers:
   main:
     enabled: true
     type: deployment
-    replicas: 1
+    # PARKED 2026-10-24: the ARC B70 PRO now serves Recursive Flint via
+    # llama.cpp in ../intel-llama (same GPU, same API key, new endpoint).
+    # Flip this back to 1 (and ../intel-llama to 0) to roll back — the 72GB
+    # Qwen cache is still on the PVC below.
+    replicas: 0
     revisionHistoryLimit: 2
     containers:
       core:
