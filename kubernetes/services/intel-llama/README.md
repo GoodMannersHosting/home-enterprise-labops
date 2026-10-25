@@ -134,7 +134,7 @@ Through the router: use `model: intel-llama`.
 | `--ctx-size` | `262144` | full native context (the point of this deployment) |
 | `--n-gpu-layers` | `999` | full GPU offload |
 | `--parallel` | `1` | single slot — see memory budget |
-| `--batch` / `--ubatch` | `2048` / `1024` | prefill batching per the community B70 reference |
+| `--batch-size` / `--ubatch-size` | `2048` / `1024` | prefill batching per the community B70 reference (b11849 renamed the old `--batch` / `--ubatch`) |
 | `--flash-attn` | `on` | SYCL flash attention; q8_0 KV still reaches the oneDNN/XMX SDPA path via dequantize→f16 (upstream #25874) |
 | `--cache-type-k/v` | `q8_0` | see memory budget |
 | `--temp` / `--top-p` / `--top-k` | `1` / `0.95` / `20` | Recursive's recommended sampling |
@@ -173,3 +173,23 @@ treating these as ours.
 - `shm`: 16 GiB emptyDir (Memory) for SYCL/USM.
 - The parked `intel-vllm` keeps its own 200 GiB PVC (Qwen3.6 cache) until
   the rollback window is over.
+
+## Troubleshooting
+
+- **Crash loop, log reads `error: invalid argument: bash`** (the incident
+  this service hit on its first deploy): the image's ENTRYPOINT is the
+  `llama-server` binary, so any bare `args` are received by the server *as
+  its CLI arguments* — our `bash -c` startup script became
+  `llama-server bash -c <script>` and the parser rejected the positional
+  `bash` (exit 1, instantly, every restart). Fix, kept in `values.yaml`:
+  `command: [/bin/bash]` overrides the entrypoint, and the script execs
+  `/app/llama-server` by absolute path — the binary is **not** on the
+  image's PATH. (A quick test that reveals the entrypoint: run the image
+  with `args: [echo, hello, world]`; you get
+  `error: invalid argument: echo`.)
+- **`error: invalid argument: --batch` / `--ubatch`**: b11849 renamed the
+  flags to `--batch-size` / `--ubatch-size`; the startup script uses the new
+  names.
+- **`/health` returns 503**: expected while the 18.5GB GGUF downloads
+  (first boot) and the model loads; poll `/v1/models` instead (see
+  [Smoke test](#smoke-test)).

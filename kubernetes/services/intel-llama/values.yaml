@@ -20,6 +20,12 @@
 # when the maintainer promotes a Flint-capable stable (announced in the
 # repo's GitHub issues).
 #
+# Gotcha: the image's ENTRYPOINT is the llama-server binary, so any bare
+# `args` are received by the server as *its* CLI arguments (the first crash
+# loop: `error: invalid argument: bash` from our `bash -c` startup script).
+# We override it with `command: [/bin/bash]` below and exec
+# /app/llama-server by absolute path (it is not on the image's PATH).
+#
 # Memory budget at full 262144 context, single slot:
 #   weights (UD-Q3_K_XL)   ~18.5 GB
 #   KV, full-attention     ~3.7 GiB (14 layers, q8_0)
@@ -63,14 +69,22 @@ controllers:
           repository: ghcr.io/snailium/llama.cpp-sycl-intel-b70/llama-sycl-b70
           tag: server-dev-b11849-c26.35.39758.10-20261024-0252
           pullPolicy: IfNotPresent
+        # The image ENTRYPOINT is the llama-server binary itself, so bare
+        # `args` are passed to the server *as its CLI arguments* (observed:
+        # the old `bash -c` script died instantly with
+        # `error: invalid argument: bash`). Override the entrypoint with an
+        # explicit command; the override also keeps us safe if the maintainer
+        # re-pushes the tag with a different entrypoint.
+        command:
+          - /bin/bash
         # llama-server takes the API key as an argument, not an env var, so a
-        # small startup script passes it through from the env.
+        # small startup script passes it through from the env. The binary is
+        # /app/llama-server, NOT on the image's PATH.
         args:
-          - bash
           - -c
           - |
             set -euo pipefail
-            exec llama-server \
+            exec /app/llama-server \
               --api-key "${API_KEY}" \
               --host 0.0.0.0 \
               --port 8080 \
@@ -80,8 +94,8 @@ controllers:
               --ctx-size 262144 \
               --n-gpu-layers 999 \
               --parallel 1 \
-              --batch 2048 \
-              --ubatch 1024 \
+              --batch-size 2048 \
+              --ubatch-size 1024 \
               --flash-attn on \
               --cache-type-k q8_0 \
               --cache-type-v q8_0 \
