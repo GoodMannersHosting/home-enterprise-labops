@@ -2,10 +2,13 @@
 apiVersion: litellm.home-operations.com/v1alpha1
 kind: LiteLLMModel
 metadata:
-  name: intel-llama
+  # Renamed 2026-10-24 (was intel-llama) to free that name for the new
+  # llama.cpp backend in model-llama.yaml. Params are unchanged — vLLM still
+  # serves the model as intel-qwen36.
+  name: intel-qwen36
   namespace: aiml
 spec:
-  modelName: intel-llama
+  modelName: intel-qwen36
   params:
     model: intel-qwen36
     apiBase: http://intel-vllm-core.aiml.svc.cluster.local:8080/v1

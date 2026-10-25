@@ -1,14 +1,14 @@
 # llm-router
 
-A single OpenAI-compatible endpoint in front of both vLLM backends in the
-cluster, via [litellm-operator](https://github.com/home-operations/litellm-operator).
-Instead of clients juggling `nvidia-vllm`'s and `intel-vllm`'s separate
-LoadBalancer IPs and API keys, they hit one host with one key and pick a
-backend by `model` name.
+A single OpenAI-compatible endpoint in front of the cluster's LLM backends,
+via [litellm-operator](https://github.com/home-operations/litellm-operator).
+Instead of clients juggling the backends' separate LoadBalancer IPs and API
+keys, they hit one host with one key and pick a backend by `model` name.
 
-Both backends run vLLM:
+Backends:
 - `nvidia-vllm`: `vllm/vllm-openai:v0.29.0` with nvidia/Qwen3.8-27B-NVFP4 (RTX 5090)
-- `intel-vllm`: `intel/llm-scaler-vllm:0.26.0-b2` with Qwen/Qwen3.6-35B-A3B, online sym_int4 (Arc B70 PRO)
+- `intel-llama`: llama.cpp (SYCL) with Recursive Flint, `unsloth/flint-GGUF:UD-Q3_K_XL`, full 262k context (Arc B70 PRO) — the current Intel inference path
+- `intel-vllm`: `intel/llm-scaler-vllm:0.26.0-b2` with Qwen/Qwen3.6-35B-A3B, online sym_int4 (Arc B70 PRO) — **parked** (`replicas: 0`), the vLLM fallback for `intel-llama`; registered as `intel-qwen36`
 
 ## Prerequisite
 
@@ -36,7 +36,8 @@ depends on.
 |------|---------|
 | `proxy.yaml` | `LiteLLMProxy` — owns the router's Deployment/Service/ConfigMap and its `HTTPRoute` (no `modelSelector`, so it adopts every `LiteLLMModel` in `aiml`); runs `applyMode: api` |
 | `model-nvidia.yaml` | `LiteLLMModel` pointing at `nvidia-vllm-core.aiml.svc.cluster.local:8080`, reusing the existing `nvidia-llm-api-key` secret |
-| `model-intel.yaml` | `LiteLLMModel` pointing at `intel-vllm-core.aiml.svc.cluster.local:8080`, reusing the existing `intel-llm-api-key` secret |
+| `model-intel.yaml` | `LiteLLMModel` `intel-qwen36` pointing at `intel-vllm-core.aiml.svc.cluster.local:8080` (parked), reusing the existing `intel-llm-api-key` secret |
+| `model-llama.yaml` | `LiteLLMModel` `intel-llama` pointing at `intel-llama-core.aiml.svc.cluster.local:8080`, reusing the existing `intel-llm-api-key` secret |
 | `model-bonsai.yaml` | `LiteLLMModel` pointing at a bare-metal endpoint (`10.2.30.217:8080`), authenticated via `bonsai-llm-api-key` |
 | `externalsecret.bonsai.yaml` | `ExternalSecret` that materializes `bonsai-llm-api-key` from OpenBao |
 | `team.yaml` | `LiteLLMTeam` `scum` — shared team the virtual keys below belong to |
@@ -275,7 +276,9 @@ curl -s https://llm.cloud.danmanners.com/v1/chat/completions \
   -d '{"model":"nvidia-llama","messages":[{"role":"user","content":"hi"}],"max_tokens":32}'
 ```
 
-Swap `model` for `intel-llama` to hit the Arc B70 box instead.
+Swap `model` for `intel-llama` to hit the Arc B70 box (Recursive Flint via
+llama.cpp). `intel-qwen36` (vLLM/Qwen3.6, parked) will error until
+`intel-vllm` is scaled back up.
 
 ## Observability
 
