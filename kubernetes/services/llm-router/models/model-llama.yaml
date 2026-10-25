@@ -5,7 +5,7 @@ metadata:
   name: intel-llama
   namespace: aiml
 spec:
-  modelName: openai/intel-llama
+  modelName: intel-llama
   params:
     model: openai/unsloth/flint-GGUF
     apiBase: http://intel-llama-core.aiml.svc.cluster.local:8080/v1
