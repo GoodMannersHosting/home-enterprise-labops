@@ -88,7 +88,7 @@ controllers:
               --api-key "${API_KEY}" \
               --host 0.0.0.0 \
               --port 8080 \
-              --hf-repo "unsloth/flint-GGUF:UD-Q3_K_XL" \
+              --hf-repo "bartowski/Nanbeige_Nanbeige4.3-33B-GGUF:Q4_K_L" \
               --jinja \
               --alias llama \
               --ctx-size 262144 \
