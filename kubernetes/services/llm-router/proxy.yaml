@@ -5,6 +5,7 @@ metadata:
   name: router
   namespace: aiml
 spec:
+  image: ghcr.io/berriai/litellm:lts@sha256:c560d317136880ea92d62334d4367ab10955b1af189dd3ea24f6551290b1d6c1
   # No modelSelector: adopts every LiteLLMModel in aiml.
   applyMode: api # models push to the live admin API (DB-backed); needed for
   # the webui and for LiteLLMVirtualKey/LiteLLMTeam to mint keys through it.

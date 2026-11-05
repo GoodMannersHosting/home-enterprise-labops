@@ -11,3 +11,4 @@ resources:
   - model-intel.yaml
   - model-llama.yaml
   - model-nvidia.yaml
+  - model-zai.yaml

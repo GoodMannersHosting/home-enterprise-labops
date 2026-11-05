@@ -1,0 +1,21 @@
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMModel
+metadata:
+  name: glm-5.3-flash
+  namespace: aiml
+spec:
+  modelName: glm-5.3-flash
+  params:
+    model: openai/glm-5.3-flash
+    apiBase: https://api.z.ai/api/coding/paas/v4
+    apiKeyRef:
+      name: zai-api-key
+      key: api-key
+    additional:
+      input_cost_per_token: 0.000000003
+      output_cost_per_token: 0.0000005
+  info:
+    maxInputTokens: 1000000
+    supportsFunctionCalling: true
+    supportsVision: true
