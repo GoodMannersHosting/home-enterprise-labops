@@ -13,6 +13,7 @@ spec:
     - intel-llama
     - nvidia-llama
     - apple-foundation
+    - glm-5.3-flash
   members:
     - userID: dan
       role: user

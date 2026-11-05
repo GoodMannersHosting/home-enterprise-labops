@@ -7,7 +7,7 @@ metadata:
 spec:
   modelName: glm-5.3-flash
   params:
-    model: openai/glm-5.3-flash
+    model: zai/glm-5.3-flash
     apiBase: https://api.z.ai/api/coding/paas/v4
     apiKeyRef:
       name: zai-api-key
