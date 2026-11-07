@@ -71,9 +71,9 @@ applicationObservability:
         enabled: true
         port: 4318
   metrics:
-    enabled: false
+    enabled: true
   logs:
-    enabled: false
+    enabled: true
 clusterMetrics:
   enabled: true
   collector: alloy-metrics

@@ -4,8 +4,6 @@ kind: Application
 metadata:
   name: litellm-operator
   namespace: argocd
-  labels:
-    chartVersion: &chartVersion 0.0.19
 spec:
   destination:
     namespace: litellm-system
@@ -14,7 +12,7 @@ spec:
   sources:
     - repoURL: ghcr.io/home-operations/charts
       chart: litellm-operator
-      targetRevision: *chartVersion
+      targetRevision: 0.0.26
   syncPolicy:
     automated:
       prune: true
