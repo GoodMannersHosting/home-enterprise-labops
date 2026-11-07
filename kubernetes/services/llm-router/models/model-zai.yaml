@@ -2,20 +2,18 @@
 apiVersion: litellm.home-operations.com/v1alpha1
 kind: LiteLLMModel
 metadata:
-  name: glm-5.3-flash
+  name: zai-wildcard
   namespace: aiml
 spec:
-  modelName: glm-5.3-flash
+  proxyRef: router
+  modelName: "zai/*"
   params:
-    model: zai/glm-5.3-flash
-    apiBase: https://api.z.ai/api/coding/paas/v4
+    model: "zai/*"
+    apiBase: https://api.z.ai/api/paas/v4
     apiKeyRef:
-      name: zai-api-key
+      name: zai-standard-api-key
       key: api-key
-    additional:
-      input_cost_per_token: 0.000000003
-      output_cost_per_token: 0.0000005
   info:
-    maxInputTokens: 1000000
-    supportsFunctionCalling: true
-    supportsVision: true
+    mode: chat
+    extra:
+      health_check_model: zai/glm-5.3-flash

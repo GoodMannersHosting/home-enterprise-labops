@@ -7,7 +7,7 @@ metadata:
 spec:
   modelName: intel-llama
   params:
-    model: openai/unsloth/flint-GGUF
+    model: openai/llama
     apiBase: http://intel-llama-core.aiml.svc.cluster.local:8080/v1
     apiKeyRef:
       name: intel-llm-api-key
@@ -20,5 +20,13 @@ spec:
       output_cost_per_token: 0.00000249
       thinking_always_on: false
   info:
-    maxInputTokens: 262144
+    mode: chat
+    maxInputTokens: 229376
+    maxOutputTokens: 32768
     supportsFunctionCalling: true
+    supportsVision: false
+    extra:
+      model_family: Nanbeige4.3-33B
+      serving_engine: llama.cpp
+      quantization: Q4_K_L
+      served_context_tokens: 262144

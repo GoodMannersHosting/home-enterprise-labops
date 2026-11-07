@@ -16,6 +16,13 @@ spec:
       input_cost_per_token: 0.0000023860
       output_cost_per_token: 0.0000028322
   info:
-    maxInputTokens: 262144
+    mode: chat
+    maxInputTokens: 151552
+    maxOutputTokens: 32768
     supportsFunctionCalling: true
     supportsVision: false
+    extra:
+      model_family: Qwen3.8-27B
+      serving_engine: vllm
+      quantization: NVFP4
+      served_context_tokens: 184320

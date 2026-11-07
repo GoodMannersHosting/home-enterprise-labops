@@ -14,5 +14,11 @@ spec:
       input_cost_per_token: 0.000000185
       output_cost_per_token: 0.0000032397
   info:
-    maxInputTokens: 4096
+    mode: chat
+    maxInputTokens: 3072
+    maxOutputTokens: 1024
     supportsFunctionCalling: true
+    supportsVision: false
+    extra:
+      model_family: Apple Foundation Models
+      serving_engine: Apple Foundation Models framework
