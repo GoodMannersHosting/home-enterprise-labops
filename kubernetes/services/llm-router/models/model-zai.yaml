@@ -11,7 +11,7 @@ spec:
     model: "zai/*"
     apiBase: https://api.z.ai/api/paas/v4
     apiKeyRef:
-      name: zai-standard-api-key
+      name: zai-api-key
       key: api-key
   info:
     mode: chat
