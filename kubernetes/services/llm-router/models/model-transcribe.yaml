@@ -1,0 +1,17 @@
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMModel
+metadata:
+  name: transcribe
+  namespace: aiml
+spec:
+  modelName: transcribe
+  params:
+    model: openai/gpt-transcribe
+    apiKeyRef:
+      name: openai-api-key
+      key: api-key
+  info:
+    mode: audio_transcription
+    extra:
+      disable_background_health_check: true

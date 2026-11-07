@@ -1,0 +1,20 @@
+
+
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMModel
+metadata:
+  name: media-analysis
+  namespace: aiml
+spec:
+  modelName: media-analysis
+  params:
+    model: openrouter/google/gemini-3.8-flash
+    apiKeyRef:
+      name: openrouter-api-key
+      key: api-key
+  info:
+    mode: chat
+    supportsFunctionCalling: true
+    supportsVision: true
+

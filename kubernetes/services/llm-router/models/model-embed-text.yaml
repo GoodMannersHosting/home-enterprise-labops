@@ -1,0 +1,15 @@
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMModel
+metadata:
+  name: embed-text
+  namespace: aiml
+spec:
+  modelName: embed-text
+  params:
+    model: openrouter/openai/text-embedding-3-small
+    apiKeyRef:
+      name: openrouter-api-key
+      key: api-key
+  info:
+    mode: embedding

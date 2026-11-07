@@ -1,0 +1,15 @@
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMModel
+metadata:
+  name: rerank-docs
+  namespace: aiml
+spec:
+  modelName: rerank-docs
+  params:
+    model: cohere/rerank-v5.0-fast
+    apiKeyRef:
+      name: cohere-api-key
+      key: api-key
+  info:
+    mode: rerank

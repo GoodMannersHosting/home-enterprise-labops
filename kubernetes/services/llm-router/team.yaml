@@ -13,7 +13,13 @@ spec:
     - intel-llama
     - nvidia-llama
     - apple-foundation
+    - glm-5.3-flash
     - "zai/*"
+    - media-analysis
+    - embed-text
+    - agent-premium
+    - rerank-docs
+    - transcribe
   members:
     - userID: dan
       role: admin
