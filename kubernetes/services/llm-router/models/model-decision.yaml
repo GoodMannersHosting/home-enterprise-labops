@@ -1,0 +1,27 @@
+
+
+
+    
+  
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMModel
+metadata:
+  name: decision
+  namespace: aiml
+spec:
+  modelName: decision
+  params:
+    model: openai/gpt-6-luna
+    apiKeyRef:
+      name: openai-api-key
+      key: api-key
+  info:
+    mode: evaluation
+    supportsVision: true
+    extra:
+      supported_endpoints:
+        - /v1/decisions
+        - /v1/systemone
+      disable_background_health_check: true
+
