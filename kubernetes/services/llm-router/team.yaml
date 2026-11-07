@@ -13,10 +13,10 @@ spec:
     - intel-llama
     - nvidia-llama
     - apple-foundation
-    - glm-5.3-flash
+    - "zai/*"
   members:
     - userID: dan
-      role: user
+      role: admin
     - userID: james
       role: user
     - userID: coolguy1771
