@@ -6,7 +6,7 @@ kind: Kustomization
 # level. Every resource below sets its own metadata.namespace: aiml instead.
 
 resources:
-  - model-embed.yaml
+  - model-embed-text.yaml
   - model-foundation.yaml
   - model-gptoss.yaml
   - model-intel.yaml
