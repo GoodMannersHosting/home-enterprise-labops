@@ -28,3 +28,5 @@ spec:
       role: user
     - userID: coolguy1771
       role: admin
+    - userID: rwalter
+      role: admin

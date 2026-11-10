@@ -34,3 +34,15 @@ spec:
   keyAlias: tyler
   userID: coolguy1771
   teamID: scum
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMVirtualKey
+metadata:
+  name: rwalter
+  namespace: aiml
+spec:
+  proxyRef: router
+  secretName: llm-router-key-rwalter
+  keyAlias: rwalter
+  userID: coolguy1771
+  teamID: scum
