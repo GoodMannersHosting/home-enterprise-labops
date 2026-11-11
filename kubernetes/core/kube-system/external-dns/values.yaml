@@ -4,7 +4,7 @@ env:
 - name: PDNS_API_KEY
   valueFrom:
     secretKeyRef:
-      name: as-secrets
+      name: pdns-api-key
       key: api-key
 extraArgs:
 - --pdns-server=https://pdns.goodmanners.services
@@ -32,19 +32,18 @@ txtPrefix: k8s.capi-core.
 domainFilters:
 - "cloud.danmanners.com"
 - "capi-core.homelab.danmanners.com"
-- "goodmanners.services"
 initContainers:
 - name: wait-for-powerdns
   image: docker.io/library/alpine:3.24
   env:
   - name: EXTERNAL_DNS_DOMAIN_FILTER
-    value: "cloud.danmanners.com,capi-core.homelab.danmanners.com,goodmanners.services"
+    value: "cloud.danmanners.com,capi-core.homelab.danmanners.com"
   - name: POWERDNS_API_URL
     value: pdns.goodmanners.services
   - name: EXTERNAL_DNS_PDNS_API_KEY
     valueFrom:
       secretKeyRef:
-        name: as-secrets
+        name: pdns-api-key
         key: api-key
   command:
   - /bin/ash

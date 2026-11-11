@@ -15,6 +15,9 @@ spec:
     - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
       targetRevision: main
       ref: values
+    - repoURL: https://github.com/GoodMannersHosting/home-enterprise-labops.git
+      targetRevision: main
+      path: kubernetes/core/kube-system/external-dns
     - repoURL: https://kubernetes-sigs.github.io/external-dns/
       chart: external-dns
       targetRevision: *chartVersion
