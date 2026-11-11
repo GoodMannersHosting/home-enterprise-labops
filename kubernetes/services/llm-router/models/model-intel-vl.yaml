@@ -1,0 +1,30 @@
+---
+apiVersion: litellm.home-operations.com/v1alpha1
+kind: LiteLLMModel
+metadata:
+  name: intel-vl
+  namespace: aiml
+spec:
+  modelName: intel-vl
+  params:
+    model: openai/qwen3-vl
+    apiBase: http://intel-vl-core.aiml.svc.cluster.local:8080/v1
+    apiKeyRef:
+      name: intel-llm-api-key
+      key: api-key
+    additional:
+      # Same Intel hardware tier as the other two backends.
+      input_cost_per_token: 0.00000249
+      output_cost_per_token: 0.00000249
+      thinking_always_on: false
+  info:
+    mode: chat
+    maxInputTokens: 32768
+    maxOutputTokens: 4096
+    supportsFunctionCalling: true
+    supportsVision: true
+    extra:
+      model_family: Qwen3-VL-8B-Instruct
+      serving_engine: llama.cpp
+      quantization: Q4_K_M
+      served_context_tokens: 32768
