@@ -17,8 +17,8 @@ spec:
           config:
             host: https://pdns.goodmanners.services
             apiKeySecretRef:
-              name: as-secrets
-              namespace: powerdns
+              name: pdns-api-key
+              namespace: cert-manager
               key: api-key
             # This should generally be left unset, and used
             # only if you have a proxy in front of the PowerDNS API
@@ -47,8 +47,8 @@ spec:
           config:
             host: https://pdns.goodmanners.services
             apiKeySecretRef:
-              name: as-secrets
-              namespace: powerdns
+              name: pdns-api-key
+              namespace: cert-manager
               key: api-key
             # This should generally be left unset, and used
             # only if you have a proxy in front of the PowerDNS API

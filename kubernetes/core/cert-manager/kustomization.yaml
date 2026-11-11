@@ -3,5 +3,6 @@ kind: Kustomization
 
 resources:
 - certbot.yaml
+- externalsecret-pdns-api-key.yaml
 - self-signed-issuer.yaml
 - https://github.com/cert-manager/cert-manager/releases/download/v1.17.2/cert-manager.crds.yaml
