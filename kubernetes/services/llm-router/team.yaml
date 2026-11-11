@@ -11,6 +11,7 @@ spec:
   models:
     - gptoss-llama
     - intel-llama
+    - intel-vl
     - nvidia-llama
     - apple-foundation
     - glm-5.3-flash
