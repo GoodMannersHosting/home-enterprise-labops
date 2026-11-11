@@ -4,7 +4,7 @@ kind: Kustomization
 resources:
   - repo
   - namespace.yaml
-  - tlsroute.yaml
+  - httproute.yaml
   - app-of-apps.yaml
   - argo-appproject.yaml
-  - https://github.com/argoproj/argo-cd/manifests/crds?ref=v3.5.3
+  - https://github.com/argoproj/argo-cd/manifests/crds?ref=v3.5.6

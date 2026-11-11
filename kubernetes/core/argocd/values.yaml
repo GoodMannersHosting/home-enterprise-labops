@@ -25,6 +25,15 @@ applicationSet:
   replicas: 2
 
 configs:
+  params:
+    # Terminate TLS at the gwapi gateway instead of SNI passthrough. The
+    # HTTPRoute on the https-cloud listener (httproute.yaml) expects a plaintext
+    # backend, and Host-based routing fixes Chrome HTTP/2 connection coalescing:
+    # Chrome reuses h2 connections to other *.cloud.danmanners.com hosts (same
+    # wildcard cert) and sends Host: argocd... over them, which a TLSRoute
+    # passthrough can never route — those requests fell through to the
+    # catchall-404 backend. See AGENTS session notes 2026-11-11.
+    server.insecure: true
   cm:
     admin.enabled: true
     url: &fullUrl https://argocd.cloud.danmanners.com
@@ -119,11 +128,9 @@ server:
       gatus.home-operations.com/enabled: "true"
       gatus.home-operations.com/endpoint: |-
         name: ArgoCD
-        client:
-          insecure: true
         conditions:
           - "[STATUS] == 200"
-        url: https://argocd-server.argocd.svc.cluster.local/
+        url: http://argocd-server.argocd.svc.cluster.local/
         method: HEAD
   config:
     application.instanceLabelKey: argocd.argoproj.io/instance
