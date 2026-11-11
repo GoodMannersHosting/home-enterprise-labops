@@ -6,4 +6,3 @@ machine:
           - harbor.cloud.danmanners.com
           - ollama.cloud.danmanners.com
           - n8n.cloud.danmanners.com
-          - keycloak.cloud.danmanners.com
