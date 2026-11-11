@@ -45,3 +45,4 @@ txtOwnerId: capi-core-internal
 txtPrefix: k8s.capi-core-internal.%{record_type}-
 domainFilters:
 - "cloud.danmanners.com"
+- "capi-core.homelab.danmanners.com"
