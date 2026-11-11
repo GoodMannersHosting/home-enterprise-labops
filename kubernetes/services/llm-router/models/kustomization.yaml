@@ -11,6 +11,7 @@ resources:
   - model-foundation.yaml
   - model-gptoss.yaml
   - model-intel.yaml
+  - model-intel-vl.yaml
   - model-llama.yaml
   - model-media-analysis.yaml
   - model-nvidia.yaml

@@ -1,0 +1,169 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+---
+# llama.cpp (SYCL/Level-Zero) serving Qwen3-VL-8B-Instruct on the same ARC B70
+# PRO as ../intel-llama, for vision work the router currently has no local
+# option for (model-media-analysis is openrouter/google/gemini-3.8-flash).
+#
+# PARKED (replicas: 0) like ../intel-vllm: only one deployment may hold
+# gpu.intel.com/xe on this node, and intel-llama currently serves Recursive
+# Flint. Flip the two replicas together, never leave both at 1.
+#
+# Why this model: Qwen3-VL-8B-Instruct is dense (8B), shipped as an official
+# GGUF with a vision projector, and multi-modal support on Arc is a documented
+# llm-scaler feature (vllm/README.md section 2.4) if we ever want the vLLM path
+# back. Q4_K_M is ~5GB of weights plus ~1.3GB for the F16 projector, so it fits
+# with room to spare even though Flint's 18.5GB is gone while this runs.
+#
+# Preview of the alternative: llm-scaler-vllm lists Qwen3-VL-4B/8B and
+# Qwen3-VL-30B-A3B as verified, so ../intel-vllm can serve vision instead by
+# swapping the model in its args and dropping --language-model-only. This
+# deployment exists because llama.cpp is what the Intel node actually runs today.
+defaultPodOptions:
+  automountServiceAccountToken: false
+  enableServiceLinks: false
+  restartPolicy: Always
+  dnsPolicy: ClusterFirst
+  nodeSelector:
+    kubernetes.io/hostname: intellectual
+    intel.feature.node.kubernetes.io/gpu: "true"
+  securityContext:
+    fsGroup: 1000
+    fsGroupChangePolicy: OnRootMismatch
+
+controllers:
+  main:
+    enabled: true
+    type: deployment
+    # LIVE: the commit that added this parked ../intel-llama behind it, because
+    # only one deployment may hold gpu.intel.com/xe on this node. Rolling back
+    # means this to 0 and ../intel-llama to 1 in the same commit, never both 1.
+    replicas: 1
+    revisionHistoryLimit: 2
+    containers:
+      core:
+        ports:
+          - name: http
+            containerPort: &port 8080
+            protocol: TCP
+        image:
+          # Same image/tag as ../intel-llama: b11849 post-dates the Qwen3-VL
+          # support in llama.cpp, and reusing the pin means one fewer variable
+          # in the swap.
+          repository: ghcr.io/snailium/llama.cpp-sycl-intel-b70/llama-sycl-b70
+          tag: server-dev-b11849-c26.35.39758.10-20261024-0252
+          pullPolicy: IfNotPresent
+        # The image ENTRYPOINT is llama-server itself, so bare args are taken as
+        # the server's own CLI arguments (../intel-llama documents the
+        # `error: invalid argument: bash` crash loop this caused). Override it.
+        command:
+          - /bin/bash
+        args:
+          - -c
+          - |
+            set -euo pipefail
+            exec /app/llama-server \
+              --api-key "${API_KEY}" \
+              --host 0.0.0.0 \
+              --port 8080 \
+              --hf-repo "Qwen/Qwen3-VL-8B-Instruct-GGUF:Q4_K_M" \
+              --mmproj-url "https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct-GGUF/resolve/main/mmproj-Qwen3VL-8B-Instruct-F16.gguf" \
+              --jinja \
+              --alias qwen3-vl \
+              --ctx-size 32768 \
+              --n-gpu-layers 999 \
+              --parallel 1 \
+              --batch-size 2048 \
+              --ubatch-size 1024 \
+              --flash-attn on \
+              --cache-type-k q8_0 \
+              --cache-type-v q8_0
+        env:
+          # Same B70/SYCL golden config as ../intel-llama: level_zero:0 selects
+          # the dGPU, and SYCL_CACHE_PERSISTENT=1 SIGSEGVs on Xe2 during first JIT.
+          - name: ONEAPI_DEVICE_SELECTOR
+            value: level_zero:0
+          - name: SYCL_CACHE_PERSISTENT
+            value: "0"
+          - name: ZES_ENABLE_SYSMAN
+            value: "1"
+          - name: HF_HOME
+            value: /cache/huggingface
+          - name: HF_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: hf-secret
+                key: token
+          # Same key as ../intel-llama and ../intel-vllm, so client tokens keep
+          # working across whichever of the three is up.
+          - name: API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: intel-llm-api-key
+                key: api-key
+
+        securityContext: {}
+        resources:
+          requests:
+            cpu: "4000m"
+            memory: "8Gi"
+            gpu.intel.com/xe: "1"
+          limits:
+            cpu: "8000m"
+            memory: "16Gi"
+            gpu.intel.com/xe: "1"
+
+service:
+  core:
+    enabled: true
+    controller: main
+    primary: true
+    type: ClusterIP
+    ports:
+      http:
+        enabled: true
+        port: *port
+        targetPort: http
+        protocol: TCP
+  public:
+    enabled: true
+    controller: main
+    primary: false
+    type: LoadBalancer
+    externalTrafficPolicy: Cluster
+    annotations:
+      # Next free in the 172.31.0.60-69 pool (.60 is the meticulous TCP
+      # gateway, .61 is intel-llama). Adjust if that has moved.
+      lbipam.cilium.io/ips: "172.31.0.62"
+      external-dns.kubernetes.io/hostname: intel-vl.cloud.danmanners.com
+      external-dns.kubernetes.io/ttl: "300"
+    ports:
+      http:
+        enabled: true
+        port: *port
+        targetPort: http
+        protocol: TCP
+
+persistence:
+  # ~5GB weights + ~1.3GB projector per quant; headroom for trying others.
+  cache:
+    enabled: true
+    type: persistentVolumeClaim
+    storageClass: ceph-block-retain
+    accessMode: ReadWriteOnce
+    size: 50Gi
+    retain: true
+    advancedMounts:
+      main:
+        core:
+          - path: /cache/huggingface
+            readOnly: false
+  shm:
+    enabled: true
+    type: emptyDir
+    medium: Memory
+    sizeLimit: 16Gi
+    advancedMounts:
+      main:
+        core:
+          - path: /dev/shm
+            readOnly: false

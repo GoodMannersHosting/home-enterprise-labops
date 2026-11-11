@@ -55,9 +55,11 @@ controllers:
   main:
     enabled: true
     type: deployment
-    # Only ONE deployment may hold gpu.intel.com/xe on this node. Rolling back
-    # to ../intel-vllm: set its replicas to 1 and this one to 0 (never both 1).
-    replicas: 1
+    # PARKED (2026-11-11): the ARC B70 PRO now serves Qwen3-VL-8B via
+    # ../intel-vl so vision work stays local. Flint's GGUF is still cached on the
+    # PVC below - flip this back to 1 and ../intel-vl to 0 to roll back (never
+    # both 1: only one deployment may hold gpu.intel.com/xe on this node).
+    replicas: 0
     revisionHistoryLimit: 2
     containers:
       core:
