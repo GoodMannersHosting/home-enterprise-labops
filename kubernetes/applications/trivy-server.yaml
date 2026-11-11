@@ -8,7 +8,7 @@ metadata:
     chartVersion: &chartVersion 4.4.0
 spec:
   destination:
-    namespace: meticulous
+    namespace: security
     server: https://kubernetes.default.svc
   project: default
   sources:

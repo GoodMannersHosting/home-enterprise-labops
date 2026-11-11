@@ -1,5 +1,5 @@
 ---
-# In-cluster Trivy server for Meticulous pipeline agents.
+# In-cluster Trivy server for CI pipeline agents (security namespace).
 # Agents set TRIVY_REMOTE=http://trivy-server:8080 (trivy-scan workflow >= 1.3.0)
 # and query this shared, auto-updating vulnerability DB instead of pulling the
 # ~1 GB DB over OCI from GitHub on every scan step.
