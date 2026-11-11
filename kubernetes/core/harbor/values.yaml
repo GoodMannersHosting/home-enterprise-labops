@@ -270,7 +270,11 @@ redis:
   internal:
     image:
       repository: goharbor/redis-photon
-      tag: *tagVersion
+      # v2.15.2 was never published to Docker Hub (latest stable is v2.14.6);
+      # its absence left harbor-core/jobservice crashlooping on the redis
+      # cache since the 1.19.1 upgrade. Redis is a cache/queue here, so the
+      # minor-version skew is harmless.
+      tag: v2.14.6
     jobserviceDatabaseIndex: "1"
     registryDatabaseIndex: "2"
     trivyAdapterIndex: "5"
