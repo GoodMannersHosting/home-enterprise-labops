@@ -14,7 +14,10 @@ spec:
   dnsNames:
     # - "*.capi-core.homelab.danmanners.com"
     - "*.cloud.danmanners.com"
-    - "*.goodmanners.services"
+    # Do not add "*.goodmanners.services": the pdns webhook only hosts
+    # cloud.danmanners.com. The goodmanners.services zone lives in Route53 and
+    # does not delegate _acme-challenge, so the DNS-01 challenge fails and takes
+    # the whole order (including *.cloud.danmanners.com) down with it.
   issuerRef:
     name: letsencrypt-dns01
     kind: ClusterIssuer
