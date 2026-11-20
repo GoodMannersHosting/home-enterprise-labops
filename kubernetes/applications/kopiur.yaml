@@ -5,7 +5,7 @@ metadata:
   name: kopiur
   namespace: argocd
   labels:
-    chartVersion: &chartVersion 0.10.18
+    chartVersion: &chartVersion 0.11.2
 spec:
   destination:
     namespace: kopiur-system
