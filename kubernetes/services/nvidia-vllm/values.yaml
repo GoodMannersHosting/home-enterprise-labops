@@ -46,9 +46,16 @@ controllers:
           - --gpu-memory-utilization
           - "1.0"
 
-          # Longest published working RTX 5090 config.
+          # 128k. 253952 crashed at startup: it needs 10.59 GiB of KV cache,
+          # but only 8.45 GiB is left after weights (18.2 GiB) plus warmup
+          # activations, and vLLM estimated a 113536-token ceiling with
+          # 4096 batched tokens. The text-only mode and smaller prefill chunks
+          # below free the headroom for 128k. To find the real ceiling, set
+          # "-1" (auto-fit; "1" means a 1-token context) and read the
+          # "Auto-fit max_model_len" log line, then pin it here and in
+          # llm-router/models/model-nvidia.yaml.
           - --max-model-len
-          - "253952"
+          - "131072"
 
           # FP8 is essential for large context.
           - --kv-cache-dtype
@@ -58,10 +65,17 @@ controllers:
           - --max-num-seqs
           - "1"
 
-          # Chunk long prompt processing.
+          # Chunk long prompt processing. Prefill activations scale with this:
+          # 4096 reserved ~2.6 GiB of transient memory, which came straight
+          # out of the KV cache.
           - --enable-chunked-prefill
           - --max-num-batched-tokens
-          - "4096"
+          - "2048"
+
+          # Text only: skips vision encoder profiling and the image-embedding
+          # encoder cache, which is carved out of KV cache memory. LiteLLM
+          # advertises supportsVision: false for this model anyway.
+          - --language-model-only
 
           # Reuse matching prompt prefixes.
           - --enable-prefix-caching
