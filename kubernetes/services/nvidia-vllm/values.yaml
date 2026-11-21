@@ -46,16 +46,15 @@ controllers:
           - --gpu-memory-utilization
           - "1.0"
 
-          # 128k. 253952 crashed at startup: it needs 10.59 GiB of KV cache,
-          # but only 8.45 GiB is left after weights (18.2 GiB) plus warmup
-          # activations, and vLLM estimated a 113536-token ceiling with
-          # 4096 batched tokens. The text-only mode and smaller prefill chunks
-          # below free the headroom for 128k. To find the real ceiling, set
-          # "-1" (auto-fit; "1" means a 1-token context) and read the
-          # "Auto-fit max_model_len" log line, then pin it here and in
+          # Auto-fit ("-1"; "1" means a 1-token context): vLLM picks the
+          # longest context that fits after warmup and logs it on the
+          # "Auto-fit max_model_len" line. 253952 crashed at startup: it needs
+          # 10.59 GiB of KV cache, but only 8.45 GiB was left after weights
+          # (18.2 GiB) plus warmup activations. Text-only ran at 131072.
+          # TODO: pin the logged value here and in
           # llm-router/models/model-nvidia.yaml.
           - --max-model-len
-          - "131072"
+          - "-1"
 
           # FP8 is essential for large context.
           - --kv-cache-dtype
@@ -72,10 +71,11 @@ controllers:
           - --max-num-batched-tokens
           - "2048"
 
-          # Text only: skips vision encoder profiling and the image-embedding
-          # encoder cache, which is carved out of KV cache memory. LiteLLM
-          # advertises supportsVision: false for this model anyway.
-          - --language-model-only
+          # Vision (images only; the processor has no video/audio). Warmup
+          # profiles the worst case for this many images and holds that
+          # memory back from the KV cache, so keep the cap low.
+          - --limit-mm-per-prompt
+          - '{"image":4}'
 
           # Reuse matching prompt prefixes.
           - --enable-prefix-caching

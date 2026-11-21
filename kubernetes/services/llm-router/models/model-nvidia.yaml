@@ -22,7 +22,7 @@ spec:
     maxInputTokens: 98304
     maxOutputTokens: 32768
     supportsFunctionCalling: true
-    supportsVision: false
+    supportsVision: true
     extra:
       model_family: Inkling-2-Mini
       model_provider: thinkingmachines
