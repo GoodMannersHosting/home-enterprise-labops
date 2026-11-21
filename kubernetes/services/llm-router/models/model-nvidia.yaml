@@ -17,9 +17,9 @@ spec:
       output_cost_per_token: 0.0000028322
   info:
     mode: chat
-    # 131,072 total context tokens (vLLM --max-model-len).
+    # 327,680 total context tokens (vLLM --max-model-len).
     # Reserve 32,768 for model output.
-    maxInputTokens: 98304
+    maxInputTokens: 294912
     maxOutputTokens: 32768
     supportsFunctionCalling: true
     supportsVision: true
@@ -28,7 +28,7 @@ spec:
       model_provider: thinkingmachines
       serving_engine: vllm
       quantization: NVFP4_MXFP8
-      served_context_tokens: 131072
+      served_context_tokens: 327680
       parameter_count: 26.4B
       active_parameters: 3.4B
       architecture: looped_moe

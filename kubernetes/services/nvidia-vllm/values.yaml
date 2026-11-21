@@ -46,15 +46,14 @@ controllers:
           - --gpu-memory-utilization
           - "1.0"
 
-          # Auto-fit ("-1"; "1" means a 1-token context): vLLM picks the
-          # longest context that fits after warmup and logs it on the
-          # "Auto-fit max_model_len" line. 253952 crashed at startup: it needs
-          # 10.59 GiB of KV cache, but only 8.45 GiB was left after weights
-          # (18.2 GiB) plus warmup activations. Text-only ran at 131072.
-          # TODO: pin the logged value here and in
+          # 320k. Auto-fit ("-1") settled on 351104 with vision on and these
+          # settings; this leaves ~23k tokens of headroom so a slightly
+          # tighter boot doesn't crash-loop. To re-measure, set "-1" ("1"
+          # means a 1-token context) and read the "Auto-fit max_model_len" /
+          # "GPU KV cache size" log lines. Keep in sync with
           # llm-router/models/model-nvidia.yaml.
           - --max-model-len
-          - "-1"
+          - "327680"
 
           # FP8 is essential for large context.
           - --kv-cache-dtype
