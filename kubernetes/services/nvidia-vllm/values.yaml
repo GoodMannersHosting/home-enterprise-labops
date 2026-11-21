@@ -48,7 +48,7 @@ controllers:
 
           # Longest published working RTX 5090 config.
           - --max-model-len
-          - "1"
+          - "12288"
 
           # FP8 is essential for large context.
           - --kv-cache-dtype
@@ -61,7 +61,7 @@ controllers:
           # Chunk long prompt processing.
           - --enable-chunked-prefill
           - --max-num-batched-tokens
-          - "8192"
+          - "2048"
 
           # Reuse matching prompt prefixes.
           - --enable-prefix-caching
