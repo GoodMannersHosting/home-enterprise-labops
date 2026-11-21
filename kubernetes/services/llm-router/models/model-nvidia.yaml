@@ -7,7 +7,7 @@ metadata:
 spec:
   modelName: nvidia-llama
   params:
-    model: openai/nvidia-qwen3-32b-nvfp4
+    model: hosted_vllm/inkling-2-mini
     apiBase: http://nvidia-vllm-core.aiml.svc.cluster.local:8080/v1
     apiKeyRef:
       name: nvidia-llm-api-key
@@ -17,12 +17,22 @@ spec:
       output_cost_per_token: 0.0000028322
   info:
     mode: chat
-    maxInputTokens: 151552
+    # 215,040 total context tokens.
+    # Reserve 32,768 for model output.
+    maxInputTokens: 182272
     maxOutputTokens: 32768
     supportsFunctionCalling: true
     supportsVision: false
     extra:
-      model_family: Qwen3.8-27B
+      model_family: Inkling-2-Mini
+      model_provider: thinkingmachines
       serving_engine: vllm
-      quantization: NVFP4
-      served_context_tokens: 184320
+      quantization: NVFP4_MXFP8
+      served_context_tokens: 215040
+      parameter_count: 26.4B
+      active_parameters: 3.4B
+      architecture: looped_moe
+      kv_cache_dtype: fp8
+      reasoning: true
+      supports_tool_choice: true
+      deployment_gpu: RTX_5090

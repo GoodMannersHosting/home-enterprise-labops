@@ -1,7 +1,5 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
 ---
-# NVIDIA RTX 5090 with vLLM, Qwen3.8-27B-NVFP4 model.
-# 32GB VRAM is sufficient for NVFP4 weights (~14GB) plus KV cache.
 defaultPodOptions:
   automountServiceAccountToken: false
   enableServiceLinks: false
@@ -26,69 +24,55 @@ controllers:
             protocol: TCP
         image:
           repository: vllm/vllm-openai
-          tag: v0.29.0-x86_64-cu129
-          digest: sha256:3e10e8189823e0f7ae4620c271bcdaaf64127ec7d0edc351591a508498b7684a
-          pullPolicy: Always
+          tag: inkling-2-mini
+          digest: sha256:c2dc759f5984f69c1e2418c6af7c26eb756f5ed2a8934c768ae1253645d1449e
         args:
           - --model
-          - nvidia/Qwen3.8-27B-NVFP4
-          # VLLM_HOST_IP/VLLM_PORT (previously set below) do NOT control the
-          # API server's bind address -- those env vars are only used for
-          # internal distributed/IPC communication between the API server and
-          # engine-core processes. The actual HTTP server host/port are CLI
-          # args only, defaulting to host=all-interfaces, port=8000. Since
-          # neither was set, the server was listening on 8000 while the
-          # container port/Service/probes all expect 8080 -- hence
-          # "connection refused" on every port-forward/curl to 8080.
+          - thinkingmachines/Inkling-2-Mini
+
           - --host
           - "0.0.0.0"
           - --port
           - "8080"
-          - --seed
-          - "0"
-          - --gpu-memory-utilization
-          - "0.945"
-          - --max-num-batched-tokens
-          - "8192"
-          - --max-model-len
-          - "184320"
-          - --kv-cache-dtype
-          - fp8_e4m3
-          - --long-prefill-token-threshold
-          - "2048"
+
+          - --served-model-name
+          - inkling-2-mini
+
+          # Single RTX 5090
           - --tensor-parallel-size
           - "1"
-          - --served-model-name
-          - nvidia-qwen3-32b-nvfp4
-          - --enable-chunked-prefill
-          - --reasoning-parser
-          - "qwen3"
-          # CUDA-graph capture/profiling allocates a KV cache buffer sized to
-          # min(max_num_seqs, max_cudagraph_capture_size) *before* the real KV
-          # cache is sized. The default cap (512 on this non-datacenter
-          # Blackwell GPU) needs ~12GB for that buffer alone, which OOMs on a
-          # 32GB card once model weights + CUDA/compile overhead (~22GB) are
-          # accounted for. Capping it here keeps full CUDA graphs (and thus
-          # --max-num-batched-tokens/--max-model-len unchanged) while shrinking
-          # the profiling buffer to a size that actually fits. 128 still covers
-          # realistic decode concurrency for a single-GPU homelab deployment;
-          # larger batches simply fall back to the piecewise/eager path.
-          - --max-cudagraph-capture-size
-          - "128"
-          # nvidia/Qwen3.8-27B-NVFP4 is a hybrid Mamba/attention model: each
-          # concurrent decode sequence needs one dedicated Mamba SSM-state
-          # cache block (separate from the paged attention KV cache), and
-          # only a limited number of those blocks fit in the memory budget.
-          # The default max_num_seqs (256) exceeds that pool, so CUDA graph
-          # capture refuses to start. Capping it here (comfortably below the
-          # observed ~121-block ceiling) is what the engine itself
-          # recommends; raise --gpu-memory-utilization instead if more
-          # concurrent decode slots are needed.
+
+          # Maximize cache capacity on a dedicated GPU.
+          - --gpu-memory-utilization
+          - "1.0"
+
+          # Longest published working RTX 5090 config.
+          - --max-model-len
+          - "215040"
+
+          # FP8 is essential for large context.
+          - --kv-cache-dtype
+          - fp8
+
+          # Prioritize one large agent session.
           - --max-num-seqs
-          - "96"
+          - "1"
+
+          # Chunk long prompt processing.
+          - --enable-chunked-prefill
+          - --max-num-batched-tokens
+          - "8192"
+
+          # Reuse matching prompt prefixes.
+          - --enable-prefix-caching
+
+          # Inkling-specific parsers.
+          - --reasoning-parser
+          - inkling
           - --enable-auto-tool-choice
           - --tool-call-parser
-          - qwen3_xml
+          - inkling
+          #-  --speculative-config '{"method":"dspark","num_speculative_tokens":7,"draft_sample_method":"probabilistic"}'
         env:
           - name: VLLM_API_KEY
             valueFrom:
