@@ -48,7 +48,7 @@ controllers:
 
           # Longest published working RTX 5090 config.
           - --max-model-len
-          - "215040"
+          - "1"
 
           # FP8 is essential for large context.
           - --kv-cache-dtype
