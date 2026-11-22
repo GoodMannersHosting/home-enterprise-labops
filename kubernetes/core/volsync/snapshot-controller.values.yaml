@@ -1,3 +1,0 @@
-controller:
-  serviceMonitor:
-    create: false

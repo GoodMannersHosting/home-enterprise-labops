@@ -78,12 +78,3 @@ spec:
             kind: Secret
             group: ""
 
-    - name: argocd
-      protocol: TLS
-      port: 443
-      hostname: "argocd.cloud.danmanners.com"
-      allowedRoutes:
-        namespaces:
-          from: All
-      tls:
-        mode: Passthrough
